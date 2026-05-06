@@ -16,12 +16,12 @@ export function AppHeader() {
   const { mode, setMode } = useTheme();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-ui-primary/20 bg-bg-base/90 backdrop-blur">
-      <nav className="mx-auto flex w-full max-w-5xl flex-wrap gap-3 p-4">
-        <Toggle
-          checked={mode === "dark"}
-          onChange={(isDark: boolean) => setMode(isDark ? "dark" : "light")}
-        />
+    <header className="sticky top-0 z-30 border-b border-ui-primary/20 bg-bg-base/90 backdrop-blur flex justify-center items-center w-full h-20">
+      <Toggle
+        checked={mode === "dark"}
+        onChange={(isDark: boolean) => setMode(isDark ? "dark" : "light")}
+      />
+      <nav className=" flex justify-center items-center w-full max-w-5xl flex-wrap gap-3 p-4">
         {navItems.map((item) => (
           <a
             key={item.href}

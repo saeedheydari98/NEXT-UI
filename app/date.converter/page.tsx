@@ -124,8 +124,8 @@ export default function Home() {
   const currentCalendar = calendarMap[fromType] || calendarMap.gregorian;
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="flex flex-col gap-2 w-1/3 h-[calc(100vh-50px)] bg-white/10 backdrop-blur-md shadow-2xl rounded-2xl p-6 border border-white/30" dir="rtl">
+    <div className="flex justify-center items-center h-screen bg-bg-base text-text-primary ">
+      <div className="flex flex-col gap-2 w-1/3 h-[calc(100vh-100px)] bg-white/10 backdrop-blur-md shadow-2xl rounded-2xl p-6 border border-white/30" dir="rtl">
         <div className="flex flex-col h-[30%] justify-center items-center gap-4">
           <div className="text-2xl font-bold text-center bg-linear-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">
             تبدیل تاریخ
