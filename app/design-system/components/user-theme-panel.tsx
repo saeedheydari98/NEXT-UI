@@ -1,7 +1,7 @@
 "use client";
 
-import { CustomButton } from "./button";
-import { CustomSwitch } from "./switch";
+import { CustomButton } from "./ui/button";
+import { CustomSwitch } from "./ui/switch";
 import { useTheme } from "../theme/provider";
 import { resolveColor, ThemeColorKey, ThemeStyle, ThemeTone } from "../theme/theme";
 
@@ -45,8 +45,9 @@ export function UserThemePanel() {
         style={{
           backgroundColor: background,
           borderColor: background,
+          borderStyle: "none",
+          borderWidth: "0",
           color: getContrastColor(background),
-          boxShadow: selected ? `0 0 0 2px ${hexToRgba(background, 0.35)}` : undefined,
         }}
         className=""
         onClick={() => updateUserTheme({ style: item })}
@@ -66,8 +67,9 @@ export function UserThemePanel() {
         style={{
           backgroundColor: background,
           borderColor: background,
+          borderStyle: "none",
+          borderWidth: "0",
           color: getContrastColor(background),
-          boxShadow: selected ? `0 0 0 2px ${hexToRgba(background, 0.35)}` : undefined,
         }}
         className=""
         onClick={() => updateUserTheme({ preferredColor: color })}
@@ -87,8 +89,9 @@ export function UserThemePanel() {
         style={{
           backgroundColor: background,
           borderColor: background,
+          borderStyle: "none",
+          borderWidth: "0",
           color: getContrastColor(background),
-          boxShadow: selected ? `0 0 0 2px ${hexToRgba(background, 0.35)}` : undefined,
         }}
         className=""
         onClick={() => updateUserTheme({ tone })}
@@ -100,14 +103,14 @@ export function UserThemePanel() {
 
   return (
     <section
-      className="w-full max-w-3xl rounded-xl bg-bg-surface p-4"
+      className="flex flex-col gap-4 w-full max-w-3xl rounded-xl bg-bg-surface p-4"
       style={{
         border: `1px solid ${hexToRgba(accentColor, 0.3)}`,
       }}
     >
-      <h2 className="mb-3 text-xl font-bold">User Panel Theme</h2>
+      <div className=" text-xl font-bold">User Panel Theme</div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-4">
+      <div className=" flex flex-wrap items-center gap-4">
         <CustomSwitch
           checked={mode === "dark"}
           onChange={(next) => setMode(next ? "dark" : "light")}
@@ -116,15 +119,15 @@ export function UserThemePanel() {
         />
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-2">
-        {styleOptions.map(renderStyleButton)}
-      </div>
-
       <div className="flex flex-wrap gap-2">
         {colorOptions.map(renderColorButton)}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className=" flex flex-wrap gap-2">
+        {styleOptions.map(renderStyleButton)}
+      </div>
+
+      <div className=" flex flex-wrap gap-2">
         {toneOptions.map(renderToneButton)}
       </div>
     </section>

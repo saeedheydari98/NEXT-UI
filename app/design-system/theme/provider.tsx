@@ -99,6 +99,21 @@ export function ThemeProvider({
   }, [userTheme]);
 
   useEffect(() => {
+    const saved = localStorage.getItem("theme-user");
+    if (!saved) return;
+
+    try {
+      const parsed = JSON.parse(saved) as Partial<UserThemeConfig>;
+      setUserTheme((prev) => ({
+        ...prev,
+        ...parsed,
+      }));
+    } catch {
+      // ignore invalid stored theme data
+    }
+  }, []);
+
+  useEffect(() => {
     const vars = generateCSSVariables(theme);
     applyCSSVariables(vars as Record<string, string>);
   }, [theme]);

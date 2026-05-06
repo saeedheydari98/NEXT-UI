@@ -2,10 +2,10 @@
 
 import React from "react";
 
-import { useTheme } from "../theme/provider";
-import { resolveDynamicColor } from "../theme/theme";
-import { resolveVariantColors, UICommonVariant } from "../variants/ui.variant";
-import { borderVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../variants/shared.variant";
+import { useTheme } from "../../theme/provider";
+import { resolveDynamicColor } from "../../theme/theme";
+import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { borderVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
 
 type BaseProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
@@ -88,6 +88,8 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         backgroundColor: variantStyle.backgroundColor,
         color: variantStyle.color,
         borderColor: variantStyle.borderColor,
+        borderStyle: "solid",
+        borderWidth: "1px",
         ...style,
         ...tokenStyle,
       }}
@@ -96,7 +98,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         (fullWidth || fullwidth) && "w-full",
         sizeVariants[size],
         radiusVariants[rounded],
-        borderVariants[border],
+        border !== "none" && borderVariants[border],
         shadowVariants[shadow],
         motionVariants.smooth,
         !isDisabled && interactionStates.hover[hover],

@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { useTheme } from "../theme/provider";
-import { resolveVariantColors, UICommonVariant } from "../variants/ui.variant";
-import { borderVariants, cx, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../variants/shared.variant";
+import { useTheme } from "../../theme/provider";
+import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { borderVariants, cx, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
-type CustomSelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
+type CustomSelectProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'> & {
   variant?: UICommonVariant;
   size?: keyof typeof sizeVariants;
   rounded?: keyof typeof radiusVariants;

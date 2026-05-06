@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { CustomButton } from "../design-system/components/button";
+import { CustomButton } from "../design-system/components/ui/button";
 import { AdminThemePanel } from "../design-system/components/admin-theme-panel";
 import { UserThemePanel } from "../design-system/components/user-theme-panel";
-import { CustomInput } from "../design-system/components/input";
-import { CustomSelect } from "../design-system/components/select";
-import { CustomSwitch } from "../design-system/components/switch";
-import { CustomCard } from "../design-system/components/card";
-import { CustomModal } from "../design-system/components/modal";
-import { FloatButton } from "../design-system/components/float-button";
+import { CustomSwitch } from "../design-system/components/ui/switch";
 import { useTheme } from "../design-system/theme/provider";
+import { CustomModal } from "../design-system/components/ui/modal";
+import { CustomCard } from "../design-system/components/ui/card";
+import { FloatButton } from "../design-system/components/ui/float-button";
+import { CustomInput } from "../design-system/components/ui/input";
+import { CustomSelect } from "../design-system/components/ui/select";
 
 export default function TestThemePage() {
   const { mode, setMode, style, setStyle } = useTheme();
@@ -96,9 +96,6 @@ export default function TestThemePage() {
             ))}
           </div>
         </CustomCard>
-
-        <AdminThemePanel />
-        <UserThemePanel />
       </div>
 
       <CustomModal

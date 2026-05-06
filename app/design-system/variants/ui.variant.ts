@@ -23,7 +23,7 @@ export function resolveVariantColors(
     case "secondary":
       return {
         backgroundColor: theme.tokens.colors.ui.secondary,
-        color: "#111111",
+        color: theme.tokens.colors.text.primary,
         borderColor: theme.tokens.colors.ui.secondary,
       };
     case "success":

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { CustomButton } from "./button";
-import { UICommonVariant } from "../variants/ui.variant";
+import { UICommonVariant } from "../../variants/ui.variant";
 
 type FloatButtonProps = {
   onClick?: () => void;

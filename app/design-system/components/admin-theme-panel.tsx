@@ -1,6 +1,6 @@
 "use client";
 
-import { CustomButton } from "./button";
+import { CustomButton } from "./ui/button";
 import { useTheme } from "../theme/provider";
 import { resolveColor, ThemeColorKey, ThemeStyle, ThemeTone } from "../theme/theme";
 
@@ -24,8 +24,16 @@ const getContrastColor = (hex: string) => {
   return r * 0.299 + g * 0.587 + b * 0.114 > 150 ? "#111111" : "#ffffff";
 };
 
+const hexToRgba = (hex: string, alpha: number) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 export function AdminThemePanel() {
   const { adminTheme, updateAdminTheme } = useTheme();
+  const adminColor = resolveColor(adminTheme.primary, adminTheme.style, adminTheme.tone);
 
   const renderColorButton = (color: ThemeColorKey) => {
     const background = resolveColor(color, adminTheme.style, adminTheme.tone);
@@ -37,9 +45,11 @@ export function AdminThemePanel() {
         style={{
           backgroundColor: background,
           borderColor: background,
+          borderStyle: "none",
+          borderWidth: "0",
           color: getContrastColor(background),
         }}
-        className={selected ? "ring-2 ring-ui-primary/80" : ""}
+        className=""
         onClick={() => updateAdminTheme({ primary: color })}
       >
         {color}
@@ -57,9 +67,11 @@ export function AdminThemePanel() {
         style={{
           backgroundColor: background,
           borderColor: background,
+          borderStyle: "none",
+          borderWidth: "0",
           color: getContrastColor(background),
         }}
-        className={selected ? "ring-2 ring-ui-primary/80" : ""}
+        className=""
         onClick={() => updateAdminTheme({ style: item })}
       >
         {item}
@@ -77,9 +89,11 @@ export function AdminThemePanel() {
         style={{
           backgroundColor: background,
           borderColor: background,
+          borderStyle: "none",
+          borderWidth: "0",
           color: getContrastColor(background),
         }}
-        className={selected ? "ring-2 ring-ui-primary/80" : ""}
+        className=""
         onClick={() => updateAdminTheme({ tone })}
       >
         tone {tone}
@@ -88,14 +102,19 @@ export function AdminThemePanel() {
   };
 
   return (
-    <section className="w-full max-w-3xl rounded-xl border border-ui-primary/30 bg-bg-surface p-4">
-      <h2 className="mb-3 text-xl font-bold">Admin Panel Theme</h2>
+    <section
+      className="flex flex-col gap-4 w-full max-w-3xl rounded-xl bg-bg-surface p-4"
+      style={{
+        border: `1px solid ${hexToRgba(adminColor, 0.3)}`,
+      }}
+    >
+      <h2 className=" text-xl font-bold">Admin Panel Theme</h2>
 
-      <div className="mb-3 flex flex-wrap gap-2">
+      <div className=" flex flex-wrap gap-2">
         {colorOptions.map(renderColorButton)}
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-2">
+      <div className=" flex flex-wrap gap-2">
         {styleOptions.map(renderStyleButton)}
       </div>
 

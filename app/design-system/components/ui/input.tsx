@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import { useTheme } from "../theme/provider";
-import { resolveVariantColors, UICommonVariant } from "../variants/ui.variant";
-import { borderVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../variants/shared.variant";
+import { useTheme } from "../../theme/provider";
+import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { borderVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
-type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+type CustomInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> & {
   variant?: UICommonVariant;
   size?: keyof typeof sizeVariants;
   rounded?: keyof typeof radiusVariants;

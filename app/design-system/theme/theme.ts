@@ -293,13 +293,13 @@ export function createTheme(
                     primary: resolveColor(
                         admin?.primary || semanticThemeMap.primary,
                         admin?.style ?? style,
-                        500
+                        admin?.tone ?? 500
                     ),
 
                     secondary: resolveColor(
-                        semanticThemeMap.secondary,
-                        style,
-                        200
+                        user?.preferredColor || semanticThemeMap.secondary,
+                        user?.style ?? style,
+                        user?.tone ?? 500
                     ),
 
                     success: resolveColor(

@@ -3,7 +3,7 @@
 import React from "react";
 import { CustomButton } from "./button";
 import { CustomCard } from "./card";
-import { UICommonVariant } from "../variants/ui.variant";
+import { UICommonVariant } from "../../variants/ui.variant";
 
 type CustomModalProps = {
   open: boolean;

@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { useTheme } from "../theme/provider";
-import { resolveVariantColors, UICommonVariant } from "../variants/ui.variant";
-import { borderVariants, cx, radiusVariants, shadowVariants } from "../variants/shared.variant";
+import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { borderVariants, cx, radiusVariants, shadowVariants } from "../../variants/shared.variant";
+import { useTheme } from "../../theme/provider";
 
 type CustomCardProps = React.HTMLAttributes<HTMLDivElement> & {
   children: React.ReactNode;

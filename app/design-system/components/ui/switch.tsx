@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { useTheme } from "../theme/provider";
-import { resolveVariantColors, UICommonVariant } from "../variants/ui.variant";
-import { cx, motionVariants } from "../variants/shared.variant";
+import { useTheme } from "../../theme/provider";
+import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { cx, motionVariants } from "../../variants/shared.variant";
 
 type CustomSwitchProps = {
   checked: boolean;
