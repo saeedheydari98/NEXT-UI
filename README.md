@@ -1,23 +1,53 @@
-# Next.js UI Playground
+# 🚀 Next.js UI Playground
 
-A learning-focused project built with Next.js to experiment with UI infrastructure, design systems, and Storybook integration.
+![Next.js](https://img.shields.io/badge/Next.js-000?logo=nextdotjs)
+![React](https://img.shields.io/badge/React-20232A?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript)
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql)
+![Storybook](https://img.shields.io/badge/Storybook-FF4785?logo=storybook)
 
-## 🚀 Features
+A modern **Next.js learning project** focused on building scalable UI systems, integrating Storybook, and working with real backend infrastructure using Prisma and PostgreSQL.
 
-- ⚡ Built with Next.js (App Router)
-- 🎨 UI infrastructure setup
-- 📚 Storybook integration for component development
-- 🔄 Date conversion APIs (Jalali ↔ Gregorian ↔ Arabic)
-- 🗄️ Prisma ORM with PostgreSQL (Neon)
+---
+
+## ✨ Features
+
+* ⚡ Built with **Next.js (App Router)**
+* 🎨 Scalable and reusable UI architecture
+* 📚 Storybook for isolated component development
+* 🔄 Multi-calendar date conversion:
+
+  * Jalali (Persian)
+  * Gregorian
+  * Arabic (Hijri)
+* 🗄️ Prisma ORM + Neon (serverless PostgreSQL)
+* 🔌 RESTful API routes
+
+---
+
+## 🖼️ Preview
+
+> (Add screenshots here if available)
+
+```md
+![App Screenshot](./public/screenshot.png)
+```
+
+---
 
 ## 🛠️ Tech Stack
 
-- Next.js
-- React
-- Storybook
-- Prisma
-- PostgreSQL (Neon)
-- TypeScript
+| Category      | Technology        |
+| ------------- | ----------------- |
+| Framework     | Next.js           |
+| UI Library    | React             |
+| Language      | TypeScript        |
+| Component Dev | Storybook         |
+| ORM           | Prisma            |
+| Database      | PostgreSQL (Neon) |
+
+---
 
 ## 📦 Getting Started
 
@@ -26,128 +56,210 @@ A learning-focused project built with Next.js to experiment with UI infrastructu
 ```bash
 git clone https://github.com/saeedheydari98/NEXT-UI.git
 cd NEXT-UI
-2. Install dependencies
-bash
+```
+
+---
+
+### 2. Install dependencies
+
+```bash
 npm install
-3. Set up environment variables
-Create a .env file in the root directory and add your database connection string:
+```
 
-bash
+---
+
+### 3. Environment Variables
+
+Create `.env` file:
+
+```bash
 cp .env.example .env
-Then edit .env and replace the placeholder with your actual Neon PostgreSQL connection string:
+```
 
-env
+Update with your Neon database URL:
+
+```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
-Note: Get your connection string from Neon Console
+```
 
-4. Set up the database
-Push the Prisma schema to your database:
+> 🔑 Get your connection string from **Neon Console**
 
-bash
+---
+
+### 4. Database Setup
+
+Push schema:
+
+```bash
 npx prisma db push
-Generate Prisma Client:
+```
 
-bash
+Generate Prisma client:
+
+```bash
 npx prisma generate
-5. Run the development server
-bash
+```
+
+---
+
+### 5. Run Development Server
+
+```bash
 npm run dev
-Open http://localhost:3000 to see the date converter app.
+```
 
-6. (Optional) Open Prisma Studio
-To view and manage database records:
+Open:
 
-bash
-npx prisma studio
-7. Run Storybook
-bash
+```
+http://localhost:3000
+```
+
+---
+
+### 6. Run Storybook
+
+```bash
 npm run storybook
-📁 Project Structure
-text
+```
+
+---
+
+### 7. Prisma Studio (Optional)
+
+```bash
+npx prisma studio
+```
+
+---
+
+## 📁 Project Structure
+
+```
 NEXT-UI/
 ├── app/
-│   ├── api/           # API routes for date conversion and history
-│   ├── date.converter/# Main date converter page
+│   ├── api/              # API routes
+│   ├── date.converter/   # Main feature page
 │   └── globals.css
 ├── prisma/
-│   ├── schema.prisma  # Database schema
-│   └── migrations/    # Database migrations
+│   ├── schema.prisma
+│   └── migrations/
 ├── public/
-├── .env.example       # Example environment variables
-├── .gitignore
-└── package.json
-🗄️ Database Schema
-The project uses two main models:
+├── .env.example
+├── package.json
+```
 
-User: For user management (extendable)
+---
 
-Conversion: Stores date conversion history
+## 🗄️ Database Schema
 
-date: Original date string
+### User
 
-fromType: Source calendar type (gregorian/persian/arabic)
+* پایه برای توسعه سیستم احراز هویت
 
-toType: Target calendar type
+### Conversion
 
-result: Converted date
+Stores conversion history:
 
-createdAt: Timestamp
+| Field     | Description      |
+| --------- | ---------------- |
+| date      | Original date    |
+| fromType  | Source calendar  |
+| toType    | Target calendar  |
+| result    | Converted result |
+| createdAt | Timestamp        |
 
-🔄 API Endpoints
-Method	Endpoint	Description
-GET	/api/calendars	Get available calendar types
-POST	/api/convert	Convert a date between calendars
-POST	/api/save	Save conversion to history
-GET	/api/history	Get conversion history
-🤝 Team Collaboration
-When working with other developers:
+---
 
-Each developer should create their own Neon database (free tier) or use a shared staging database
+## 🔄 API Endpoints
 
-Never commit the .env file with real credentials
+| Method | Endpoint         | Description    |
+| ------ | ---------------- | -------------- |
+| GET    | `/api/calendars` | List calendars |
+| POST   | `/api/convert`   | Convert date   |
+| POST   | `/api/save`      | Save history   |
+| GET    | `/api/history`   | Fetch history  |
 
-Use .env.example as a template for required environment variables
+---
 
-Run npx prisma db push to sync the schema after pulling latest changes
+## 🤝 Team Collaboration
 
-🧠 Purpose of This Project
-This is a personal learning project focused on:
+* Use separate Neon DB per developer OR shared staging DB
+* Never commit `.env`
+* Use `.env.example` as template
+* After pulling changes:
 
-Building scalable UI architecture
+```bash
+npx prisma db push
+```
 
-Working with design systems
+---
 
-Integrating Storybook into a Next.js project
+## 🧠 Learning Goals
 
-Practicing backend logic with API routes
+* Build scalable UI architecture
+* Work with design systems
+* Integrate Storybook into production apps
+* Handle backend logic in Next.js API routes
+* Practice DB migration (SQLite → PostgreSQL)
+* Improve team workflows
 
-Learning database migration from SQLite to PostgreSQL
+---
 
-Team collaboration workflows with shared database
+## 📌 Notes
 
-📌 Notes
-The database connection is hosted on Neon (serverless PostgreSQL)
+* Database is fully **serverless (Neon)**
+* No local DB setup required
+* Secure environment handling via `.env`
+* Schema sync required after updates
 
-No local database setup required
+---
 
-All team members connect to the same database (or their own instances)
+## 🐛 Troubleshooting
 
-The .env file with real credentials is ignored and not included in the repository
+### ❌ history.map is not a function
 
-Make sure to npx prisma db push after pulling latest changes
+```bash
+npx prisma db push
+```
 
-🐛 Troubleshooting
-Issue: history.map is not a function
-Solution: Run npx prisma db push to sync database schema
+---
 
-Issue: Database connection error
-Solution: Check your DATABASE_URL in .env and ensure it's valid
+### ❌ Database connection error
 
-Issue: Prisma client not found
-Solution: Run npx prisma generate
+Check `.env` → `DATABASE_URL`
 
-👤 Author
-Saeed Heydari
+---
 
-📄 License
-This project is for learning purposes only.
+### ❌ Prisma Client not found
+
+```bash
+npx prisma generate
+```
+
+---
+
+## 📈 Future Improvements
+
+* 🔐 Authentication system (NextAuth)
+* 🌐 Internationalization (i18n)
+* 📊 Analytics dashboard
+* 🧩 Component library export
+* 🧪 Testing (Jest + React Testing Library)
+
+---
+
+## 👤 Author
+
+**Saeed Heydari**
+
+* GitHub: https://github.com/saeedheydari98
+
+---
+
+## 📄 License
+
+This project is licensed for **learning and educational purposes only**.
+
+---
+
+⭐ If you found this project useful, consider giving it a star!
