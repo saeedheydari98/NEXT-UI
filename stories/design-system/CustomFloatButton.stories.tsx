@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
-import { FloatButton } from "@/app/design-system/components/float-button";
+import { FloatButton } from "../../app/design-system/components/ui/float-button";
 
 const meta = {
   title: "Design System/FloatButton",
@@ -25,4 +25,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Playground: Story = {};
+export const Playground = {} as Story;

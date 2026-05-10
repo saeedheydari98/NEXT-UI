@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminThemePanel } from "@/app/design-system/components/admin-theme-panel";
+import { AdminThemePanel } from "@/app/panel/admin/admin-theme-panel";
 
 export default function AdminPanelPage() {
   return (

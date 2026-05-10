@@ -1,6 +1,8 @@
 "use client";
 
-import { UserThemePanel } from "@/app/design-system/components/user-theme-panel";
+import { UserThemePanel } from "./user-theme-panel";
+
+
 
 export default function UserPanelPage() {
   return (

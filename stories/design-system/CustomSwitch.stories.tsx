@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import React from "react";
-import { CustomSwitch } from "@/app/design-system/components/ui/switch";
+import { CustomSwitch } from "../../app/design-system/components/ui/switch";
 
 const meta = {
   title: "Design System/CustomSwitch",
@@ -22,4 +22,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Playground: Story = {};
+export const Playground = {} as Story;

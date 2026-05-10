@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { CustomButton } from "../design-system/components/ui/button";
-import { AdminThemePanel } from "../design-system/components/admin-theme-panel";
-import { UserThemePanel } from "../design-system/components/user-theme-panel";
+import { AdminThemePanel } from "../panel/admin/admin-theme-panel";
+import { UserThemePanel } from "../panel/user/user-theme-panel";
 import { CustomSwitch } from "../design-system/components/ui/switch";
 import { useTheme } from "../design-system/theme/provider";
 import { CustomModal } from "../design-system/components/ui/modal";

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import React from "react";
-import { CustomButton } from "@/app/design-system/components/ui/button";
-import { CustomModal } from "@/app/design-system/components/ui/modal";
+import { CustomButton } from "../../app/design-system/components/ui/button";
+import { CustomModal } from "../../app/design-system/components/ui/modal";
 
 const meta = {
   title: "Design System/CustomModal",
@@ -31,4 +31,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Playground: Story = {};
+export const Playground = {} as Story;

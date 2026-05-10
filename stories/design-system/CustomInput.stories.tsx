@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { CustomInput } from "@/app/design-system/components/input";
+import { CustomInput } from "../../app/design-system/components/ui/input";
 
 const meta = {
   title: "Design System/CustomInput",
@@ -24,4 +24,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Playground: Story = {};
+export const Playground = {} as Story;

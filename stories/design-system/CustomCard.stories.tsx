@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { CustomCard } from "@/app/design-system/components/card";
+import { CustomCard } from "../../app/design-system/components/ui/card";
 
 const meta = {
   title: "Design System/CustomCard",
@@ -21,4 +21,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Playground: Story = {};
+export const Playground = {} as Story;
