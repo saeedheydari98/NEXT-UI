@@ -18,7 +18,6 @@ export default function Toggle({ checked, onChange }: ToggleProps) {
   }, [checked]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
   const handleToggle = () => {

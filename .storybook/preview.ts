@@ -11,12 +11,13 @@ const preview: Preview = {
         null,
         React.createElement(
           "div",
-          { style: { padding: "16px", minHeight: "100vh" } },
+          { style: { padding: "16px" } },
           React.createElement(Story)
         )
       ),
   ],
   parameters: {
+    layout: "padded",
     controls: {
       matchers: {
        color: /(background|color)$/i,

@@ -15,6 +15,7 @@ import { generateCSSVariables } from "./css-vars";
 import { createTheme, resolveDynamicColor, ThemeStyle, ThemeColorKey, ThemeTone } from "./theme";
 
 type ThemeMode = "light" | "dark";
+type ThemeModePreference = ThemeMode | "system";
 type ThemeDensity = "compact" | "comfortable" | "spacious";
 
 type AdminThemeConfig = {
@@ -32,8 +33,10 @@ type UserThemeConfig = {
 
 type ThemeContextType = {
   mode: ThemeMode;
+  modePreference: ThemeModePreference;
   style: ThemeStyle;
   setMode: (mode: ThemeMode) => void;
+  setModePreference: (pref: ThemeModePreference) => void;
   setStyle: (style: ThemeStyle) => void;
   adminTheme: AdminThemeConfig;
   userTheme: UserThemeConfig;
@@ -72,11 +75,50 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [mode, setMode] = useState<ThemeMode>(() => {
+  const [modePreference, setModePreference] = useState<ThemeModePreference>(() => {
     if (typeof window === "undefined") return "light";
-    const savedMode = localStorage.getItem("theme-mode");
-    return savedMode === "dark" ? "dark" : "light";
+    const savedPref = localStorage.getItem("theme-mode-pref");
+    if (savedPref === "light" || savedPref === "dark" || savedPref === "system") {
+      return savedPref;
+    }
+
+    // Backward compat: if old key exists, treat it as manual preference.
+    const legacy = localStorage.getItem("theme-mode");
+    if (legacy === "light" || legacy === "dark") return legacy;
+
+    return "system";
   });
+
+  const [systemMode, setSystemMode] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") return "light";
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia?.("(prefers-color-scheme: dark)") as
+      | MediaQueryList
+      | undefined;
+    if (!media) return;
+
+    const update = () => setSystemMode(media.matches ? "dark" : "light");
+    update();
+
+    // Safari uses addListener/removeListener
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", update);
+      return () => media.removeEventListener("change", update);
+    }
+
+    if (typeof (media as any).addListener === "function") {
+      (media as any).addListener(update);
+      return () => (media as any).removeListener(update);
+    }
+  }, []);
+
+  const mode: ThemeMode = modePreference === "system" ? systemMode : modePreference;
 
   const [style, setStyle] = useState<ThemeStyle>(() => {
     if (typeof window === "undefined") return "light";
@@ -115,8 +157,10 @@ export function ThemeProvider({
   );
 
   useEffect(() => {
+    localStorage.setItem("theme-mode-pref", modePreference);
+    // keep legacy key updated too
     localStorage.setItem("theme-mode", mode);
-  }, [mode]);
+  }, [modePreference, mode]);
 
   useEffect(() => {
     localStorage.setItem("theme-style", style);
@@ -134,6 +178,10 @@ export function ThemeProvider({
     const vars = generateCSSVariables(theme);
     applyCSSVariables(vars as Record<string, string>);
   }, [theme]);
+
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle("dark", mode === "dark");
+  }, [mode]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -226,9 +274,15 @@ export function ThemeProvider({
     }
   }, []);
 
+  const setMode = useCallback((next: ThemeMode) => {
+    setModePreference(next);
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       mode,
+      modePreference,
+      setModePreference,
       style,
       setMode,
       setStyle,
@@ -238,7 +292,18 @@ export function ThemeProvider({
       updateUserTheme,
       theme,
     }),
-    [mode, style, adminTheme, userTheme, updateAdminTheme, updateUserTheme, theme]
+    [
+      mode,
+      modePreference,
+      setModePreference,
+      style,
+      setMode,
+      adminTheme,
+      userTheme,
+      updateAdminTheme,
+      updateUserTheme,
+      theme,
+    ]
   );
 
   return (

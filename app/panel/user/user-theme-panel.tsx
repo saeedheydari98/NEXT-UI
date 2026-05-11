@@ -1,7 +1,6 @@
 "use client";
 
 import { CustomButton } from "@/app/design-system/components/ui/button";
-import { CustomSwitch } from "@/app/design-system/components/ui/switch";
 import { useTheme } from "@/app/design-system/theme/provider";
 import { resolveColor, ThemeColorKey, ThemeStyle, ThemeTone } from "@/app/design-system/theme/theme";
 
@@ -34,8 +33,29 @@ const hexToRgba = (hex: string, alpha: number) => {
 };
 
 export function UserThemePanel() {
-  const { mode, setMode, userTheme, updateUserTheme, theme } = useTheme();
+  const { mode, modePreference, setModePreference, userTheme, updateUserTheme, theme } =
+    useTheme();
   const accentColor = resolveColor(userTheme.preferredColor, userTheme.style, userTheme.tone);
+
+  const renderModeButton = (value: "system" | "light" | "dark", label: string) => {
+    const selected = modePreference === value;
+    return (
+      <CustomButton
+        key={value}
+        variant="secondary"
+        rounded="full"
+        size="sm"
+        style={{
+          backgroundColor: selected ? accentColor : "transparent",
+          borderColor: selected ? accentColor : hexToRgba(accentColor, 0.3),
+          color: selected ? getContrastColor(accentColor) : theme.tokens.colors.text.primary,
+        }}
+        onClick={() => setModePreference(value)}
+      >
+        {label}
+      </CustomButton>
+    );
+  };
 
   const renderStyleButton = (item: ThemeStyle) => {
     const background = resolveColor(userTheme.preferredColor, item, userTheme.tone);
@@ -115,12 +135,19 @@ export function UserThemePanel() {
       <div className=" text-xl font-bold">User Panel Theme</div>
 
       <div className=" flex flex-wrap items-center gap-4">
-        <CustomSwitch
-          checked={mode === "dark"}
-          onChange={(next) => setMode(next ? "dark" : "light")}
-          customColor={accentColor}
-          label={`mode: ${mode}`}
-        />
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm font-semibold text-text-secondary">
+            mode: <span className="font-bold text-text-primary">{mode}</span>
+          </div>
+          <div
+            className="flex flex-wrap items-center gap-2 rounded-full border px-2 py-2"
+            style={{ borderColor: hexToRgba(accentColor, 0.3) }}
+          >
+            {renderModeButton("system", "device")}
+            {renderModeButton("light", "light")}
+            {renderModeButton("dark", "dark")}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
