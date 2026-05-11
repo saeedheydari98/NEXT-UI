@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import Toggle from "./shared/toggle";
 import { useTheme } from "../theme/provider";
+import { useScrollHeaderHide } from "@/hooks/useScrollHeaderHide";
 
 const navItems = [
   { href: "/", label: "home", tone: "bg-ui-info text-white" },
@@ -15,14 +15,22 @@ const navItems = [
 
 export function AppHeader() {
   const { mode, setMode } = useTheme();
-
+  const hideHeader = useScrollHeaderHide(10);
+  
   return (
-    <header className="sticky top-0 z-30 border-b border-ui-primary/20 bg-bg-base/90 backdrop-blur flex justify-center items-center w-full h-20">
+    <header 
+      className={`
+        sticky top-0 z-30 border-b border-ui-primary/20 
+        bg-bg-base/90 backdrop-blur flex justify-center items-center 
+        w-full h-20 transition-transform duration-300
+        ${hideHeader ? '-translate-y-full' : 'translate-y-0'}
+      `}
+    >
       <Toggle
         checked={mode === "dark"}
         onChange={(isDark: boolean) => setMode(isDark ? "dark" : "light")}
       />
-      <nav className=" flex justify-center items-center w-full max-w-5xl flex-wrap gap-3 p-4">
+      <nav className="flex justify-center items-center w-full max-w-5xl flex-wrap gap-3 p-4">
         {navItems.map((item) => (
           <Link
             key={item.href}

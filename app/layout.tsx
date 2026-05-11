@@ -1,6 +1,7 @@
 import { ThemeProvider } from "./design-system/theme/provider";
 import { AppHeader } from "./design-system/components/app-header";
 import "./globals.css";
+import { AppFooter } from "./design-system/components/app-footer";
 
 export default function RootLayout({
   children,
@@ -9,10 +10,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="flex flex-col min-h-screen">
         <ThemeProvider>
           <AppHeader />
-          {children}
+          <main className="flex-1">
+            {children}
+          </main>
+          <AppFooter />
         </ThemeProvider>
       </body>
     </html>
