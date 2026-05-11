@@ -1,9 +1,18 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { applyCSSVariables } from "./engine";
 import { generateCSSVariables } from "./css-vars";
-import { createTheme, resolveDynamicColor, ThemeColorKey, ThemeStyle, ThemeTone } from "./theme";
+import { createTheme, resolveDynamicColor, ThemeStyle, ThemeColorKey, ThemeTone } from "./theme";
 
 type ThemeMode = "light" | "dark";
 type ThemeDensity = "compact" | "comfortable" | "spacious";
@@ -48,6 +57,16 @@ const defaultUserTheme: UserThemeConfig = {
   density: "comfortable",
 };
 
+function readJsonFromStorage<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
 export function ThemeProvider({
   children,
 }: {
@@ -58,33 +77,42 @@ export function ThemeProvider({
     const savedMode = localStorage.getItem("theme-mode");
     return savedMode === "dark" ? "dark" : "light";
   });
+
   const [style, setStyle] = useState<ThemeStyle>(() => {
     if (typeof window === "undefined") return "light";
     const savedStyle = localStorage.getItem("theme-style");
     return savedStyle === "dark" || savedStyle === "fantasy" ? savedStyle : "light";
   });
-  const [adminTheme, setAdminTheme] = useState<AdminThemeConfig>(defaultAdminTheme);
-  const [userTheme, setUserTheme] = useState<UserThemeConfig>(() => {
-    if (typeof window === "undefined") return defaultUserTheme;
-    const saved = localStorage.getItem("theme-user");
-    if (!saved) return defaultUserTheme;
 
-    try {
-      return {
-        ...defaultUserTheme,
-        ...(JSON.parse(saved) as Partial<UserThemeConfig>),
-      };
-    } catch {
-      return defaultUserTheme;
-    }
+  const [adminTheme, setAdminTheme] = useState<AdminThemeConfig>(() => {
+    if (typeof window === "undefined") return defaultAdminTheme;
+    const saved = readJsonFromStorage<Partial<AdminThemeConfig>>("theme-admin");
+    return { ...defaultAdminTheme, ...(saved ?? {}) };
   });
 
-  const theme = createTheme({
-    mode,
-    source: "developer",
-    adminActive: true,
-    style,
-  }, adminTheme, userTheme);
+  const [userTheme, setUserTheme] = useState<UserThemeConfig>(() => {
+    if (typeof window === "undefined") return defaultUserTheme;
+    const saved = readJsonFromStorage<Partial<UserThemeConfig>>("theme-user");
+    return { ...defaultUserTheme, ...(saved ?? {}) };
+  });
+
+  const adminThemeRef = useRef(adminTheme);
+  adminThemeRef.current = adminTheme;
+
+  const theme = useMemo(
+    () =>
+      createTheme(
+        {
+          mode,
+          source: "developer",
+          adminActive: true,
+          style,
+        },
+        adminTheme,
+        userTheme
+      ),
+    [mode, style, adminTheme, userTheme]
+  );
 
   useEffect(() => {
     localStorage.setItem("theme-mode", mode);
@@ -95,25 +123,14 @@ export function ThemeProvider({
   }, [style]);
 
   useEffect(() => {
+    localStorage.setItem("theme-admin", JSON.stringify(adminTheme));
+  }, [adminTheme]);
+
+  useEffect(() => {
     localStorage.setItem("theme-user", JSON.stringify(userTheme));
   }, [userTheme]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("theme-user");
-    if (!saved) return;
-
-    try {
-      const parsed = JSON.parse(saved) as Partial<UserThemeConfig>;
-      setUserTheme((prev) => ({
-        ...prev,
-        ...parsed,
-      }));
-    } catch {
-      // ignore invalid stored theme data
-    }
-  }, []);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     const vars = generateCSSVariables(theme);
     applyCSSVariables(vars as Record<string, string>);
   }, [theme]);
@@ -184,66 +201,48 @@ export function ThemeProvider({
     return () => observer.disconnect();
   }, [theme]);
 
-  useEffect(() => {
-    const loadAdminTheme = async () => {
-      try {
-        const res = await fetch("/api/theme/admin", { cache: "no-store" });
-        if (!res.ok) return;
-
-        const data = (await res.json()) as Partial<AdminThemeConfig>;
-        setAdminTheme((prev) => ({
-          ...prev,
-          ...data,
-        }));
-      } catch {
-        setAdminTheme(defaultAdminTheme);
-      }
-    };
-
-    loadAdminTheme();
+  const updateUserTheme = useCallback((next: Partial<UserThemeConfig>) => {
+    setUserTheme((prev) => {
+      const optimistic = { ...prev, ...next };
+      return optimistic;
+    });
   }, []);
 
-  const updateUserTheme = (next: Partial<UserThemeConfig>) => {
-    setUserTheme((prev) => ({
-      ...prev,
-      ...next,
-    }));
-  };
-
-  const updateAdminTheme = async (next: Partial<AdminThemeConfig>) => {
-    const optimistic = {
-      ...adminTheme,
-      ...next,
-    };
+  const updateAdminTheme = useCallback(async (next: Partial<AdminThemeConfig>) => {
+    const prev = adminThemeRef.current;
+    const optimistic = { ...prev, ...next };
     setAdminTheme(optimistic);
 
     try {
-      await fetch("/api/theme/admin", {
+      const res = await fetch("/api/theme/admin", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(optimistic),
       });
-    } catch {
-      setAdminTheme(defaultAdminTheme);
+      if (!res.ok) throw new Error("Request failed");
+    } catch (error) {
+      console.error("Failed to update admin theme:", error);
+      setAdminTheme(prev);
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      mode,
+      style,
+      setMode,
+      setStyle,
+      adminTheme,
+      userTheme,
+      updateAdminTheme,
+      updateUserTheme,
+      theme,
+    }),
+    [mode, style, adminTheme, userTheme, updateAdminTheme, updateUserTheme, theme]
+  );
 
   return (
-    <ThemeContext.Provider
-      value={{
-        mode,
-        style,
-        setMode,
-        setStyle,
-        adminTheme,
-        userTheme,
-        updateAdminTheme,
-        updateUserTheme,
-        theme,
-      }}
-    >
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

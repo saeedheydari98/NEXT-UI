@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import Toggle from "./shared/toggle";
 import { useTheme } from "../theme/provider";
 
@@ -23,13 +24,13 @@ export function AppHeader() {
       />
       <nav className=" flex justify-center items-center w-full max-w-5xl flex-wrap gap-3 p-4">
         {navItems.map((item) => (
-          <a
+          <Link
             key={item.href}
             className={`rounded-md px-4 py-2 text-sm font-semibold ${item.tone}`}
             href={item.href}
           >
             {item.label}
-          </a>
+          </Link>
         ))}
         <a
           className="rounded-md bg-ui-info px-4 py-2 text-sm font-semibold text-white"

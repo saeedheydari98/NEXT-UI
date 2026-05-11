@@ -34,7 +34,7 @@ const hexToRgba = (hex: string, alpha: number) => {
 };
 
 export function UserThemePanel() {
-  const { mode, setMode, userTheme, updateUserTheme } = useTheme();
+  const { mode, setMode, userTheme, updateUserTheme, theme } = useTheme();
   const accentColor = resolveColor(userTheme.preferredColor, userTheme.style, userTheme.tone);
 
   const renderStyleButton = (item: ThemeStyle) => {
@@ -105,9 +105,11 @@ export function UserThemePanel() {
 
   return (
     <section
-      className="flex flex-col gap-4 w-full max-w-3xl rounded-xl bg-bg-surface p-4"
+      className="flex flex-col gap-4 w-full max-w-3xl rounded-xl p-4"
       style={{
         border: `1px solid ${hexToRgba(accentColor, 0.3)}`,
+        backgroundColor: hexToRgba(accentColor, 0.1),
+        color: theme.tokens.colors.text.primary,
       }}
     >
       <div className=" text-xl font-bold">User Panel Theme</div>

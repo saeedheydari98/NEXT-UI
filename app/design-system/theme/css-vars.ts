@@ -7,6 +7,7 @@ export function generateCSSVariables(theme: Theme) {
     "--ui-success": theme.tokens.colors.ui.success,
     "--ui-danger": theme.tokens.colors.ui.danger,
     "--ui-warning": theme.tokens.colors.ui.warning,
+    "--ui-info": theme.tokens.colors.ui.info,
 
     "--bg-base": theme.tokens.colors.background.base,
     "--bg-surface": theme.tokens.colors.background.surface,

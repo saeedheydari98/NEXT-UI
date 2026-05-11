@@ -32,7 +32,7 @@ const hexToRgba = (hex: string, alpha: number) => {
 };
 
 export function AdminThemePanel() {
-  const { adminTheme, updateAdminTheme } = useTheme();
+  const { adminTheme, updateAdminTheme, theme } = useTheme();
   const adminColor = resolveColor(adminTheme.primary, adminTheme.style, adminTheme.tone);
 
   const renderColorButton = (color: ThemeColorKey) => {
@@ -103,9 +103,11 @@ export function AdminThemePanel() {
 
   return (
     <section
-      className="flex flex-col gap-4 w-full max-w-3xl rounded-xl bg-bg-surface p-4"
+      className="flex flex-col gap-4 w-full max-w-3xl rounded-xl p-4"
       style={{
         border: `1px solid ${hexToRgba(adminColor, 0.3)}`,
+        backgroundColor: hexToRgba(adminColor, 0.1),
+        color: theme.tokens.colors.text.primary,
       }}
     >
       <h2 className=" text-xl font-bold">Admin Panel Theme</h2>
