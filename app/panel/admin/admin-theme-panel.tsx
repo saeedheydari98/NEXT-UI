@@ -68,6 +68,7 @@ export function AdminThemePanel() {
       <CustomButton
         key={item}
         rounded="full"
+        cursor="pointer"
         style={{
           backgroundColor: background,
           borderColor: background,

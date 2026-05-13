@@ -130,6 +130,10 @@ export interface Theme {
             xxl: string;
             full: string;
         };
+        cursor: {
+            pointer: string;
+            notAllowed: string;
+        }
     };
 }
 
@@ -389,7 +393,7 @@ export function createTheme(
                 lg: "24px",
                 xl: "32px",
                 xxl: "40px",
-                xxxl: "48"
+                xxxl: "48px"
             },
 
             radius: {
@@ -397,10 +401,15 @@ export function createTheme(
                 sm: "8px",
                 md: "12px",
                 lg: "16px",
-                xl: "32",
-                xxl: "40",
+                xl: "32px",
+                xxl: "40px",
                 full: "999px",
             },
+            
+            cursor: {
+                pointer: "pointer",
+                notAllowed: "not-allowed",
+            }
         },
     };
 }

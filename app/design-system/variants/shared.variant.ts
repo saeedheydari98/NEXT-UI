@@ -121,6 +121,12 @@ export const shadowVariants = {
   xl: "shadow-xl",
 };
 
+export const cursorVariants = {
+  none: "",
+  pointer: "cursor-pointer",
+  notAllowed: "cursor-not-allowed",
+};
+
 /**
  * =========================
  * Utility: Class Combiner

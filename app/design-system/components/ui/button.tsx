@@ -5,7 +5,7 @@ import React from "react";
 import { useTheme } from "../../theme/provider";
 import { resolveDynamicColor } from "../../theme/theme";
 import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
-import { borderVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
+import { borderVariants, cursorVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
 
 type BaseProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
@@ -18,17 +18,14 @@ type CustomButtonProps = BaseProps & {
   rounded?: keyof typeof radiusVariants;
   border?: keyof typeof borderVariants;
   shadow?: keyof typeof shadowVariants;
+  cursor?: keyof typeof cursorVariants;
   fullWidth?: boolean;
-  fullwidth?: boolean;
-
   loading?: boolean;
   disabled?: boolean;
-
   hover?: keyof typeof interactionStates.hover;
   icon?: React.ReactNode;
   iconAfter?: React.ReactNode;
   iconafter?: React.ReactNode;
-
   token?: string;
   className?: string;
 };
@@ -40,6 +37,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   rounded = "md",
   border = "none",
   shadow = "none",
+  cursor = "pointer",
   fullWidth = false,
   loading = false,
   disabled = false,
@@ -92,11 +90,12 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         ...tokenStyle,
       }}
       className={cx(
-        "inline-flex items-center justify-center gap-2 font-medium",
+        "inline-flex items-center justify-center gap-2 font-medium ",
         (fullWidth) && "w-full",
         sizeVariants[size],
         radiusVariants[rounded],
         border !== "none" && borderVariants[border],
+        cursorVariants[cursor],
         shadowVariants[shadow],
         motionVariants.smooth,
         !isDisabled && interactionStates.hover[hover],
