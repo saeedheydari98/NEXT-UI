@@ -4,6 +4,7 @@ import React from "react";
 import { CustomButton } from "./button";
 import { CustomCard } from "./card";
 import { UICommonVariant } from "../../variants/ui.variant";
+import { LoadingVariant } from "../loading/loading";
 
 type CustomModalProps = {
   open: boolean;
@@ -12,6 +13,9 @@ type CustomModalProps = {
   children: React.ReactNode;
   variant?: UICommonVariant;
   closeText?: string;
+  loading?: LoadingVariant;
+  isLoading?: boolean;
+  loadingText?: string;
 };
 
 export function CustomModal({
@@ -21,6 +25,9 @@ export function CustomModal({
   children,
   variant = "primary",
   closeText = "Close",
+  loading = "spinner",
+  isLoading = false,
+  loadingText,
 }: CustomModalProps) {
   if (!open) return null;
 
@@ -36,10 +43,13 @@ export function CustomModal({
         className="w-full max-w-lg"
         shadow="lg"
         onClick={(event) => event.stopPropagation()}
+        isLoading={isLoading}
+        loading={loading}
+        loadingText={loadingText}
       >
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xl font-bold">{title}</h2>
-          <CustomButton variant={variant} size="sm" onClick={onClose}>
+          <h2 className="text-xl font-bold">{isLoading ? loadingText : title}</h2>
+          <CustomButton variant={variant} size="sm" onClick={onClose} disabled={isLoading}>
             {closeText}
           </CustomButton>
         </div>

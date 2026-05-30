@@ -3,7 +3,7 @@ import { fn } from "storybook/test";
 import { CustomTag } from "../../app/design-system/components/ui/tag";
 
 const meta = {
-  title: "Design System/CustomButton",
+  title: "Design System/CustomTag",
   component: CustomTag,
   tags: ["autodocs"],
   argTypes: {

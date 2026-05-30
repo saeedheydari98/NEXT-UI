@@ -127,16 +127,16 @@ export default function Home() {
   const currentCalendar = calendarMap[fromType] || calendarMap.gregorian;
 
   return (
-    <div className="flex justify-center items-center h-screen bg-bg-base text-text-primary">
-      <div className="flex flex-col gap-2 w-1/3 h-[calc(100vh-100px)] bg-bg-surface/40 backdrop-blur-md shadow-2xl rounded-2xl p-6 border border-ui-secondary/40" dir="rtl">
+    <div className="flex justify-center items-center max-h-full bg-bg-base text-text-primary p-4">
+      <div className="flex flex-col gap-2 w-full md:w-1/3 h-full bg-bg-surface/40 backdrop-blur-md shadow-2xl rounded-2xl p-6 border border-ui-secondary/40" dir="rtl">
         <div className="flex flex-col h-[30%] justify-center items-center gap-4">
-          <div className="text-2xl font-bold text-center bg-user-user-user bg-clip-text text-transparent">
+          <div className="text-2xl font-bold text-center bg-user-user-user bg-clip-text text-transparent ">
             تبدیل تاریخ
           </div>
 
           <CustomSelect
             variant="secondary"
-            size="xxxl"
+            size="lg"
             rounded="lg"
             value={fromType}
             onChange={(e) => {
@@ -157,7 +157,7 @@ export default function Home() {
 
           <CustomSelect
             variant="secondary"
-            size="xxxl"
+            size="lg"
             rounded="lg"
             value={toType}
             onChange={(e) => setToType(e.target.value)}
@@ -183,12 +183,16 @@ export default function Home() {
             onClick={handleSubmit}
             disabled={loading}
             variant="secondary"
-            size="xxl"
+            size="lg"
             fullWidth
             hover="lift"
             rounded="lg"
+            isLoading={loading}
+            loading="dots"
+            className="font-bold text-6xl"
+            // loadingText="در حال تبدیل..."
           >
-            {loading ? "در حال تبدیل..." : "تبدیل"}
+           تبدیل
           </CustomButton>
         </div>
 

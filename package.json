@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "date-fns-hijri": "^1.0.0",
     "date-fns-jalali": "^4.1.0-0",
@@ -21,6 +22,7 @@
     "jalali-moment": "^3.3.11",
     "moment": "^2.30.1",
     "moment-hijri": "^3.0.0",
+    "motion": "^12.38.0",
     "next": "16.2.4",
     "prisma": "^5.22.0",
     "react": "19.2.4",

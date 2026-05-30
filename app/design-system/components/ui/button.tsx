@@ -4,6 +4,7 @@ import React from "react";
 
 import { useTheme } from "../../theme/provider";
 import { resolveDynamicColor } from "../../theme/theme";
+import Loading, { LoadingVariant, } from "../loading/loading";
 import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
 import { borderVariants, cursorVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
@@ -20,12 +21,13 @@ type CustomButtonProps = BaseProps & {
   shadow?: keyof typeof shadowVariants;
   cursor?: keyof typeof cursorVariants;
   fullWidth?: boolean;
-  loading?: boolean;
+  loading?: LoadingVariant;
+  isLoading?: boolean;
+  loadingText?: string;
   disabled?: boolean;
   hover?: keyof typeof interactionStates.hover;
   icon?: React.ReactNode;
   iconAfter?: React.ReactNode;
-  iconafter?: React.ReactNode;
   token?: string;
   className?: string;
 };
@@ -39,7 +41,9 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   shadow = "none",
   cursor = "pointer",
   fullWidth = false,
-  loading = false,
+  loading = "spinner",
+  isLoading = false,
+  loadingText,
   disabled = false,
   hover = "scale",
   icon,
@@ -52,8 +56,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
 }) => {
   const { theme } = useTheme();
   const variantStyle = resolveVariantColors(variant, theme);
-  const isDisabled = disabled || loading;
-
+  const isDisabled = disabled || isLoading;
   const tokenStyle: React.CSSProperties = {};
 
   if (token) {
@@ -104,10 +107,15 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         className
       )}
     >
-      {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
-      {!loading && icon}
-      <span>{loading ? "Loading..." : children}</span>
-      {!loading && (iconAfter)}
+      {isLoading && (<Loading loading={loading} size={size} />)}
+
+      {!isLoading && icon}
+
+      {(!isLoading || loadingText) && (
+        <span> {isLoading ? loadingText : children} </span>
+      )}
+
+      {!isLoading && iconAfter}
     </button>
   );
 };
