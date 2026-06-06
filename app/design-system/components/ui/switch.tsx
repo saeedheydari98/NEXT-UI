@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useTheme } from "../../theme/provider";
-import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
-import { cx, motionVariants, sizeVariants } from "../../variants/shared.variant";
+import { resolveVariantColors, strengthenBorderColor, UICommonVariant } from "../../variants/ui.variant";
+import { borderVariants, cx, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 import Loading, { LoadingVariant } from "../loading/loading";
 
 type CustomSwitchProps = {
@@ -12,11 +12,14 @@ type CustomSwitchProps = {
   disabled?: boolean;
   variant?: UICommonVariant;
   size?: keyof typeof sizeVariants;
-  token?: string;
+  rounded?: keyof typeof radiusVariants;
+  border?: keyof typeof borderVariants;
+  shadow?: keyof typeof shadowVariants;
   customColor?: string;
   label?: string;
   loading?: LoadingVariant;
   isLoading?: boolean;
+  loadingText?: string;
 };
 
 export function CustomSwitch({
@@ -25,16 +28,19 @@ export function CustomSwitch({
   disabled = false,
   variant = "primary",
   size = "md",
-  token,
+  rounded = "full",
+  border = "base",
+  shadow = "none",
   customColor,
   label,
   loading = "spinner",
   isLoading = false,
+  loadingText,
 }: CustomSwitchProps) {
   const { theme } = useTheme();
   const colorStyle = resolveVariantColors(variant, theme);
   const switchColor = customColor ?? colorStyle.backgroundColor;
-  const borderColor = customColor ?? colorStyle.borderColor;
+  const borderColor = customColor ? strengthenBorderColor(customColor) : colorStyle.borderColor;
   const isDisabled = disabled || isLoading;
 
   return (
@@ -45,7 +51,10 @@ export function CustomSwitch({
         disabled={isDisabled}
         onClick={() => onChange(!checked)}
         className={cx(
-          "relative h-7 w-12 rounded-full border",
+          "relative h-7 w-12",
+          radiusVariants[rounded],
+          borderVariants[border],
+          shadowVariants[shadow],
           motionVariants.smooth,
           isDisabled && "opacity-50 cursor-not-allowed"
         )}
@@ -69,6 +78,7 @@ export function CustomSwitch({
         )}
       </button>
       {label && <span>{label}</span>}
+      {isLoading && loadingText && <span className="text-sm text-text-secondary">{loadingText}</span>}
     </label>
   );
 }

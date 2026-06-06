@@ -4,7 +4,7 @@ import React from "react";
 
 import { useTheme } from "../../theme/provider";
 import { resolveDynamicColor } from "../../theme/theme";
-import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { resolveVariantColors, strengthenBorderColor, UICommonVariant } from "../../variants/ui.variant";
 import { borderVariants, cx, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
 type BaseProps = React.HTMLAttributes<HTMLSpanElement>;
@@ -19,11 +19,9 @@ type CustomTagProps = BaseProps & {
   shadow?: keyof typeof shadowVariants;
 
   fullWidth?: boolean;
-  fullwidth?: boolean;
 
   icon?: React.ReactNode;
   iconAfter?: React.ReactNode;
-  iconafter?: React.ReactNode;
 
   token?: string;
   className?: string;
@@ -59,7 +57,7 @@ export const CustomTag: React.FC<CustomTagProps> = ({
 
     if (token.startsWith("bg-")) {
       tokenStyle.backgroundColor = resolvedColor;
-      tokenStyle.borderColor = resolvedColor;
+      tokenStyle.borderColor = strengthenBorderColor(resolvedColor);
       tokenStyle.color = "#ffffff";
     }
 
@@ -75,8 +73,6 @@ export const CustomTag: React.FC<CustomTagProps> = ({
         backgroundColor: variantStyle.backgroundColor,
         color: variantStyle.color,
         borderColor: variantStyle.borderColor,
-        borderStyle: "solid",
-        borderWidth: "1px",
         ...style,
         ...tokenStyle,
       }}
@@ -85,7 +81,7 @@ export const CustomTag: React.FC<CustomTagProps> = ({
         (fullWidth) && "w-full",
         sizeVariants[size],
         radiusVariants[rounded],
-        border !== "none" && borderVariants[border],
+        borderVariants[border],
         shadowVariants[shadow],
         className
       )}

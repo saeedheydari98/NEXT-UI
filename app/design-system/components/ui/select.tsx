@@ -61,12 +61,10 @@ export function CustomSelect({
         {children}
       </select>
       {isLoading && (
-        <span className="absolute right-3">
+        <span className="absolute right-3 flex items-center gap-2 text-text-secondary">
           <Loading loading={loading} size={size} />
+          {loadingText && <span className="text-sm">{loadingText}</span>}
         </span>
-      )}
-      {isLoading && loadingText && (
-        <span className="sr-only">{loadingText}</span>
       )}
     </div>
   );

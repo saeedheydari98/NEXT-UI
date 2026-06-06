@@ -10,12 +10,58 @@ import persian_fa from "react-date-object/locales/persian_fa";
 import arabic_en from "react-date-object/locales/arabic_en";
 import { CustomButton } from "../design-system/components/ui/button";
 import { CustomSelect } from "../design-system/components/ui/select";
-import { CustomTag } from "../design-system/components/ui/tag";
+
+type HistoryItem = {
+  id: number | string;
+  date: string;
+  fromType: string;
+  toType: string;
+  result: string;
+  createdAt?: string;
+};
 
 const calendarMap: any = {
   gregorian: { calendar: gregorian, locale: gregorian_en },
   persian: { calendar: persian, locale: persian_fa },
   arabic: { calendar: arabic, locale: arabic_en },
+};
+
+const HISTORY_STORAGE_KEY = "date-converter-history";
+
+const readLocalHistory = (): HistoryItem[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const parsed = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLocalHistory = (items: HistoryItem[]) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items.slice(0, 20)));
+};
+
+const normalizeHistory = (value: any): HistoryItem[] => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.data)) return value.data;
+  return [];
+};
+
+const mergeHistory = (...lists: HistoryItem[][]) => {
+  const seen = new Set<string>();
+  const merged: HistoryItem[] = [];
+
+  for (const item of lists.flat()) {
+    const key = String(item.id ?? `${item.date}-${item.fromType}-${item.toType}-${item.result}`);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(item);
+  }
+
+  return merged.slice(0, 20);
 };
 
 export default function Home() {
@@ -24,7 +70,7 @@ export default function Home() {
   const [toType, setToType] = useState("");
   const [date, setDate] = useState<any>(null);
   const [result, setResult] = useState("");
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,12 +91,16 @@ export default function Home() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch("/api/history");
+      const res = await fetch("/api/history?limit=20", { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error("History request failed");
+      }
+
       const data = await res.json();
-      setHistory(Array.isArray(data) ? data : []);
+      setHistory(mergeHistory(normalizeHistory(data), readLocalHistory()));
     } catch (error) {
       console.error("Error fetching history:", error);
-      setHistory([]);
+      setHistory((current) => mergeHistory(current, readLocalHistory()));
     }
   };
 
@@ -102,20 +152,45 @@ export default function Home() {
 
       setResult(data.result);
 
-      await fetch("/api/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          date: formattedDate,
-          fromType: fromType,
-          toType: toType,
-          result: data.result,
-        }),
-      });
+      const newHistoryItem: HistoryItem = {
+        id: `local-${Date.now()}`,
+        date: formattedDate,
+        fromType,
+        toType,
+        result: data.result,
+        createdAt: new Date().toISOString(),
+      };
 
-      fetchHistory();
+      let savedHistoryItem = newHistoryItem;
+
+      try {
+        const saveRes = await fetch("/api/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: formattedDate,
+            fromType: fromType,
+            toType: toType,
+            result: data.result,
+          }),
+        });
+
+        const saveData = await saveRes.json().catch(() => ({}));
+        if (!saveRes.ok) {
+          throw new Error(saveData.error || "Save request failed");
+        }
+
+        savedHistoryItem = saveData.saved || newHistoryItem;
+      } catch (saveError) {
+        console.error("Save failed, keeping local history:", saveError);
+        const localHistory = mergeHistory([newHistoryItem], readLocalHistory());
+        writeLocalHistory(localHistory);
+      }
+
+      setHistory((current) => mergeHistory([savedHistoryItem], current, readLocalHistory()));
+      await fetchHistory();
     } catch (err: any) {
       console.error("Error:", err);
       setError(err.message);
@@ -127,16 +202,16 @@ export default function Home() {
   const currentCalendar = calendarMap[fromType] || calendarMap.gregorian;
 
   return (
-    <div className="flex justify-center items-center max-h-full bg-bg-base text-text-primary p-4">
-      <div className="flex flex-col gap-2 w-full md:w-1/3 h-full bg-bg-surface/40 backdrop-blur-md shadow-2xl rounded-2xl p-6 border border-ui-secondary/40" dir="rtl">
+    <div className="flex justify-center items-center h-screen bg-bg-base text-text-primary p-4">
+      <div className="flex flex-col gap-2 w-full md:w-1/2 h-full bg-bg-surface/40 backdrop-blur-md shadow-2xl rounded-2xl p-6 border border-ui-secondary/40" dir="rtl">
         <div className="flex flex-col h-[30%] justify-center items-center gap-4">
-          <div className="text-2xl font-bold text-center bg-user-user-user bg-clip-text text-transparent ">
+          <div className="text-2xl font-bold text-center bg-user-user-user bg-clip-text text-transparent">
             تبدیل تاریخ
           </div>
 
           <CustomSelect
             variant="secondary"
-            size="lg"
+            size="xxxl"
             rounded="lg"
             value={fromType}
             onChange={(e) => {
@@ -157,7 +232,7 @@ export default function Home() {
 
           <CustomSelect
             variant="secondary"
-            size="lg"
+            size="xxxl"
             rounded="lg"
             value={toType}
             onChange={(e) => setToType(e.target.value)}
@@ -183,16 +258,15 @@ export default function Home() {
             onClick={handleSubmit}
             disabled={loading}
             variant="secondary"
-            size="lg"
+            size="xxl"
             fullWidth
             hover="lift"
             rounded="lg"
             isLoading={loading}
             loading="dots"
-            className="font-bold text-6xl"
-            // loadingText="در حال تبدیل..."
+            loadingText="در حال تبدیل..."
           >
-           تبدیل
+            تبدیل
           </CustomButton>
         </div>
 
@@ -210,7 +284,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="flex flex-col h-[60%] justify-center items-center gap-4">
+        <div className="flex flex-col h-[50%] justify-center items-center gap-4">
           <div className="font-bold text-xl bg-user-user-user bg-clip-text text-transparent">
             تاریخچه
           </div>

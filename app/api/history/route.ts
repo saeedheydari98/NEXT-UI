@@ -2,6 +2,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -17,7 +20,10 @@ export async function GET(req: Request) {
       skip: (page - 1) * limit,
     });
 
-    return NextResponse.json({ ok: true, data, page, limit });
+    return NextResponse.json(
+      { ok: true, data, page, limit },
+      { headers: { "Cache-Control": "no-store" } }
+    );
   } catch (error) {
     console.error("History error:", error);
     return NextResponse.json({ error: "خطا در دریافت تاریخچه" }, { status: 500 });

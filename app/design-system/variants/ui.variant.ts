@@ -15,53 +15,48 @@ export type VariantColorStyle = {
   borderColor: string;
 };
 
+export function strengthenBorderColor(color: string): string {
+  const match = color.match(/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+
+  if (!match) {
+    return color;
+  }
+
+  const darken = (value: string) => {
+    const next = Math.round(Number.parseInt(value, 16) * 0.72);
+    return next.toString(16).padStart(2, "0");
+  };
+
+  return `#${darken(match[1])}${darken(match[2])}${darken(match[3])}`;
+}
+
+function createVariantStyle(backgroundColor: string, color: string): VariantColorStyle {
+  return {
+    backgroundColor,
+    color,
+    borderColor: strengthenBorderColor(backgroundColor),
+  };
+}
+
 export function resolveVariantColors(
   variant: UICommonVariant,
   theme: Theme
 ): VariantColorStyle {
   switch (variant) {
     case "secondary":
-      return {
-        backgroundColor: theme.tokens.colors.ui.secondary,
-        color: theme.tokens.colors.text.primary,
-        borderColor: theme.tokens.colors.ui.secondary,
-      };
+      return createVariantStyle(theme.tokens.colors.ui.secondary, theme.tokens.colors.text.primary);
     case "success":
-      return {
-        backgroundColor: theme.tokens.colors.ui.success,
-        color: "#ffffff",
-        borderColor: theme.tokens.colors.ui.success,
-      };
+      return createVariantStyle(theme.tokens.colors.ui.success, "#ffffff");
     case "danger":
-      return {
-        backgroundColor: theme.tokens.colors.ui.danger,
-        color: "#ffffff",
-        borderColor: theme.tokens.colors.ui.danger,
-      };
+      return createVariantStyle(theme.tokens.colors.ui.danger, "#ffffff");
     case "warning":
-      return {
-        backgroundColor: theme.tokens.colors.ui.warning,
-        color: "#111111",
-        borderColor: theme.tokens.colors.ui.warning,
-      };
+      return createVariantStyle(theme.tokens.colors.ui.warning, "#111111");
     case "info":
-      return {
-        backgroundColor: theme.tokens.colors.ui.info,
-        color: "#ffffff",
-        borderColor: theme.tokens.colors.ui.info,
-      };
+      return createVariantStyle(theme.tokens.colors.ui.info, "#ffffff");
     case "neutral":
-      return {
-        backgroundColor: theme.tokens.colors.ui.neutral,
-        color: "#ffffff",
-        borderColor: theme.tokens.colors.ui.neutral,
-      };
+      return createVariantStyle(theme.tokens.colors.ui.neutral, "#ffffff");
     case "primary":
     default:
-      return {
-        backgroundColor: theme.tokens.colors.ui.primary,
-        color: "#ffffff",
-        borderColor: theme.tokens.colors.ui.primary,
-      };
+      return createVariantStyle(theme.tokens.colors.ui.primary, "#ffffff");
   }
 }

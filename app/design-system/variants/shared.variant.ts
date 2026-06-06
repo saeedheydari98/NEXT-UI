@@ -51,6 +51,7 @@ export const interactionStates = {
 export const borderVariants = {
   none: "border-0",
   base: "border",
+  "border-b": "border-b",
   subtle: "border border-opacity-30",
   strong: "border-2",
   heavy: "border-4",

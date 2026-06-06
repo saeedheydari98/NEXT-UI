@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { fn } from "storybook/test";
+import type { ComponentProps } from "react";
+import { FaRegStar } from "react-icons/fa";
 import { CustomTag } from "../../app/design-system/components/ui/tag";
+
+type StoryArgs = ComponentProps<typeof CustomTag> & {
+  icon?: boolean;
+  iconAfter?: boolean;
+};
 
 const meta = {
   title: "Design System/CustomTag",
@@ -8,20 +14,31 @@ const meta = {
   tags: ["autodocs"],
   argTypes: {
     variant: { control: "select", options: ["primary", "secondary", "success", "danger", "warning", "info", "neutral"] },
-    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
+    size: { control: "select", options: ["xs", "sm", "md", "lg", "xl", "xxl", "xxxl"] },
     rounded: { control: "select", options: ["none", "sm", "md", "lg", "xl", "full"] },
-    border: { control: "select", options: ["none", "base", "subtle", "strong", "heavy", "dashed", "dotted"] },
+    border: { control: "select", options: ["none", "base", "border-b", "subtle", "strong", "heavy", "dashed", "dotted"] },
     shadow: { control: "select", options: ["none", "sm", "md", "lg", "xl"] },
+    icon: { control: "boolean" },
+    iconAfter: { control: "boolean" },
   },
   args: {
-    children: "Click me",
+    children: "Status",
     variant: "primary",
     size: "md",
     rounded: "md",
     border: "none",
     shadow: "none",
+    icon: true,
+    iconAfter: false,
   },
-} satisfies Meta<typeof CustomTag>;
+  render: ({ icon, iconAfter, ...args }) => (
+    <CustomTag
+      {...args}
+      icon={icon ? <FaRegStar /> : undefined}
+      iconAfter={iconAfter ? <FaRegStar /> : undefined}
+    />
+  ),
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

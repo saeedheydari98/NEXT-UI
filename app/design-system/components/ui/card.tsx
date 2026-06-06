@@ -47,13 +47,19 @@ export function CustomCard({
         radiusVariants[rounded],
         borderVariants[border],
         shadowVariants[shadow],
+        hover !== "none" && interactionStates.hover[hover],
         className
       )}
       style={{ borderColor: colorStyle.borderColor }}
     >
-      {title && <h3 className="mb-2 text-lg font-semibold">{isLoading ? loadingText : title}</h3>}
+      {title && <h3 className="mb-2 text-lg font-semibold">{title}</h3>}
       <div>
-        {isLoading && <Loading loading={loading} size={size} />}
+        {isLoading && (
+          <div className="flex items-center gap-2 text-text-secondary">
+            <Loading loading={loading} size={size} />
+            {loadingText && <span>{loadingText}</span>}
+          </div>
+        )}
         {!isLoading && children}
       </div>
     </article>

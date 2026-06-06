@@ -4,9 +4,9 @@ import React from "react";
 
 import { useTheme } from "../../theme/provider";
 import { resolveDynamicColor } from "../../theme/theme";
-import Loading, { LoadingVariant, } from "../loading/loading";
-import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { resolveVariantColors, strengthenBorderColor, UICommonVariant } from "../../variants/ui.variant";
 import { borderVariants, cursorVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
+import Loading, { LoadingVariant } from "../loading/loading";
 
 
 type BaseProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
@@ -57,6 +57,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   const { theme } = useTheme();
   const variantStyle = resolveVariantColors(variant, theme);
   const isDisabled = disabled || isLoading;
+
   const tokenStyle: React.CSSProperties = {};
 
   if (token) {
@@ -69,7 +70,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
 
     if (token.startsWith("bg-")) {
       tokenStyle.backgroundColor = resolvedColor;
-      tokenStyle.borderColor = resolvedColor;
+      tokenStyle.borderColor = strengthenBorderColor(resolvedColor);
       tokenStyle.color = "#ffffff";
     }
 
@@ -87,8 +88,6 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         backgroundColor: variantStyle.backgroundColor,
         color: variantStyle.color,
         borderColor: variantStyle.borderColor,
-        borderStyle: "solid",
-        borderWidth: "1px",
         ...style,
         ...tokenStyle,
       }}
@@ -97,7 +96,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         (fullWidth) && "w-full",
         sizeVariants[size],
         radiusVariants[rounded],
-        border !== "none" && borderVariants[border],
+        borderVariants[border],
         cursorVariants[cursor],
         shadowVariants[shadow],
         motionVariants.smooth,
@@ -107,14 +106,9 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         className
       )}
     >
-      {isLoading && (<Loading loading={loading} size={size} />)}
-
+      {isLoading && <Loading loading={loading} size={size} />}
       {!isLoading && icon}
-
-      {(!isLoading || loadingText) && (
-        <span> {isLoading ? loadingText : children} </span>
-      )}
-
+      <span>{isLoading ? loadingText ?? children : children}</span>
       {!isLoading && iconAfter}
     </button>
   );

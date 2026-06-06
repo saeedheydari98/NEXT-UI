@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-bg-base p-10 text-text-primary">
+    <main className=" bg-bg-base p-10 text-text-primary">
       <section className="mx-auto w-full max-w-3xl rounded-xl border border-ui-primary/30 bg-bg-surface p-8">
         <h1 className="text-4xl md:text-5xl font-bold mb-6">
         Building a Dynamic UI Playground
