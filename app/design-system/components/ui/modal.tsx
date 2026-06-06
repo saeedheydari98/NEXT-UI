@@ -54,6 +54,7 @@ export function CustomModal({
         border={border}
         className="w-full max-w-lg"
         shadow={shadow}
+        hover="none"
         onClick={(event) => event.stopPropagation()}
         isLoading={isLoading}
         loading={loading}

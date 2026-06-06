@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminThemePanel } from "@/app/panel/admin/admin-theme-panel";
+import { AdminProductsPanel } from "@/app/panel/admin/admin-products-panel";
 import { useTheme } from "@/app/design-system/theme/provider";
 
 export default function AdminPanelPage() {
@@ -14,8 +15,14 @@ export default function AdminPanelPage() {
         color: theme.tokens.colors.text.primary,
       }}
     >
-      <h1 className="mb-4 text-admin-admin-admin text-2xl font-bold">Admin Theme Control</h1>
-      <AdminThemePanel />
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <section>
+          <h1 className="mb-4 text-admin-admin-admin text-2xl font-bold">Admin Control</h1>
+          <AdminThemePanel />
+        </section>
+
+        <AdminProductsPanel />
+      </div>
     </main>
   );
 }

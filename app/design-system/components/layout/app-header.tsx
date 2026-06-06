@@ -11,6 +11,7 @@ import { useBackNavigation } from "@/hooks/useBackNavigation";
 
 const navItems = [
   { href: "/", label: "home", tone: "bg-ui-primary text-white" },
+  { href: "/products", label: "products", tone: "bg-ui-primary text-white" },
   { href: "/date.converter", label: "date converter", tone: "bg-ui-primary text-white" },
   { href: "/panel/admin", label: "admin panel", tone: "bg-ui-primary text-white" },
   { href: "/panel/user", label: "user panel", tone: "bg-ui-primary text-white" },
