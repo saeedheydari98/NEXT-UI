@@ -9,7 +9,7 @@ import { borderVariants, cursorVariants, cx, interactionStates, motionVariants, 
 import Loading, { LoadingVariant } from "../loading/loading";
 
 
-type BaseProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
+type BaseProps = React.ButtonHTMLAttributes<HTMLButtonElement> & React.AnchorHTMLAttributes<HTMLAnchorElement>;
 
 type CustomButtonProps = BaseProps & {
   children?: React.ReactNode;
@@ -30,6 +30,7 @@ type CustomButtonProps = BaseProps & {
   iconAfter?: React.ReactNode;
   token?: string;
   className?: string;
+  href?: string;
 };
 
 export const CustomButton: React.FC<CustomButtonProps> = ({
@@ -52,6 +53,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   onClick,
   className,
   style,
+  href,
   ...rest
 }) => {
   const { theme } = useTheme();
@@ -79,9 +81,53 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     }
   }
 
+  const classes = cx(
+    "inline-flex items-center justify-center gap-2 font-medium ",
+    (fullWidth) && "w-full",
+    sizeVariants[size],
+    radiusVariants[rounded],
+    borderVariants[border],
+    cursorVariants[cursor],
+    shadowVariants[shadow],
+    motionVariants.smooth,
+    !isDisabled && interactionStates.hover[hover],
+    !isDisabled && interactionStates.active.press,
+    isDisabled && interactionStates.disabled.base,
+    className
+  );
+
+  const content = (
+    <>
+      {isLoading && <Loading loading={loading} size={size} />}
+      {!isLoading && icon}
+      <span>{isLoading ? loadingText ?? children : children}</span>
+      {!isLoading && iconAfter}
+    </>
+  );
+
+  if (href) {
+    return (
+      <a
+        {...(rest as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+        href={href}
+        onClick={onClick as any}
+        style={{
+          backgroundColor: variantStyle.backgroundColor,
+          color: variantStyle.color,
+          borderColor: variantStyle.borderColor,
+          ...style,
+          ...tokenStyle,
+        }}
+        className={classes}
+      >
+        {content}
+      </a>
+    );
+  }
+
   return (
     <button
-      {...rest}
+      {...(rest as React.ButtonHTMLAttributes<HTMLButtonElement>)}
       disabled={isDisabled}
       onClick={onClick}
       style={{
@@ -91,25 +137,9 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         ...style,
         ...tokenStyle,
       }}
-      className={cx(
-        "inline-flex items-center justify-center gap-2 font-medium ",
-        (fullWidth) && "w-full",
-        sizeVariants[size],
-        radiusVariants[rounded],
-        borderVariants[border],
-        cursorVariants[cursor],
-        shadowVariants[shadow],
-        motionVariants.smooth,
-        !isDisabled && interactionStates.hover[hover],
-        !isDisabled && interactionStates.active.press,
-        isDisabled && interactionStates.disabled.base,
-        className
-      )}
+      className={classes}
     >
-      {isLoading && <Loading loading={loading} size={size} />}
-      {!isLoading && icon}
-      <span>{isLoading ? loadingText ?? children : children}</span>
-      {!isLoading && iconAfter}
+      {content}
     </button>
   );
 };

@@ -1,10 +1,12 @@
 "use client";
 
-import { IoBagAddOutline, IoBagHandleOutline, IoOpenOutline } from "react-icons/io5";
+import { IoBagAddOutline, IoBagHandleOutline } from "react-icons/io5";
 import type { MouseEvent } from "react";
 import { CustomButton } from "../../design-system/components/ui/button";
 import { CustomTag } from "../../design-system/components/ui/tag";
 import type { Product, Showcase } from "./types";
+import ShowcaseLink from "../../design-system/components/ui/ShowcaseLink";
+import ProductLink from "../../design-system/components/ui/ProductLink";
 
 type ShowcaseSectionProps = {
   showcase: Showcase;
@@ -37,7 +39,10 @@ export function ShowcaseSection({
         <div className="flex items-center gap-2">
           <div className="text-xl font-bold">{showcase.title || "Untitled showcase"}</div>
         </div>
-        <span className="text-xs font-semibold text-text-secondary">{products.length} items</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-text-secondary">{products.length} items</span>
+          <ShowcaseLink showcaseId={showcase.id}>See all</ShowcaseLink>
+        </div>
       </div>
 
       <div
@@ -50,7 +55,7 @@ export function ShowcaseSection({
         {products.map((product, index) => (
           <article
             key={product.id ?? `${product.title}-${index}`}
-            className="flex min-h-48 min-w-[360px] max-w-[360px] shrink-0 flex-col overflow-hidden rounded-lg border border-ui-primary/25 bg-bg-surface shadow-sm"
+            className="flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border border-ui-primary/25 bg-bg-surface shadow-sm"
           >
             <div className="flex min-h-36 flex-1 gap-3 p-3">
               <button
@@ -105,25 +110,24 @@ export function ShowcaseSection({
                 border="base"
                 rounded="md"
                 size="sm"
+                className="flex-1"
                 fullWidth
                 icon={<IoBagAddOutline />}
                 onClick={() => onAddToCart(product)}
               >
-                Add
+                Add to c
               </CustomButton>
-              <a href={product.ctaHref || "#"} className="inline-flex flex-1">
-                <CustomButton
-                  type="button"
-                  variant="primary"
-                  border="base"
-                  rounded="md"
-                  size="sm"
-                  fullWidth
-                  iconAfter={<IoOpenOutline />}
-                >
-                  {product.ctaLabel || "View"}
-                </CustomButton>
-              </a>
+              {(() => {
+                const viewHref = product.ctaHref && product.ctaHref !== "#" ? product.ctaHref : `/products/${product.id}`;
+
+                // External links (ctaHref) open full page; internal product pages use Link for client navigation
+                return (
+                  <ProductLink productId={product.id ?? String(product.id)} externalHref={product.ctaHref ?? null}>
+                    {product.ctaLabel || "View"}
+                  </ProductLink>
+                );
+              })()}
+            
             </div>
           </article>
         ))}

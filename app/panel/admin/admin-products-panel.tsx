@@ -7,6 +7,7 @@ import { CustomInput } from "../../design-system/components/ui/input";
 import { CustomModal } from "../../design-system/components/ui/modal";
 import { CustomSwitch } from "../../design-system/components/ui/switch";
 import { FloatButton } from "@/app/design-system/components/ui/float-button";
+import { clearProductsCache, getProducts } from "@/lib/products-client";
 import { AdminBannerList } from "./products-panel/admin-banner-list";
 import { AdminShowcaseList } from "./products-panel/admin-showcase-list";
 import type { BannerForm, ProductForm, ShowcaseForm } from "./products-panel/types";
@@ -14,7 +15,7 @@ import type { BannerForm, ProductForm, ShowcaseForm } from "./products-panel/typ
 const PRODUCTS_STORAGE_KEY = "admin-products";
 const SHOWCASES_STORAGE_KEY = "admin-product-showcases";
 const BANNERS_STORAGE_KEY = "admin-product-banners";
-const DEFAULT_SHOWCASE_ID = "default-showcase";
+// No default showcase id
 
 const createShowcase = (): ShowcaseForm => ({
   id: `showcase-${Date.now()}`,
@@ -33,7 +34,7 @@ const createBanner = (): BannerForm => ({
 
 const createProduct = (): ProductForm => ({
   id: `local-${Date.now()}`,
-  showcaseId: DEFAULT_SHOWCASE_ID,
+  showcaseId: "",
   title: "",
   description: "",
   price: "",
@@ -48,12 +49,6 @@ const createProduct = (): ProductForm => ({
   sortOrder: 1,
 });
 
-const defaultShowcase: ShowcaseForm = {
-  id: DEFAULT_SHOWCASE_ID,
-  title: "Main showcase",
-  active: true,
-  sortOrder: 1,
-};
 
 function readLocalProducts(): ProductForm[] {
   try {
@@ -132,7 +127,7 @@ function normalizeProduct(item: Partial<ProductForm>, index: number): ProductFor
 
   return {
     id: item.id ?? `local-${Date.now()}-${index}`,
-    showcaseId: String(item.showcaseId ?? DEFAULT_SHOWCASE_ID),
+    showcaseId: String(item.showcaseId ?? ""),
     title: String(item.title ?? ""),
     description: String(item.description ?? ""),
     price: finalPrice,
@@ -174,14 +169,12 @@ function ensureShowcases(products: ProductForm[], savedShowcases: ShowcaseForm[]
   const normalized = savedShowcases.map(normalizeShowcase);
   const byId = new Map(normalized.map((showcase) => [showcase.id, showcase]));
 
-  if (!byId.has(DEFAULT_SHOWCASE_ID)) {
-    byId.set(DEFAULT_SHOWCASE_ID, defaultShowcase);
-  }
-
   for (const product of products) {
-    if (!byId.has(product.showcaseId)) {
-      byId.set(product.showcaseId, {
-        id: product.showcaseId,
+    const showcaseId = product.showcaseId ?? "";
+    if (!showcaseId) continue;
+    if (!byId.has(showcaseId)) {
+      byId.set(showcaseId, {
+        id: showcaseId,
         title: "Untitled showcase",
         active: true,
         sortOrder: byId.size + 1,
@@ -248,14 +241,32 @@ export function AdminProductsPanel() {
   });
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadProducts = async () => {
       try {
-        const res = await fetch("/api/products?all=1", { cache: "no-store" });
-        const data = await res.json();
-        const apiProducts = Array.isArray(data?.data) ? dedupeProducts(data.data.map(normalizeProduct)) : [];
+        const catalog = await getProducts({ all: true });
+        if (cancelled) return;
+
+        const apiProducts = dedupeProducts(
+          catalog.products.map((item, index) =>
+            normalizeProduct(item as Partial<ProductForm>, index)
+          )
+        );
         const localProducts = dedupeProducts(readLocalProducts().map(normalizeProduct));
-        const nextProducts = apiProducts.length > 0 ? mergeLocalShowcaseIds(apiProducts, localProducts) : localProducts;
-        const nextShowcases = ensureShowcases(nextProducts, readLocalShowcases());
+        const nextProducts =
+          apiProducts.length > 0 ? mergeLocalShowcaseIds(apiProducts, localProducts) : localProducts;
+        const nextShowcases = ensureShowcases(
+          nextProducts,
+          catalog.showcases.length > 0
+            ? catalog.showcases.map((item, index) => ({
+                id: String(item.id),
+                title: String(item.title ?? `Showcase ${index + 1}`),
+                active: item.active !== false,
+                sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
+              }))
+            : readLocalShowcases()
+        );
         const nextBanners = readLocalBanners().map(normalizeBanner);
         setProducts(nextProducts);
         setShowcases(nextShowcases);
@@ -266,6 +277,7 @@ export function AdminProductsPanel() {
           writeLocalProducts(apiProducts);
         }
       } catch {
+        if (cancelled) return;
         const localProducts = readLocalProducts().map(normalizeProduct);
         const nextShowcases = ensureShowcases(localProducts, readLocalShowcases());
         const nextBanners = readLocalBanners().map(normalizeBanner);
@@ -275,7 +287,11 @@ export function AdminProductsPanel() {
       }
     };
 
-    loadProducts();
+    void loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const sortedProducts = useMemo(
@@ -327,12 +343,19 @@ export function AdminProductsPanel() {
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ products: validProducts }),
+        body: JSON.stringify({
+          products: validProducts,
+          showcases: sortedShowcases.map((showcase) => ({
+            id: showcase.id,
+            title: showcase.title,
+          })),
+        }),
       });
       const data = await res.json();
       const savedProducts = Array.isArray(data?.data) ? dedupeProducts(data.data.map(normalizeProduct)) : validProducts;
       setProducts(savedProducts);
       writeLocalProducts(savedProducts);
+      clearProductsCache();
       setStatus("Products saved.");
     } catch {
       writeLocalProducts(validProducts);
@@ -374,7 +397,7 @@ export function AdminProductsPanel() {
   };
 
   const openCreateModal = () => {
-    const firstShowcase = sortedShowcases[0]?.id ?? DEFAULT_SHOWCASE_ID;
+    const firstShowcase = sortedShowcases[0]?.id ?? "";
     setDraftProduct({ ...createProduct(), showcaseId: firstShowcase, sortOrder: products.length + 1 });
     setIsCreateOpen(true);
   };
@@ -626,18 +649,15 @@ export function AdminProductsPanel() {
   };
 
   const deleteEditingShowcase = async () => {
-    if (!editingShowcase || editingShowcase.id === DEFAULT_SHOWCASE_ID) return;
+    if (!editingShowcase) return;
 
     await deleteShowcase(editingShowcase);
   };
 
   const deleteShowcase = async (showcaseToDelete: ShowcaseForm) => {
-    if (showcaseToDelete.id === DEFAULT_SHOWCASE_ID) return;
-
+    // Remove the showcase and its products
     const nextShowcases = sortedShowcases.filter((showcase) => showcase.id !== showcaseToDelete.id);
-    const nextProducts = products.map((product) =>
-      product.showcaseId === showcaseToDelete.id ? { ...product, showcaseId: DEFAULT_SHOWCASE_ID } : product
-    );
+    const nextProducts = products.filter((product) => product.showcaseId !== showcaseToDelete.id);
 
     setShowcases(nextShowcases);
     writeLocalShowcases(nextShowcases);
@@ -772,7 +792,7 @@ export function AdminProductsPanel() {
                 onChange={(event) => setDraftBannerImageUrl(event.target.value)}
               />
               <CustomButton border="base" icon={<IoAdd />} onClick={() => addBannerImageUrl("draft")}>
-                Add
+                Add 
               </CustomButton>
             </div>
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-bg-base py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
@@ -1005,7 +1025,6 @@ export function AdminProductsPanel() {
                 variant="danger"
                 border="base"
                 fullWidth
-                disabled={editingShowcase.id === DEFAULT_SHOWCASE_ID}
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingShowcase}
               >

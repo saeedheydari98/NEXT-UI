@@ -55,13 +55,17 @@ export function CustomCard({
       <div>
         {title && <div className="mb-2 text-lg font-semibold">{title}</div>}
         <div>
-          {isLoading && (
-            <div className="flex items-center gap-2 text-text-secondary">
-              <Loading loading={loading} size={size} />
-              {loadingText && <span>{loadingText}</span>}
-            </div>
+          {isLoading ? (
+            <Loading
+              loading={loading === "spinner" ? "skeleton-card" : loading}
+              isLoading
+              className="w-full"
+            >
+              <div className="flex min-h-20 w-full flex-col gap-3">{children}</div>
+            </Loading>
+          ) : (
+            children
           )}
-          {!isLoading && children}
         </div>
       </div>
     </article>

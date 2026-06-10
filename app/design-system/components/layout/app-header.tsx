@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IoArrowBack, IoClose, IoMenu } from "react-icons/io5";
+import { IoClose, IoMenu } from "react-icons/io5";
 import Toggle from "../shared/toggle";
 import { useTheme } from "../../theme/provider";
 import { useScrollHeaderHide } from "@/hooks/useScrollHeaderHide";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { RiShoppingCartFill } from "react-icons/ri";
 
 const navItems = [
@@ -57,7 +56,6 @@ export function AppHeader() {
   const { mode, setMode } = useTheme();
   const hideHeader = useScrollHeaderHide(10);
   const isMobile = useIsMobile();
-  const { goBack, showBackButton } = useBackNavigation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
@@ -89,16 +87,6 @@ export function AppHeader() {
       <div className="flex justify-between items-center w-full  px-4">
         {/* Logo or brand name */}
         <div className="flex justify-center items-center gap-4">
-          {showBackButton && isMobile && (
-            <button
-              type="button"
-              onClick={goBack}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-ui-primary/30 text-xl text-text-primary transition-colors hover:bg-ui-primary/10"
-              aria-label="back"
-            >
-              <IoArrowBack aria-hidden="true" />
-            </button>
-          )}
           <div className="text-sm font-bold text-text-primary border-b-2 border-ui-secondary">
             LiveUiBook
           </div>

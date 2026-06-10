@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -21,14 +22,23 @@ export type ProductPayload = {
   sortOrder: number;
 };
 
+type ShowcasePayload = {
+  id: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+};
+
 const hasProductModel =
-  (prisma as any).product &&
-  typeof (prisma as any).product.findMany === "function";
+  prisma.product && typeof prisma.product.findMany === "function";
+
+const hasShowcaseModel =
+  prisma.showcase && typeof prisma.showcase.findMany === "function";
 
 function normalizeProduct(value: Partial<ProductPayload>, index: number): ProductPayload {
   return {
     id: value.id,
-    showcaseId: String(value.showcaseId ?? "default-showcase").trim(),
+    showcaseId: String(value.showcaseId ?? "").trim(),
     title: String(value.title ?? "").trim(),
     description: String(value.description ?? "").trim(),
     price: String(value.price ?? "").trim(),
@@ -50,6 +60,7 @@ function sortProducts(products: ProductPayload[]) {
 
 function getProductKey(product: Partial<ProductPayload>) {
   return [
+    String(product.showcaseId ?? "").trim().toLowerCase(),
     product.title,
     product.description,
     product.price,
@@ -75,45 +86,107 @@ function dedupeProducts(products: ProductPayload[]) {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const includeInactive = url.searchParams.get("all") === "1";
+  const id = url.searchParams.get("id") ?? null;
 
   if (!hasProductModel) {
-    return NextResponse.json({ ok: true, data: [] });
+    return NextResponse.json({ ok: true, data: { products: [], showcases: [], tree: [] } });
   }
 
   try {
-    const data = await (prisma as any).product.findMany({
+    if (id) {
+      const maybeIdNum = Number(id);
+      const where =
+        Number.isFinite(maybeIdNum) && !Number.isNaN(maybeIdNum)
+          ? { id: maybeIdNum }
+          : { id: String(id) };
+      const item = await prisma.product.findFirst({ where });
+      if (!item) {
+        return NextResponse.json({ ok: false, data: { product: null } }, { status: 404 });
+      }
+      return NextResponse.json({ ok: true, data: { product: item } });
+    }
+
+    const productsData = await prisma.product.findMany({
       where: includeInactive ? undefined : { active: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
+    const products = dedupeProducts(productsData as ProductPayload[]);
 
-    return NextResponse.json({ ok: true, data: dedupeProducts(data) });
+    const showcases = hasShowcaseModel
+      ? await prisma.showcase.findMany({
+          include: { products: true, banners: true },
+          orderBy: [{ createdAt: "asc" }],
+        })
+      : [];
+
+    return NextResponse.json({ ok: true, data: { products, showcases } });
   } catch (error) {
     console.error("Products GET error:", error);
-    return NextResponse.json({ ok: true, data: [] });
+    return NextResponse.json({ ok: true, data: { products: [], showcases: [] } });
   }
 }
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const products = Array.isArray(body.products) ? body.products : [];
+  const showcases = Array.isArray(body.showcases) ? (body.showcases as ShowcasePayload[]) : [];
   const normalized = dedupeProducts(
     products
       .map((item: Partial<ProductPayload>, index: number) => normalizeProduct(item, index))
       .filter((item: ProductPayload) => item.title && item.description && item.price)
   );
 
+  // All products must be assigned to a showcase for consistency
+  const missingShowcase = normalized.some((p) => !String(p.showcaseId ?? "").trim());
+  if (missingShowcase) {
+    return NextResponse.json({ ok: false, error: "showcaseId is required for every product" }, { status: 400 });
+  }
+
   if (!hasProductModel) {
     return NextResponse.json({ ok: true, data: sortProducts(normalized) });
   }
 
   try {
-    await (prisma as any).$transaction([
-      (prisma as any).product.deleteMany(),
-      ...(sortProducts(normalized).map((item) =>
-        (prisma as any).product.create({
+    const showcaseIds = [
+      ...new Set([
+        ...showcases.map((item) => String(item.id ?? "").trim()).filter(Boolean),
+        ...normalized.map((item) => String(item.showcaseId ?? "").trim()).filter(Boolean),
+      ]),
+    ];
+
+    const showcaseById = new Map(
+      showcases
+        .map((item) => [String(item.id ?? "").trim(), item] as const)
+        .filter(([id]) => Boolean(id))
+    );
+
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      for (const showcaseId of showcaseIds) {
+        if (!hasShowcaseModel) continue;
+        const meta = showcaseById.get(showcaseId);
+        await tx.showcase.upsert({
+          where: { id: showcaseId },
+          update: {
+            title: meta?.title ?? undefined,
+            description: meta?.description ?? undefined,
+            imageUrl: meta?.imageUrl ?? undefined,
+          },
+          create: {
+            id: showcaseId,
+            title: meta?.title ?? null,
+            description: meta?.description ?? null,
+            imageUrl: meta?.imageUrl ?? null,
+          },
+        });
+      }
+
+      await tx.product.deleteMany();
+
+      for (const item of sortProducts(normalized)) {
+        await tx.product.create({
           data: {
             title: item.title,
-            showcaseId: item.showcaseId || "default-showcase",
+            showcaseId: String(item.showcaseId ?? "").trim(),
             description: item.description,
             price: item.price,
             originalPrice: item.originalPrice || null,
@@ -126,11 +199,11 @@ export async function POST(request: Request) {
             active: item.active,
             sortOrder: item.sortOrder,
           },
-        })
-      )),
-    ]);
+        });
+      }
+    });
 
-    const data = await (prisma as any).product.findMany({
+    const data = await prisma.product.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
 

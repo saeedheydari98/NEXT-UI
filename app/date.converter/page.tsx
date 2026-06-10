@@ -10,6 +10,7 @@ import persian_fa from "react-date-object/locales/persian_fa";
 import arabic_en from "react-date-object/locales/arabic_en";
 import { CustomButton } from "../design-system/components/ui/button";
 import { CustomSelect } from "../design-system/components/ui/select";
+import { fetchJsonDeduped } from "@/lib/fetch-json";
 
 type HistoryItem = {
   id: number | string;
@@ -75,29 +76,42 @@ export default function Home() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchCalendars = async () => {
-      const res = await fetch("/api/calendars");
-      const data = await res.json();
-      setCalendars(data);
-      if (data.length > 0) {
-        setFromType(data[0].key);
-        setToType(data[1]?.key || data[0].key);
+    let cancelled = false;
+
+    const loadInitialData = async () => {
+      try {
+        const data = await fetchJsonDeduped<any[]>("/api/calendars");
+        if (cancelled) return;
+        setCalendars(data);
+        if (data.length > 0) {
+          setFromType(data[0].key);
+          setToType(data[1]?.key || data[0].key);
+        }
+      } catch {
+        // ignore calendar load errors
+      }
+
+      try {
+        const data = await fetchJsonDeduped<unknown>("/api/history?limit=20");
+        if (cancelled) return;
+        setHistory(mergeHistory(normalizeHistory(data), readLocalHistory()));
+      } catch {
+        if (!cancelled) {
+          setHistory((current) => mergeHistory(current, readLocalHistory()));
+        }
       }
     };
 
-    fetchCalendars();
-    fetchHistory();
+    void loadInitialData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch("/api/history?limit=20", { cache: "no-store" });
-      if (!res.ok) {
-        setHistory((current) => mergeHistory(current, readLocalHistory()));
-        return;
-      }
-
-      const data = await res.json();
+      const data = await fetchJsonDeduped<unknown>("/api/history?limit=20", { force: true });
       setHistory(mergeHistory(normalizeHistory(data), readLocalHistory()));
     } catch {
       setHistory((current) => mergeHistory(current, readLocalHistory()));

@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useProductsCatalog } from "@/lib/products-catalog-context";
 import { CustomModal } from "../design-system/components/ui/modal";
 import { BannerCarousel } from "./product-showcase/banner-carousel";
 import { ShowcaseSection } from "./product-showcase/showcase-section";
+import { ProductCatalogSkeleton } from "./product-showcase/catalog-skeletons";
 import type { Banner, Product, Showcase } from "./product-showcase/types";
 
-const PRODUCTS_STORAGE_KEY = "admin-products";
-const SHOWCASES_STORAGE_KEY = "admin-product-showcases";
 const BANNERS_STORAGE_KEY = "admin-product-banners";
-const DEFAULT_SHOWCASE_ID = "default-showcase";
+// No default showcase id: only use explicit showcase ids provided by data
 const CART_STORAGE_KEY = "product-cart";
 const CART_UPDATED_EVENT = "product-cart-updated";
 
@@ -37,24 +37,6 @@ function getDiscountPercent(product: Product) {
   return Number.isFinite(percent) && percent > 0 ? Math.round(percent) : 0;
 }
 
-function readLocalProducts(): Product[] {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(PRODUCTS_STORAGE_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function readLocalShowcases(): Showcase[] {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(SHOWCASES_STORAGE_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
 function readLocalBanners(): Banner[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(BANNERS_STORAGE_KEY) || "[]");
@@ -76,39 +58,6 @@ function readCart(): CartItem[] {
 function writeCart(items: CartItem[]) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   window.dispatchEvent(new Event(CART_UPDATED_EVENT));
-}
-
-function getProductKey(product: Partial<Product>) {
-  return [
-    product.title,
-    product.description,
-    product.price,
-    product.originalPrice,
-    product.discountPrice,
-    product.imageUrl,
-  ]
-    .map((value) => String(value ?? "").trim().toLowerCase())
-    .join("|");
-}
-
-function dedupeProducts(products: Product[]) {
-  const seen = new Set<string>();
-
-  return products.filter((product) => {
-    const key = getProductKey(product);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function mergeLocalShowcaseIds(apiProducts: Product[], localProducts: Product[]) {
-  const localByKey = new Map(localProducts.map((product) => [getProductKey(product), product.showcaseId ?? DEFAULT_SHOWCASE_ID]));
-
-  return apiProducts.map((product) => ({
-    ...product,
-    showcaseId: localByKey.get(getProductKey(product)) ?? product.showcaseId ?? DEFAULT_SHOWCASE_ID,
-  }));
 }
 
 function normalizeShowcase(item: Partial<Showcase>, index: number): Showcase {
@@ -134,19 +83,13 @@ function normalizeBanner(item: Partial<Banner> & { bannerUrl?: string }, index: 
 }
 
 function ensureShowcases(products: Product[], savedShowcases: Showcase[]) {
-  const byId = new Map(savedShowcases.map(normalizeShowcase).map((showcase) => [showcase.id, showcase]));
+  const normalized = savedShowcases.map(normalizeShowcase);
+  const byId = new Map(normalized.map((showcase) => [showcase.id, showcase]));
 
-  if (!byId.has(DEFAULT_SHOWCASE_ID)) {
-    byId.set(DEFAULT_SHOWCASE_ID, {
-      id: DEFAULT_SHOWCASE_ID,
-      title: "Main showcase",
-      active: true,
-      sortOrder: 1,
-    });
-  }
-
+  // Add showcases referenced by products if missing (ignore empty/undefined ids)
   for (const product of products) {
-    const showcaseId = product.showcaseId ?? DEFAULT_SHOWCASE_ID;
+    const showcaseId = product.showcaseId ?? "";
+    if (!showcaseId) continue;
     if (!byId.has(showcaseId)) {
       byId.set(showcaseId, {
         id: showcaseId,
@@ -161,10 +104,8 @@ function ensureShowcases(products: Product[], savedShowcases: Showcase[]) {
 }
 
 export function ProductShowcase() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [showcases, setShowcases] = useState<Showcase[]>([]);
+  const { products: catalogProducts, showcases: catalogShowcases, loading } = useProductsCatalog();
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [loading, setLoading] = useState(true);
   const [cartMessage, setCartMessage] = useState("");
   const [previewImage, setPreviewImage] = useState("");
   const dragRef = useRef({
@@ -174,37 +115,20 @@ export function ProductShowcase() {
   });
 
   useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const res = await fetch("/api/products", { cache: "no-store" });
-        const data = await res.json();
-        const apiProducts = Array.isArray(data?.data) ? dedupeProducts(data.data) : [];
-        const localProducts = dedupeProducts(readLocalProducts().filter((item) => item.active));
-        const nextProducts = apiProducts.length > 0 ? mergeLocalShowcaseIds(apiProducts, localProducts) : localProducts;
-        setProducts(nextProducts);
-        setShowcases(ensureShowcases(nextProducts, readLocalShowcases()));
-        setBanners(readLocalBanners().map(normalizeBanner));
-      } catch {
-        const localProducts = readLocalProducts().filter((item) => item.active);
-        setProducts(localProducts);
-        setShowcases(ensureShowcases(localProducts, readLocalShowcases()));
-        setBanners(readLocalBanners().map(normalizeBanner));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProducts();
+    setBanners(readLocalBanners().map(normalizeBanner));
   }, []);
 
   const sortedProducts = useMemo(
-    () => products.filter((item) => item.active).sort((a, b) => a.sortOrder - b.sortOrder),
-    [products]
+    () => catalogProducts.filter((item) => item.active).sort((a, b) => a.sortOrder - b.sortOrder),
+    [catalogProducts]
   );
 
   const sortedShowcases = useMemo(
-    () => ensureShowcases(sortedProducts, showcases).filter((showcase) => showcase.active),
-    [sortedProducts, showcases]
+    () =>
+      ensureShowcases(sortedProducts, catalogShowcases as Showcase[]).filter(
+        (showcase) => showcase.active
+      ),
+    [sortedProducts, catalogShowcases]
   );
 
   const displaySections = useMemo(() => {
@@ -216,7 +140,7 @@ export function ProductShowcase() {
       .map((showcase) => ({
         type: "showcase" as const,
         item: showcase,
-        products: sortedProducts.filter((product) => (product.showcaseId ?? DEFAULT_SHOWCASE_ID) === showcase.id),
+        products: sortedProducts.filter((product) => (product.showcaseId ?? "") === showcase.id),
         sortOrder: showcase.sortOrder,
       }))
       .filter((section) => section.products.length > 0);
@@ -277,20 +201,21 @@ export function ProductShowcase() {
           <div className="text-3xl font-bold">Products</div>
         </div>
 
-        {loading && <div className="text-sm text-text-secondary">Loading products...</div>}
+        {loading ? <ProductCatalogSkeleton /> : null}
 
-        {!loading && sortedProducts.length === 0 && (
+        {!loading && sortedProducts.length === 0 ? (
           <div className="rounded-lg border border-ui-primary/30 bg-bg-surface p-6 text-sm text-text-secondary">
             No active products are available.
           </div>
-        )}
+        ) : null}
 
-        {cartMessage && (
+        {cartMessage ? (
           <div className="rounded-md border border-ui-primary/30 bg-bg-surface px-4 py-2 text-sm font-semibold text-ui-primary">
             {cartMessage}
           </div>
-        )}
+        ) : null}
 
+        {!loading ? (
         <div className="flex flex-col gap-8">
           {displaySections.map((section) =>
             section.type === "banner" ? (
@@ -316,6 +241,7 @@ export function ProductShowcase() {
             )
           )}
         </div>
+        ) : null}
 
         <CustomModal
           open={Boolean(previewImage)}
