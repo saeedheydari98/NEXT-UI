@@ -115,7 +115,7 @@ export default function CartPage() {
 
   return (
     <main className="min-h-screen bg-bg-base text-text-primary">
-      <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
+      <section className="mx-auto flex w-full flex-col gap-6 px-4 py-8">
         <div className="flex items-center justify-between gap-3 border-b border-ui-primary/30 pb-4">
           <div>
             <div className="text-3xl font-bold">Cart</div>

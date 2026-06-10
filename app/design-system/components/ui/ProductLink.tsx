@@ -3,12 +3,15 @@
 import { useRouter } from "next/navigation";
 import React from "react";
 import { CustomButton } from "./button";
+import Icon from "react-multi-date-picker/components/icon";
 
 type Props = {
   productId: string | number;
   children?: React.ReactNode;
   variant?: Parameters<typeof CustomButton>[0]["variant"];
   size?: Parameters<typeof CustomButton>[0]["size"];
+  icon?: React.ReactNode;
+  iconAfter?: React.ReactNode;
   className?: string;
   externalHref?: string | null;
 };
@@ -19,6 +22,8 @@ export default function ProductLink({
   variant = "primary",
   size = "sm",
   className,
+  icon,
+  iconAfter,
   externalHref,
 }: Props) {
   const router = useRouter();
@@ -36,6 +41,8 @@ export default function ProductLink({
     <CustomButton
       type="button"
       className={className}
+      icon={icon}
+      iconAfter={iconAfter}
       variant={variant}
       size={size}
       rounded="md"

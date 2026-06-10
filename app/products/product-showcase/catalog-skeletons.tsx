@@ -178,7 +178,7 @@ export function ProductDetailSkeleton() {
 
 export function ShowcaseGridSkeleton() {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
+    <div className=" flex w-full flex-col gap-4 p-4">
       <Loading loading="skeleton-item" isLoading>
         <div className="text-2xl font-bold">Showcase title placeholder</div>
       </Loading>

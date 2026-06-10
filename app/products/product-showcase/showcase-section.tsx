@@ -1,12 +1,13 @@
 "use client";
 
-import { IoBagAddOutline, IoBagHandleOutline } from "react-icons/io5";
+import { IoBagAddOutline, IoBagHandleOutline} from "react-icons/io5";
 import type { MouseEvent } from "react";
 import { CustomButton } from "../../design-system/components/ui/button";
 import { CustomTag } from "../../design-system/components/ui/tag";
 import type { Product, Showcase } from "./types";
 import ShowcaseLink from "../../design-system/components/ui/ShowcaseLink";
 import ProductLink from "../../design-system/components/ui/ProductLink";
+import { FiExternalLink } from "react-icons/fi";
 
 type ShowcaseSectionProps = {
   showcase: Showcase;
@@ -76,7 +77,7 @@ export function ShowcaseSection({
                 )}
                 {product.badge && (
                   <div className="absolute left-2 top-2">
-                    <CustomTag size="sm" rounded="full" border="base">
+                    <CustomTag size="xs" rounded="full" border="base">
                       {product.badge}
                     </CustomTag>
                   </div>
@@ -96,7 +97,7 @@ export function ShowcaseSection({
                     <div className="text-sm font-semibold text-ui-primary">{formatPrice(getFinalPrice(product))}</div>
                   </div>
                   {getDiscountPercent(product) > 0 && (
-                    <CustomTag size="sm" rounded="full" border="base">
+                    <CustomTag size="xs" rounded="full" border="base">
                       {getDiscountPercent(product)}% off
                     </CustomTag>
                   )}
@@ -115,19 +116,13 @@ export function ShowcaseSection({
                 icon={<IoBagAddOutline />}
                 onClick={() => onAddToCart(product)}
               >
-                Add to c
+                Add to cart
               </CustomButton>
-              {(() => {
-                const viewHref = product.ctaHref && product.ctaHref !== "#" ? product.ctaHref : `/products/${product.id}`;
-
-                // External links (ctaHref) open full page; internal product pages use Link for client navigation
-                return (
-                  <ProductLink productId={product.id ?? String(product.id)} externalHref={product.ctaHref ?? null}>
-                    {product.ctaLabel || "View"}
-                  </ProductLink>
-                );
-              })()}
-            
+              <div className="flex flex-1 gap-2 w-full">
+                <ProductLink iconAfter={<FiExternalLink />} className="w-full flex justify-center items-center gap-1" productId={product.id ?? String(product.id)}>
+                  {product.ctaLabel || "View"}  
+                </ProductLink>
+              </div>
             </div>
           </article>
         ))}

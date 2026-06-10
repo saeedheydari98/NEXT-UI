@@ -87,7 +87,7 @@ export function AppHeader() {
       <div className="flex justify-between items-center w-full  px-4">
         {/* Logo or brand name */}
         <div className="flex justify-center items-center gap-4">
-          <div className="text-sm font-bold text-text-primary border-b-2 border-ui-secondary">
+          <div className="text-sm font-bold text-admin-admin-800 border-b-2 border-ui-secondary">
             LiveUiBook
           </div>
           <Toggle

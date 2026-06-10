@@ -180,7 +180,7 @@ export default function ProductPage() {
             <div className="flex flex-col gap-3">
               {product.badge ? (
                 <div>
-                  <CustomTag size="sm" rounded="full" border="base">
+                  <CustomTag size="xs" rounded="full" border="base">
                     {product.badge}
                   </CustomTag>
                 </div>
@@ -210,7 +210,7 @@ export default function ProductPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="text-3xl font-bold text-ui-primary">{finalPrice || "No price"}</div>
                 {discountPercent > 0 ? (
-                  <CustomTag size="sm" rounded="full" border="base">
+                  <CustomTag size="xs" rounded="full" border="base">
                     {discountPercent}% off
                   </CustomTag>
                 ) : null}
