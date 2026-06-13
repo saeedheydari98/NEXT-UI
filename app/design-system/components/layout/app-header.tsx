@@ -8,12 +8,16 @@ import { useTheme } from "../../theme/provider";
 import { useScrollHeaderHide } from "@/hooks/useScrollHeaderHide";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { RiShoppingCartFill } from "react-icons/ri";
+import {
+  ADMIN_ACCESS_UPDATED_EVENT,
+  isAdminAccessUnlocked,
+} from "@/lib/admin-access";
 
 const navItems = [
   { href: "/", label: "home", tone: "bg-admin-admin-800 text-admin-admin-100" },
   { href: "/products", label: "products", tone: "bg-admin-admin-800 text-admin-admin-100" },
   { href: "/date.converter", label: "date converter", tone: "bg-admin-admin-800 text-admin-admin-100" },
-  { href: "/panel/admin", label: "admin panel", tone: "bg-admin-admin-800 text-admin-admin-100" },
+  { href: "/panel/admin", label: "admin panel", tone: "bg-admin-admin-800 text-admin-admin-100", adminOnly: true },
   { href: "/panel/user", label: "user panel", tone: "bg-admin-admin-800 text-admin-admin-100" },
 ];
 
@@ -58,22 +62,30 @@ export function AppHeader() {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
 
   useEffect(() => {
     const syncCartCount = () => setCartCount(readCartCount());
+    const syncAdminAccess = () => setHasAdminAccess(isAdminAccessUnlocked());
 
     syncCartCount();
+    syncAdminAccess();
     window.addEventListener("storage", syncCartCount);
+    window.addEventListener("storage", syncAdminAccess);
     window.addEventListener(CART_UPDATED_EVENT, syncCartCount);
+    window.addEventListener(ADMIN_ACCESS_UPDATED_EVENT, syncAdminAccess);
 
     return () => {
       window.removeEventListener("storage", syncCartCount);
+      window.removeEventListener("storage", syncAdminAccess);
       window.removeEventListener(CART_UPDATED_EVENT, syncCartCount);
+      window.removeEventListener(ADMIN_ACCESS_UPDATED_EVENT, syncAdminAccess);
     };
   }, []);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || hasAdminAccess);
 
   return (
     <header
@@ -101,7 +113,7 @@ export function AppHeader() {
         {/* Desktop Navigation */}
         {!isMobile && (
           <nav className="flex justify-center items-center gap-3">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <Link
                 key={item.href}
                 className={`rounded-md px-4 py-2 text-sm font-semibold transition-all hover:scale-105 ${item.tone}`}
@@ -132,7 +144,7 @@ export function AppHeader() {
       {isMobile && isMenuOpen && (
         <div className="absolute top-20 w-1/2  right-0 z-20 bg-admin-admin-50 border-b border-ui-primary/20 backdrop-blur-md shadow-lg">
           <div className="flex flex-col p-4 gap-2  mx-auto">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <Link
                 key={item.href}
                 className={`rounded-md px-4 py-3 text-sm font-semibold transition-all hover:scale-105 text-center backdrop-blur-md bg-bg-base/80 border border-ui-primary/20 ${item.tone}`}

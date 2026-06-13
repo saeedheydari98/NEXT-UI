@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/app/design-system/theme/provider";
+import { UserProfilePanel } from "./user-profile-panel";
 import { UserThemePanel } from "./user-theme-panel";
 
 export default function UserPanelPage() {
@@ -14,8 +15,13 @@ export default function UserPanelPage() {
         color: theme.tokens.colors.text.primary,
       }}
     >
-      <div className="mb-4 text-2xl text-user-user-user font-bold">User Theme Control</div>
-      <UserThemePanel />
+      <div className="flex flex-col gap-2">
+        <div className="text-2xl text-user-user-user font-bold">User Control</div>
+        <section className="flex flex-col md:flex-row  w-full gap-4">
+          <UserThemePanel />
+          <UserProfilePanel />
+        </section>  
+      </div>
     </main>
   );
 }

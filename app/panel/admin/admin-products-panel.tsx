@@ -51,6 +51,7 @@ const createProduct = (): ProductForm => ({
 
 
 function readLocalProducts(): ProductForm[] {
+  if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(localStorage.getItem(PRODUCTS_STORAGE_KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
@@ -64,6 +65,7 @@ function writeLocalProducts(products: ProductForm[]) {
 }
 
 function readLocalShowcases(): ShowcaseForm[] {
+  if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(localStorage.getItem(SHOWCASES_STORAGE_KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
@@ -77,6 +79,7 @@ function writeLocalShowcases(showcases: ShowcaseForm[]) {
 }
 
 function readLocalBanners(): BannerForm[] {
+  if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(localStorage.getItem(BANNERS_STORAGE_KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
@@ -214,9 +217,15 @@ function formatPrice(value?: string) {
 }
 
 export function AdminProductsPanel() {
-  const [products, setProducts] = useState<ProductForm[]>([]);
-  const [showcases, setShowcases] = useState<ShowcaseForm[]>([]);
-  const [banners, setBanners] = useState<BannerForm[]>([]);
+  const [products, setProducts] = useState<ProductForm[]>(() =>
+    readLocalProducts().map(normalizeProduct)
+  );
+  const [showcases, setShowcases] = useState<ShowcaseForm[]>(() =>
+    ensureShowcases(readLocalProducts().map(normalizeProduct), readLocalShowcases())
+  );
+  const [banners, setBanners] = useState<BannerForm[]>(() =>
+    readLocalBanners().map(normalizeBanner)
+  );
   const [draftProduct, setDraftProduct] = useState<ProductForm>(createProduct);
   const [draftShowcase, setDraftShowcase] = useState<ShowcaseForm>(createShowcase);
   const [draftBanner, setDraftBanner] = useState<BannerForm>(createBanner);
@@ -229,6 +238,7 @@ export function AdminProductsPanel() {
   const [isBannerOpen, setIsBannerOpen] = useState(false);
   const [isEditBannerOpen, setIsEditBannerOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const [previewImage, setPreviewImage] = useState("");
@@ -284,6 +294,10 @@ export function AdminProductsPanel() {
         setProducts(localProducts);
         setShowcases(nextShowcases);
         setBanners(nextBanners);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
@@ -714,6 +728,7 @@ export function AdminProductsPanel() {
               banner={section.item}
               onEdit={openEditBannerModal}
               onPreview={openImagePreview}
+              isLoading={loading}
             />
           ) : (
             <AdminShowcaseList
@@ -728,6 +743,7 @@ export function AdminProductsPanel() {
               onDragMove={moveProductRailDrag}
               onDragStop={stopProductRailDrag}
               formatPrice={formatPrice}
+              isLoading={loading}
             />
           )
         )}

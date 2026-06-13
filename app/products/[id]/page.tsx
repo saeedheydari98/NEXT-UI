@@ -9,10 +9,21 @@ import { CustomButton } from "@/app/design-system/components/ui/button";
 import { CustomTag } from "@/app/design-system/components/ui/tag";
 import { StarRating } from "@/app/design-system/components/ui/star-rating";
 import { ProductReviewsSection, type ProductReview } from "./product-reviews-section";
-import { ProductDetailSkeleton } from "@/app/products/product-showcase/catalog-skeletons";
+import Loading from "@/app/design-system/components/loading/loading";
 
 const CART_STORAGE_KEY = "product-cart";
 const CART_UPDATED_EVENT = "product-cart-updated";
+const LOADING_PRODUCT: ProductRecord = {
+  id: "loading-product",
+  title: "Product title placeholder text",
+  description: "Description line one for layout sizing\nDescription line two continues here",
+  price: "$2,499",
+  originalPrice: "$2,899",
+  discountPercent: 15,
+  badge: "Featured",
+  active: true,
+  sortOrder: 1,
+};
 
 function getFinalPrice(product: ProductRecord) {
   return product.discountPrice || product.price;
@@ -134,7 +145,112 @@ export default function ProductPage() {
   if (catalogLoading && !product) {
     return (
       <main className="min-h-screen bg-bg-base text-text-primary">
-        <ProductDetailSkeleton />
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 py-8 px-4">
+          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-bg-surface p-6 shadow-sm lg:flex-row lg:items-start">
+            <div className="flex w-full flex-col gap-4 lg:max-w-md lg:shrink-0">
+              <Loading loading="skeleton-item" isLoading>
+                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-[#e5e5e5] bg-[#eeeeee]">
+                  <IoBagHandleOutline className="text-6xl text-neutral-400" aria-hidden="true" />
+                </div>
+              </Loading>
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col gap-5">
+              <Loading loading="skeleton-item" isLoading>
+                <div>
+                  <CustomTag size="xs" rounded="full" border="base">
+                    {LOADING_PRODUCT.badge}
+                  </CustomTag>
+                </div>
+              </Loading>
+              <Loading loading="skeleton-item" isLoading>
+                <div className="text-3xl font-bold leading-tight text-text-primary">
+                  {LOADING_PRODUCT.title}
+                </div>
+              </Loading>
+              <div className="flex items-center gap-3">
+                <Loading loading="skeleton-item" isLoading>
+                  <StarRating value={4} size="md" />
+                </Loading>
+                <Loading loading="skeleton-item" isLoading>
+                  <span className="text-sm font-semibold text-text-primary">4.8</span>
+                </Loading>
+                <Loading loading="skeleton-item" isLoading>
+                  <span className="text-sm text-text-secondary">(128 reviews)</span>
+                </Loading>
+              </div>
+              <div className="flex flex-col gap-1 rounded-xl border border-[#e5e5e5] bg-bg-base p-4">
+                <Loading loading="skeleton-item" isLoading>
+                  <div className="text-sm text-red-admin-500 line-through">
+                    {LOADING_PRODUCT.originalPrice}
+                  </div>
+                </Loading>
+                <Loading loading="skeleton-item" isLoading>
+                  <div className="text-3xl font-bold text-ui-primary">{LOADING_PRODUCT.price}</div>
+                </Loading>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Loading loading="skeleton-item" isLoading>
+                  <div className="text-sm font-bold text-text-primary">About this product</div>
+                </Loading>
+                <Loading loading="skeleton-item" isLoading>
+                  <div className="text-sm leading-7 text-text-secondary whitespace-pre-wrap">
+                    {LOADING_PRODUCT.description}
+                  </div>
+                </Loading>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Loading loading="skeleton-item" isLoading>
+                  <CustomButton type="button" variant="success" border="base" icon={<IoBagAddOutline />}>
+                    Add to cart
+                  </CustomButton>
+                </Loading>
+                <Loading loading="skeleton-item" isLoading>
+                  <CustomButton type="button" variant="primary">
+                    See reviews
+                  </CustomButton>
+                </Loading>
+              </div>
+            </div>
+          </section>
+
+          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-bg-surface p-6 shadow-sm">
+            <div className="flex flex-col gap-2 border-b border-[#e5e5e5] pb-6">
+              <Loading loading="skeleton-item" isLoading>
+                <div className="text-2xl font-bold text-text-primary">Customer reviews</div>
+              </Loading>
+              <Loading loading="skeleton-item" isLoading>
+                <div className="text-sm text-text-secondary">
+                  Read what shoppers think about this product.
+                </div>
+              </Loading>
+            </div>
+            <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
+              <div className="flex w-full flex-col gap-5 lg:max-w-xs">
+                <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-bg-base p-5">
+                  <Loading loading="skeleton-item" isLoading>
+                    <div className="text-4xl font-bold">4.8</div>
+                  </Loading>
+                  <Loading loading="skeleton-item" isLoading>
+                    <StarRating value={4} size="lg" />
+                  </Loading>
+                  <Loading loading="skeleton-item" isLoading>
+                    <div className="text-sm text-text-secondary">128 rated reviews</div>
+                  </Loading>
+                </div>
+              </div>
+              <div className="flex flex-1 flex-col gap-4">
+                <div className="flex flex-col gap-4 rounded-xl border border-[#e5e5e5] bg-bg-base p-5">
+                  <Loading loading="skeleton-item" isLoading>
+                    <div className="text-lg font-bold">Write a review</div>
+                  </Loading>
+                  <Loading loading="skeleton-item" isLoading>
+                    <div className="min-h-28 w-full rounded-lg border border-[#e5e5e5] bg-bg-surface" />
+                  </Loading>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
       </main>
     );
   }

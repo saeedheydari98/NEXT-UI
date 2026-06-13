@@ -5,10 +5,11 @@ import { useProductsCatalog } from "@/lib/products-catalog-context";
 import { CustomModal } from "../design-system/components/ui/modal";
 import { BannerCarousel } from "./product-showcase/banner-carousel";
 import { ShowcaseSection } from "./product-showcase/showcase-section";
-import { ProductCatalogSkeleton } from "./product-showcase/catalog-skeletons";
 import type { Banner, Product, Showcase } from "./product-showcase/types";
 
 const BANNERS_STORAGE_KEY = "admin-product-banners";
+const PRODUCTS_STORAGE_KEY = "admin-products";
+const SHOWCASES_STORAGE_KEY = "admin-product-showcases";
 // No default showcase id: only use explicit showcase ids provided by data
 const CART_STORAGE_KEY = "product-cart";
 const CART_UPDATED_EVENT = "product-cart-updated";
@@ -38,8 +39,29 @@ function getDiscountPercent(product: Product) {
 }
 
 function readLocalBanners(): Banner[] {
+  if (typeof window === "undefined") return [];
   try {
     const parsed = JSON.parse(localStorage.getItem(BANNERS_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function readLocalProducts(): Product[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PRODUCTS_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function readLocalShowcases(): Showcase[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SHOWCASES_STORAGE_KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
@@ -105,7 +127,9 @@ function ensureShowcases(products: Product[], savedShowcases: Showcase[]) {
 
 export function ProductShowcase() {
   const { products: catalogProducts, showcases: catalogShowcases, loading } = useProductsCatalog();
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<Banner[]>(() => readLocalBanners().map(normalizeBanner));
+  const [localProducts, setLocalProducts] = useState<Product[]>(() => readLocalProducts());
+  const [localShowcases, setLocalShowcases] = useState<Showcase[]>(() => readLocalShowcases());
   const [cartMessage, setCartMessage] = useState("");
   const [previewImage, setPreviewImage] = useState("");
   const dragRef = useRef({
@@ -116,6 +140,8 @@ export function ProductShowcase() {
 
   useEffect(() => {
     setBanners(readLocalBanners().map(normalizeBanner));
+    setLocalProducts(readLocalProducts());
+    setLocalShowcases(readLocalShowcases());
   }, []);
 
   const sortedProducts = useMemo(
@@ -147,6 +173,34 @@ export function ProductShowcase() {
 
     return [...bannerSections, ...showcaseSections].sort((a, b) => a.sortOrder - b.sortOrder);
   }, [banners, sortedProducts, sortedShowcases]);
+
+  const loadingSections = useMemo(() => {
+    const sourceProducts = sortedProducts.length > 0 ? sortedProducts : localProducts;
+    const sourceShowcases =
+      sortedShowcases.length > 0 ? (sortedShowcases as Showcase[]) : localShowcases;
+    const activeProducts = sourceProducts
+      .filter((item) => item.active !== false)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const localSortedShowcases = ensureShowcases(
+      activeProducts,
+      sourceShowcases as Showcase[]
+    ).filter((showcase) => showcase.active !== false);
+
+    const bannerSections = banners
+      .filter((banner) => banner.active && banner.imageUrls.length > 0)
+      .map((banner) => ({ type: "banner" as const, item: banner, sortOrder: banner.sortOrder }));
+
+    const showcaseSections = localSortedShowcases
+      .map((showcase) => ({
+        type: "showcase" as const,
+        item: showcase,
+        products: activeProducts.filter((product) => (product.showcaseId ?? "") === showcase.id),
+        sortOrder: showcase.sortOrder,
+      }))
+      .filter((section) => section.products.length > 0);
+
+    return [...bannerSections, ...showcaseSections].sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [banners, localProducts, localShowcases, sortedProducts, sortedShowcases]);
 
   const startProductRailDrag = (event: React.MouseEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest("button, a")) {
@@ -201,7 +255,35 @@ export function ProductShowcase() {
           <div className="text-3xl font-bold">Products</div>
         </div>
 
-        {loading ? <ProductCatalogSkeleton /> : null}
+        {loading ? (
+          <div className="flex flex-col gap-8">
+            {loadingSections.map((section) =>
+              section.type === "banner" ? (
+                <BannerCarousel
+                  key={`loading-banner-${section.item.id}`}
+                  banner={section.item}
+                  onPreview={() => undefined}
+                  isLoading
+                />
+              ) : (
+                <ShowcaseSection
+                  key={`loading-showcase-${section.item.id}`}
+                  showcase={section.item}
+                  products={section.products}
+                  onAddToCart={() => undefined}
+                  onPreview={() => undefined}
+                  onDragStart={() => undefined}
+                  onDragMove={() => undefined}
+                  onDragStop={() => undefined}
+                  formatPrice={(value) => value || ""}
+                  getFinalPrice={(product) => product.discountPrice || product.price}
+                  getDiscountPercent={(product) => Number(product.discountPercent) || 0}
+                  isLoading
+                />
+              )
+            )}
+          </div>
+        ) : null}
 
         {!loading && sortedProducts.length === 0 ? (
           <div className="rounded-lg border border-ui-primary/30 bg-bg-surface p-6 text-sm text-text-secondary">

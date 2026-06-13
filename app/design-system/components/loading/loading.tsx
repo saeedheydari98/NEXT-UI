@@ -35,21 +35,32 @@ function SkeletonShell({
   className?: string;
   children?: React.ReactNode;
 }) {
+  const backgroundColor = tone === "card" ? "#f3f3f3" : "#eeeeee";
+
   return (
     <div
+      aria-busy="true"
+      aria-live="polite"
       className={cx(
-        "relative overflow-hidden",
-        tone === "card" ? "bg-ui-primary/10" : "bg-ui-primary/20",
+        "pointer-events-none relative overflow-hidden",
+        tone === "card" ? "shadow-sm" : "",
         radiusVariants.lg,
         className
       )}
+      style={{ backgroundColor, filter: "grayscale(1)" }}
     >
       <motion.div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(90deg, transparent 0%, #fafafa 50%, transparent 100%)",
+        }}
         animate={{ x: ["-100%", "100%"] }}
-        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+        transition={{ repeat: Infinity, duration: tone === "card" ? 3.2 : 2.6, ease: "linear" }}
       />
-      <div className="invisible">{children}</div>
+      <div className="invisible" aria-hidden="true">
+        {children}
+      </div>
     </div>
   );
 }

@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { IoBagHandleOutline, IoTrashOutline } from "react-icons/io5";
+import { IoBagHandleOutline, IoCardOutline, IoTrashOutline } from "react-icons/io5";
 import { CustomButton } from "../design-system/components/ui/button";
+import { CustomInput } from "../design-system/components/ui/input";
 import { CustomModal } from "../design-system/components/ui/modal";
+import {
+  EMPTY_USER_PROFILE,
+  isUserProfileComplete,
+  readUserProfile,
+  writeUserProfile,
+  type UserProfile,
+} from "@/lib/user-profile";
 
 type CartItem = {
   id?: number | string;
@@ -63,9 +71,17 @@ function getDiscountPercent(item: CartItem) {
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [previewImage, setPreviewImage] = useState("");
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileDraft, setProfileDraft] = useState<UserProfile>(EMPTY_USER_PROFILE);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [checkoutMessage, setCheckoutMessage] = useState("");
 
   useEffect(() => {
     setItems(readCart());
+    const savedProfile = readUserProfile();
+    setProfile(savedProfile);
+    setProfileDraft(savedProfile ?? EMPTY_USER_PROFILE);
   }, []);
 
   const totalItems = useMemo(
@@ -113,6 +129,45 @@ export default function CartPage() {
     setPreviewImage(imageUrl);
   };
 
+  const updateProfileDraft = (patch: Partial<UserProfile>) => {
+    setProfileDraft((current) => ({ ...current, ...patch }));
+    setProfileError("");
+  };
+
+  const saveProfileDraft = () => {
+    if (!isUserProfileComplete(profileDraft)) {
+      setProfileError("All profile fields are required.");
+      return;
+    }
+
+    const nextProfile = {
+      firstName: profileDraft.firstName.trim(),
+      lastName: profileDraft.lastName.trim(),
+      nationalId: profileDraft.nationalId.trim(),
+      phone: profileDraft.phone.trim(),
+    };
+
+    writeUserProfile(nextProfile);
+    setProfile(nextProfile);
+    setProfileDraft(nextProfile);
+    setIsProfileModalOpen(false);
+    setCheckoutMessage("Profile saved. You can continue checkout.");
+  };
+
+  const continueCheckout = () => {
+    const savedProfile = readUserProfile();
+
+    if (!savedProfile) {
+      setProfileDraft(profile ?? EMPTY_USER_PROFILE);
+      setProfileError("");
+      setIsProfileModalOpen(true);
+      return;
+    }
+
+    setProfile(savedProfile);
+    setCheckoutMessage("Profile found. You can continue checkout.");
+  };
+
   return (
     <main className="min-h-screen bg-bg-base text-text-primary">
       <section className="mx-auto flex w-full flex-col gap-6 px-4 py-8">
@@ -127,11 +182,27 @@ export default function CartPage() {
             )}
           </div>
           {items.length > 0 && (
-            <CustomButton variant="danger" border="base" size="sm" onClick={clearCart}>
-              Clear cart
-            </CustomButton>
+            <div className="flex flex-wrap items-center gap-2">
+              <CustomButton
+                border="base"
+                size="sm"
+                icon={<IoCardOutline />}
+                onClick={continueCheckout}
+              >
+                Continue checkout
+              </CustomButton>
+              <CustomButton variant="danger" border="base" size="sm" onClick={clearCart}>
+                Clear cart
+              </CustomButton>
+            </div>
           )}
         </div>
+
+        {checkoutMessage ? (
+          <div className="rounded-md border border-ui-primary/30 bg-bg-surface px-4 py-2 text-sm font-semibold text-ui-primary">
+            {checkoutMessage}
+          </div>
+        ) : null}
 
         {items.length === 0 ? (
           <div className="rounded-lg border border-ui-primary/30 bg-bg-surface p-6 text-sm text-text-secondary">
@@ -221,6 +292,72 @@ export default function CartPage() {
                 className="max-h-[75vh] w-full object-contain"
               />
             )}
+          </div>
+        </CustomModal>
+
+        <CustomModal
+          open={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          title="Checkout profile"
+          closeText="Close"
+          rounded="lg"
+          border="base"
+          shadow="lg"
+        >
+          <div className="flex flex-col gap-3">
+            <div className="text-sm text-text-secondary">
+              Please register your required profile information before checkout.
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-bold text-text-primary">First name</div>
+              <CustomInput
+                value={profileDraft.firstName}
+                placeholder="نام"
+                required
+                aria-label="First name"
+                onChange={(event) => updateProfileDraft({ firstName: event.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-bold text-text-primary">Last name</div>
+              <CustomInput
+                value={profileDraft.lastName}
+                placeholder="نام خانوادگی"
+                required
+                aria-label="Last name"
+                onChange={(event) => updateProfileDraft({ lastName: event.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-bold text-text-primary">National ID</div>
+              <CustomInput
+                value={profileDraft.nationalId}
+                placeholder="کد ملی"
+                required
+                inputMode="numeric"
+                aria-label="National ID"
+                onChange={(event) => updateProfileDraft({ nationalId: event.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-bold text-text-primary">Phone</div>
+              <CustomInput
+                value={profileDraft.phone}
+                placeholder="شماره تماس"
+                required
+                inputMode="tel"
+                aria-label="Phone"
+                onChange={(event) => updateProfileDraft({ phone: event.target.value })}
+              />
+            </div>
+            {profileError ? (
+              <div className="rounded-md border border-red-admin-500/30 bg-bg-base px-3 py-2 text-sm font-semibold text-red-admin-500">
+                {profileError}
+              </div>
+            ) : null}
+            <CustomButton border="base" fullWidth icon={<IoCardOutline />} onClick={saveProfileDraft}>
+              Save and continue
+            </CustomButton>
           </div>
         </CustomModal>
       </section>

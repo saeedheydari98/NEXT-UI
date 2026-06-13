@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Loading from "@/app/design-system/components/loading/loading";
 import type { Banner } from "./types";
 
 type BannerCarouselProps = {
   banner: Banner;
   onPreview: (imageUrl?: string) => void;
+  isLoading?: boolean;
 };
 
-export function BannerCarousel({ banner, onPreview }: BannerCarouselProps) {
+export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
@@ -26,6 +28,23 @@ export function BannerCarousel({ banner, onPreview }: BannerCarouselProps) {
   }, [banner.imageUrls.length]);
 
   const activeImage = banner.imageUrls[activeIndex] ?? banner.imageUrls[0];
+
+  if (isLoading) {
+    return (
+      <section className="flex flex-col gap-2">
+        <Loading loading="skeleton-item" isLoading>
+          <div className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-[#e5e5e5]" />
+        </Loading>
+        <div className="flex justify-center gap-2">
+          {banner.imageUrls.map((imageUrl, index) => (
+            <Loading key={`${imageUrl}-${index}`} loading="skeleton-item" isLoading>
+              <div className={index === activeIndex ? "h-2 w-4 rounded-full" : "h-2 w-2 rounded-full"} />
+            </Loading>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   if (!activeImage) return null;
 
