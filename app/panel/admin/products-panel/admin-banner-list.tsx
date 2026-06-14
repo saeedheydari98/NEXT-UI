@@ -17,7 +17,7 @@ export function AdminBannerList({ banner, onEdit, onPreview, isLoading = false }
 
   return (
     <div
-      className={`flex flex-col gap-3 rounded-lg border bg-bg-base p-4 ${
+      className={`flex flex-col gap-3 rounded-lg border bg-[var(--surface-admin-card)] p-4 ${
         isLoading ? "border-[#e5e5e5]" : "border-ui-primary/30"
       }`}
     >
@@ -45,7 +45,7 @@ export function AdminBannerList({ banner, onEdit, onPreview, isLoading = false }
       </div>
 
       <div
-        className={`flex min-h-36 items-center justify-center overflow-hidden rounded-lg border bg-bg-surface ${
+        className={`flex min-h-36 items-center justify-center overflow-hidden rounded-lg border bg-[var(--surface-admin-media)] ${
           isLoading ? "border-[#e5e5e5]" : "border-ui-primary/20"
         }`}
       >

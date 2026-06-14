@@ -199,13 +199,13 @@ export default function CartPage() {
         </div>
 
         {checkoutMessage ? (
-          <div className="rounded-md border border-ui-primary/30 bg-bg-surface px-4 py-2 text-sm font-semibold text-ui-primary">
+          <div className="rounded-md border border-ui-primary/30 bg-[var(--surface-user-card)] px-4 py-2 text-sm font-semibold text-ui-primary">
             {checkoutMessage}
           </div>
         ) : null}
 
         {items.length === 0 ? (
-          <div className="rounded-lg border border-ui-primary/30 bg-bg-surface p-6 text-sm text-text-secondary">
+          <div className="rounded-lg border border-ui-primary/30 bg-[var(--surface-user-card)] p-6 text-sm text-text-secondary">
             Your cart is empty.
           </div>
         ) : (
@@ -213,11 +213,11 @@ export default function CartPage() {
             {items.map((item, index) => (
               <article
                 key={String(item.id ?? `${item.title}-${index}`)}
-                className="grid gap-4 rounded-lg border border-ui-primary/30 bg-bg-surface p-4 sm:grid-cols-[120px_1fr_auto]"
+                className="grid gap-4 rounded-lg border border-ui-primary/30 bg-[var(--surface-user-card)] p-4 sm:grid-cols-[120px_1fr_auto]"
               >
                 <button
                   type="button"
-                  className="flex h-28 items-center justify-center overflow-hidden rounded-md bg-ui-primary/10"
+                  className="flex h-28 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-user-media)]"
                   onClick={() => openImagePreview(item.imageUrl)}
                   disabled={!item.imageUrl}
                   aria-label="Open product image"

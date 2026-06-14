@@ -78,7 +78,7 @@ export function ProductReviewsSection({
   return (
     <section
       id="product-reviews"
-      className="flex w-full flex-col gap-8 rounded-2xl border border-ui-primary/25 bg-bg-surface p-6 shadow-sm"
+      className="flex w-full flex-col gap-8 rounded-2xl border border-ui-primary/25 bg-[var(--surface-user-soft)] p-6 shadow-sm"
     >
       <div className="flex flex-col gap-2 border-b border-ui-primary/15 pb-6">
         <div className="text-2xl font-bold text-text-primary">Customer reviews</div>
@@ -89,7 +89,7 @@ export function ProductReviewsSection({
 
       <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
         <aside className="flex w-full flex-col gap-5 lg:max-w-xs lg:shrink-0">
-          <div className="flex flex-col gap-3 rounded-xl border border-ui-primary/20 bg-bg-base p-5">
+          <div className="flex flex-col gap-3 rounded-xl border border-ui-primary/20 bg-[var(--surface-user-card)] p-5">
             <div className="text-4xl font-bold leading-none text-text-primary">
               {avgRating > 0 ? avgRating.toFixed(1) : "—"}
             </div>
@@ -111,7 +111,7 @@ export function ProductReviewsSection({
               return (
                 <div key={item.stars} className="flex items-center gap-3">
                   <div className="w-12 text-xs font-medium text-text-secondary">{item.stars} star</div>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-ui-primary/10">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--surface-user-media)]">
                     <div
                       className="h-full rounded-full bg-amber-400 transition-all"
                       style={{ width }}
@@ -125,7 +125,7 @@ export function ProductReviewsSection({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col gap-8">
-          <div className="flex flex-col gap-4 rounded-xl border border-ui-primary/20 bg-bg-base p-5">
+          <div className="flex flex-col gap-4 rounded-xl border border-ui-primary/20 bg-[var(--surface-user-card)] p-5">
             <div className="text-lg font-bold text-text-primary">Write a review</div>
 
             <div className="flex flex-col gap-2">
@@ -165,7 +165,7 @@ export function ProductReviewsSection({
                 value={text}
                 onChange={(event) => onTextChange(event.target.value)}
                 placeholder="What did you like or dislike? How was the quality and value?"
-                className="min-h-28 w-full resize-y rounded-lg border border-ui-primary/30 bg-bg-surface p-3 text-sm text-text-primary outline-none focus:border-ui-primary"
+                className="min-h-28 w-full resize-y rounded-lg border border-ui-primary/30 bg-[var(--surface-user-soft)] p-3 text-sm text-text-primary outline-none focus:border-ui-primary"
               />
             </div>
 
@@ -188,7 +188,7 @@ export function ProductReviewsSection({
             </div>
 
             {reviews.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-ui-primary/25 bg-bg-base py-12 text-center">
+              <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-ui-primary/25 bg-[var(--surface-user-card)] py-12 text-center">
                 <IoChatbubbleEllipsesOutline className="text-4xl text-ui-primary/40" aria-hidden="true" />
                 <div className="text-base font-semibold text-text-primary">No reviews yet</div>
                 <div className="max-w-sm text-sm text-text-secondary">
@@ -200,7 +200,7 @@ export function ProductReviewsSection({
                 {reviews.map((review) => (
                   <article
                     key={review.id}
-                    className="flex flex-col gap-3 rounded-xl border border-ui-primary/15 bg-bg-base p-5"
+                    className="flex flex-col gap-3 rounded-xl border border-ui-primary/15 bg-[var(--surface-user-card)] p-5"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex flex-col gap-2">

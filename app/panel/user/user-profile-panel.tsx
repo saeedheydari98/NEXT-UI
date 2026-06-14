@@ -51,7 +51,7 @@ export function UserProfilePanel() {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-ui-secondary/30 bg-ui-secondary/10 p-4">
+    <section className="flex flex-col gap-4 rounded-xl border border-ui-secondary/30 bg-[var(--surface-user-card)] p-4">
       <div className="flex flex-col gap-1">
         <div className="text-base font-bold text-text-secondary">Profile information</div>
         <div className="text-sm text-text-secondary">
@@ -109,7 +109,7 @@ export function UserProfilePanel() {
       </div>
 
       {status ? (
-        <div className="rounded-md border border-ui-secondary/30 bg-bg-base px-3 py-2 text-sm font-semibold text-text-secondary">
+        <div className="rounded-md border border-ui-secondary/30 bg-[var(--surface-user-soft)] px-3 py-2 text-sm font-semibold text-text-secondary">
           {status}
         </div>
       ) : null}

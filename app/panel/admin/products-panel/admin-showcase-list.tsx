@@ -41,7 +41,7 @@ export function AdminShowcaseList({
         return (
           <div
             key={showcase.id}
-            className={`flex w-full flex-col gap-3 rounded-xl border bg-bg-base p-4 ${
+            className={`flex w-full flex-col gap-3 rounded-xl border bg-[var(--surface-admin-card)] p-4 ${
               isLoading ? "border-[#e5e5e5]" : "border-ui-primary/30"
             }`}
           >
@@ -79,7 +79,7 @@ export function AdminShowcaseList({
             >
               {showcaseProducts.length === 0 && (
                 <div
-                  className={`flex min-h-28 min-w-44 flex-col justify-center gap-1 rounded-lg border border-dashed bg-bg-base p-3 ${
+                  className={`flex min-h-28 min-w-44 flex-col justify-center gap-1 rounded-lg border border-dashed bg-[var(--surface-admin-soft)] p-3 ${
                     isLoading ? "border-[#e5e5e5]" : "border-ui-primary/30"
                   }`}
                 >
@@ -95,15 +95,13 @@ export function AdminShowcaseList({
               {showcaseProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  className={`flex min-h-44 min-w-36 max-w-36 shrink-0 flex-col gap-2 rounded-md border bg-bg-base p-2 shadow-sm ${
+                  className={`flex min-h-44 min-w-36 max-w-36 shrink-0 flex-col gap-2 rounded-md border bg-[var(--surface-admin-soft)] p-2 shadow-sm ${
                     isLoading ? "border-[#e5e5e5]" : "border-ui-primary/20"
                   }`}
                 >
                   <button
                     type="button"
-                    className={`flex h-20 items-center justify-center overflow-hidden rounded ${
-                      isLoading ? "bg-[#eeeeee]" : "bg-ui-primary/10"
-                    }`}
+                    className="flex h-20 items-center justify-center overflow-hidden rounded bg-[var(--surface-admin-media)]"
                     onClick={() => onPreview(product.imageUrl)}
                     disabled={isLoading || !product.imageUrl}
                     aria-label="Open product image"

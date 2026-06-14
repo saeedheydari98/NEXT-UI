@@ -1,0 +1,312 @@
+"use client";
+
+import { ReactNode, useId, useState } from "react";
+import { IoChevronDown, IoCheckmark } from "react-icons/io5";
+import { CustomButton } from "@/app/design-system/components/ui/button";
+import { resolveColor, ThemeColorKey, ThemeStyle, ThemeTone } from "@/app/design-system/theme/theme";
+
+const colorOptions: ThemeColorKey[] = [
+  "green",
+  "blue",
+  "purple",
+  "orange",
+  "red",
+  "yellow",
+  "gray",
+];
+
+const styleOptions: ThemeStyle[] = ["light", "dark", "fantasy"];
+const toneOptions = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+const previewTones: ThemeTone[] = [100, 300, 500, 700, 900];
+
+const colorLabels: Record<ThemeColorKey, string> = {
+  green: "Green",
+  blue: "Blue",
+  purple: "Purple",
+  orange: "Orange",
+  red: "Red",
+  yellow: "Yellow",
+  gray: "Gray",
+};
+
+const styleLabels: Record<ThemeStyle, string> = {
+  light: "Light",
+  dark: "Dark",
+  fantasy: "Fantasy",
+};
+
+type PaletteSection = "colors" | "styles" | "tones";
+
+export const getContrastColor = (hex: string) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return r * 0.299 + g * 0.587 + b * 0.114 > 150 ? "#111111" : "#ffffff";
+};
+
+export const hexToRgba = (hex: string, alpha: number) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+type ThemePalettePickerProps = {
+  accentColor: string;
+  selectedColor: ThemeColorKey;
+  selectedStyle: ThemeStyle;
+  selectedTone: ThemeTone;
+  textColor: string;
+  selectionClassName: string;
+  onChange: (next: {
+    color?: ThemeColorKey;
+    style?: ThemeStyle;
+    tone?: ThemeTone;
+  }) => void | Promise<void>;
+};
+
+type PaletteSectionProps = {
+  accentColor: string;
+  children: ReactNode;
+  id: string;
+  open: boolean;
+  preview: ReactNode;
+  title: string;
+  value: string;
+  valueClassName: string;
+  textColor: string;
+  onToggle: () => void;
+};
+
+function PaletteSection({
+  accentColor,
+  children,
+  id,
+  open,
+  preview,
+  title,
+  value,
+  valueClassName,
+  textColor,
+  onToggle,
+}: PaletteSectionProps) {
+  return (
+    <div className="flex flex-col gap-3 border-t py-3 first:border-t-0 first:pt-0 last:pb-0" style={{ borderColor: hexToRgba(accentColor, 0.18) }}>
+      <button
+        type="button"
+        aria-controls={id}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer touch-manipulation items-center justify-between gap-3 rounded-lg bg-transparent p-0 text-start transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ui-primary/40 focus-visible:ring-offset-2"
+        style={{ color: textColor }}
+        onClick={onToggle}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          {preview}
+          <span className="flex min-w-0 flex-col gap-1">
+            <span className="text-sm font-semibold">{title}</span>
+            <span className={`truncate text-xs font-semibold ${valueClassName}`}>{value}</span>
+          </span>
+        </span>
+        <span
+          aria-hidden="true"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform"
+          style={{
+            backgroundColor: hexToRgba(accentColor, 0.12),
+            color: accentColor,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          }}
+        >
+          <IoChevronDown />
+        </span>
+      </button>
+
+      {open ? (
+        <div id={id} className="flex flex-wrap gap-2">
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function ThemePalettePicker({
+  accentColor,
+  selectedColor,
+  selectedStyle,
+  selectedTone,
+  textColor,
+  selectionClassName,
+  onChange,
+}: ThemePalettePickerProps) {
+  const paletteId = useId();
+  const [openSections, setOpenSections] = useState<Record<PaletteSection, boolean>>({
+    colors: true,
+    styles: false,
+    tones: false,
+  });
+  const selectedThemeLabel = `${colorLabels[selectedColor]} / ${styleLabels[selectedStyle]} / ${selectedTone}`;
+  const selectedPreviewColor = resolveColor(selectedColor, selectedStyle, selectedTone);
+
+  const toggleSection = (section: PaletteSection) => {
+    setOpenSections((current) => ({
+      ...current,
+      [section]: !current[section],
+    }));
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div
+        className="flex items-center justify-between gap-3 rounded-xl border p-3"
+        style={{
+          borderColor: hexToRgba(accentColor, 0.18),
+          backgroundColor: hexToRgba(accentColor, 0.06),
+        }}
+      >
+        <span className="flex min-w-0 flex-col gap-1">
+          <span className="text-xs font-semibold uppercase text-text-muted">Palette</span>
+          <span className={`truncate text-sm font-bold ${selectionClassName}`}>{selectedThemeLabel}</span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5" aria-hidden="true">
+          {previewTones.map((tone) => (
+            <span
+              key={tone}
+              className="h-8 w-2.5 rounded-full"
+              style={{ backgroundColor: resolveColor(selectedColor, selectedStyle, tone) }}
+            />
+          ))}
+        </span>
+      </div>
+
+      <div className="flex flex-col rounded-xl border p-3" style={{ borderColor: hexToRgba(accentColor, 0.22) }}>
+        <PaletteSection
+          id={`${paletteId}-colors`}
+          accentColor={accentColor}
+          open={openSections.colors}
+          title="Colors"
+          value={colorLabels[selectedColor]}
+          valueClassName={selectionClassName}
+          textColor={textColor}
+          onToggle={() => toggleSection("colors")}
+          preview={
+            <span
+              className="h-8 w-8 shrink-0 rounded-full"
+              style={{ backgroundColor: selectedPreviewColor }}
+              aria-hidden="true"
+            />
+          }
+        >
+          {colorOptions.map((color) => {
+            const background = resolveColor(color, selectedStyle, selectedTone);
+            const selected = selectedColor === color;
+
+            return (
+              <button
+                key={color}
+                type="button"
+                aria-label={colorLabels[color]}
+                className="flex h-9 w-9 cursor-pointer touch-manipulation items-center justify-center rounded-full border transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ui-primary/40 focus-visible:ring-offset-2"
+                style={{
+                  backgroundColor: background,
+                  borderColor: selected ? getContrastColor(background) : hexToRgba(background, 0.3),
+                  boxShadow: selected ? `0 0 0 2px ${hexToRgba(background, 0.45)}` : "none",
+                  color: getContrastColor(background),
+                }}
+                onClick={() => void onChange({ color })}
+              >
+                {selected ? <IoCheckmark aria-hidden="true" /> : null}
+              </button>
+            );
+          })}
+        </PaletteSection>
+
+        <PaletteSection
+          id={`${paletteId}-styles`}
+          accentColor={accentColor}
+          open={openSections.styles}
+          title="Styles"
+          value={styleLabels[selectedStyle]}
+          valueClassName={selectionClassName}
+          textColor={textColor}
+          onToggle={() => toggleSection("styles")}
+          preview={
+            <span className="flex shrink-0 gap-1" aria-hidden="true">
+              {styleOptions.map((style) => (
+                <span
+                  key={style}
+                  className="h-8 w-2.5 rounded-full"
+                  style={{ backgroundColor: resolveColor(selectedColor, style, selectedTone) }}
+                />
+              ))}
+            </span>
+          }
+        >
+          {styleOptions.map((item) => {
+            const background = resolveColor(selectedColor, item, selectedTone);
+            const selected = selectedStyle === item;
+
+            return (
+              <CustomButton
+                key={item}
+                rounded="full"
+                size="sm"
+                style={{
+                  backgroundColor: selected ? background : "transparent",
+                  borderColor: selected ? background : hexToRgba(background, 0.38),
+                  borderStyle: "solid",
+                  borderWidth: "1px",
+                  color: selected ? getContrastColor(background) : textColor,
+                }}
+                icon={selected ? <IoCheckmark aria-hidden="true" /> : undefined}
+                onClick={() => void onChange({ style: item })}
+              >
+                {styleLabels[item]}
+              </CustomButton>
+            );
+          })}
+        </PaletteSection>
+
+        <PaletteSection
+          id={`${paletteId}-tones`}
+          accentColor={accentColor}
+          open={openSections.tones}
+          title="Tones"
+          value={String(selectedTone)}
+          valueClassName={selectionClassName}
+          textColor={textColor}
+          onToggle={() => toggleSection("tones")}
+          preview={
+            <span
+              className="h-8 w-8 shrink-0 rounded-full"
+              style={{ backgroundColor: selectedPreviewColor }}
+              aria-hidden="true"
+            />
+          }
+        >
+          {toneOptions.map((tone) => {
+            const toneColor = resolveColor(selectedColor, selectedStyle, tone);
+            const selected = selectedTone === tone;
+
+            return (
+              <button
+                key={tone}
+                type="button"
+                className="flex h-8 min-w-8 cursor-pointer touch-manipulation items-center justify-center rounded-full border text-xs font-bold tabular-nums transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ui-primary/40 focus-visible:ring-offset-2"
+                style={{
+                  backgroundColor: toneColor,
+                  borderColor: selected ? getContrastColor(toneColor) : hexToRgba(toneColor, 0.28),
+                  boxShadow: selected ? `0 0 0 2px ${hexToRgba(toneColor, 0.45)}` : "none",
+                  color: getContrastColor(toneColor),
+                }}
+                onClick={() => void onChange({ tone })}
+                aria-label={`${selectedColor} ${tone}`}
+              >
+                <span>{tone}</span>
+              </button>
+            );
+          })}
+        </PaletteSection>
+      </div>
+    </div>
+  );
+}

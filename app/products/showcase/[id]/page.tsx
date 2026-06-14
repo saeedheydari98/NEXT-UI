@@ -47,10 +47,10 @@ export default function ShowcasePage() {
           <div className="mt-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {LOADING_PRODUCTS.map((product) => (
-                <div key={product.id} className="rounded-md border border-[#e5e5e5] p-3 bg-bg-base">
+                <div key={product.id} className="rounded-md border border-[#e5e5e5] p-3 bg-[var(--surface-user-card)]">
                   <div className="flex gap-3">
                     <Loading loading="skeleton-item" isLoading>
-                      <div className="w-24 h-24 overflow-hidden rounded bg-[#eeeeee]" />
+                      <div className="w-24 h-24 overflow-hidden rounded bg-[var(--surface-user-media)]" />
                     </Loading>
                     <div className="flex-1 flex flex-col justify-between">
                       <div className="flex flex-col h-full">
@@ -100,9 +100,9 @@ export default function ShowcasePage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {products.map((product) => (
-              <div key={product.id} className="rounded-md border border-ui-primary/20 p-3 bg-bg-base">
+              <div key={product.id} className="rounded-md border border-ui-primary/20 p-3 bg-[var(--surface-user-card)]">
                 <div className="flex gap-3">
-                  <div className="w-24 h-24 overflow-hidden rounded bg-ui-primary/10">
+                  <div className="w-24 h-24 overflow-hidden rounded bg-[var(--surface-user-media)]">
                     {product.imageUrl ? (
                       <img
                         src={product.imageUrl}

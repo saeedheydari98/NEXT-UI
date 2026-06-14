@@ -34,10 +34,12 @@ export function CustomInput({
   loadingText,
   icon,
   iconAfter,
+  style,
   ...rest
 }: CustomInputProps) {
   const { theme } = useTheme();
   const colorStyle = resolveVariantColors(variant, theme);
+  const controlBackground = `color-mix(in srgb, ${colorStyle.backgroundColor} 10%, var(--bg-surface))`;
   const isDisabled = disabled || isLoading;
 
   return (
@@ -49,7 +51,7 @@ export function CustomInput({
         {...rest}
         disabled={isDisabled}
         className={cx(
-          "bg-bg-surface text-text-primary placeholder:text-text-secondary",
+          "text-text-primary placeholder:text-text-secondary",
           "focus:outline-none focus:ring-2 focus:ring-ui-primary/30",
           sizeVariants[size],
           radiusVariants[rounded],
@@ -64,7 +66,9 @@ export function CustomInput({
           className
         )}
         style={{
+          backgroundColor: controlBackground,
           borderColor: colorStyle.borderColor,
+          ...style,
         }}
       />
       {isLoading && (

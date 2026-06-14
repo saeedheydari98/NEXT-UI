@@ -39,7 +39,7 @@ export function ShowcaseSection({
 }: ShowcaseSectionProps) {
   return (
     <section
-      className={`flex flex-col gap-3 rounded-xl border bg-bg-surface p-4 ${
+      className={`flex flex-col gap-3 rounded-xl border bg-[var(--surface-user-soft)] p-4 ${
         isLoading ? "border-[#e5e5e5]" : "border-ui-primary/30"
       }`}
     >
@@ -69,16 +69,14 @@ export function ShowcaseSection({
         {products.map((product, index) => (
           <article
             key={product.id ?? `${product.title}-${index}`}
-            className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border bg-bg-surface shadow-sm ${
+            className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border bg-[var(--surface-user-card)] shadow-sm ${
               isLoading ? "border-[#e5e5e5]" : "border-ui-primary/25"
             }`}
           >
             <div className="flex min-h-36 flex-1 gap-3 p-3">
               <button
                 type="button"
-                className={`relative flex min-h-28 w-1/3 shrink-0 items-center justify-center overflow-hidden rounded-md ${
-                  isLoading ? "bg-[#eeeeee]" : "bg-ui-primary/10"
-                }`}
+                className="relative flex min-h-28 w-1/3 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-user-media)]"
                 onClick={() => onPreview(product.imageUrl)}
                 disabled={isLoading || !product.imageUrl}
                 aria-label="Open product image"

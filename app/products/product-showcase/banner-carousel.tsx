@@ -33,7 +33,7 @@ export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerC
     return (
       <section className="flex flex-col gap-2">
         <Loading loading="skeleton-item" isLoading>
-          <div className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-[#e5e5e5]" />
+          <div className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-media)]" />
         </Loading>
         <div className="flex justify-center gap-2">
           {banner.imageUrls.map((imageUrl, index) => (
@@ -52,7 +52,7 @@ export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerC
     <section className="flex flex-col gap-2">
       <button
         type="button"
-        className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-ui-primary/20"
+        className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-ui-primary/20 bg-[var(--surface-user-media)]"
         onClick={() => onPreview(activeImage)}
         aria-label="Open banner image"
       >

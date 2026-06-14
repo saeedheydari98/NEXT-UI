@@ -714,7 +714,7 @@ export function AdminProductsPanel() {
   };
 
   return (
-    <section className="flex w-full max-w-none flex-col gap-4 rounded-lg border border-ui-primary/30 bg-bg-surface p-4">
+    <section className="flex w-full max-w-none flex-col gap-4 rounded-lg border border-ui-primary/30 bg-[var(--surface-admin-soft)] p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-base font-bold">products display</div>
         <span className="text-xs font-semibold text-text-secondary">{sortedProducts.length} products</span>
@@ -811,7 +811,7 @@ export function AdminProductsPanel() {
                 Add 
               </CustomButton>
             </div>
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-bg-base py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-[var(--surface-admin-card)] py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
               <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
               <span className="text-sm font-semibold">Upload images</span>
               <input
@@ -830,7 +830,7 @@ export function AdminProductsPanel() {
                 <div key={`${imageUrl}-${index}`} className="flex min-w-40 flex-col gap-2">
                   <button
                     type="button"
-                    className="h-24 overflow-hidden rounded-md border border-ui-primary/20 bg-bg-base"
+                    className="h-24 overflow-hidden rounded-md border border-ui-primary/20 bg-[var(--surface-admin-media)]"
                     onClick={() => openImagePreview(imageUrl)}
                     aria-label="Open banner image"
                   >
@@ -903,7 +903,7 @@ export function AdminProductsPanel() {
                   Add
                 </CustomButton>
               </div>
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-bg-base py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-[var(--surface-admin-card)] py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
                 <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
                 <span className="text-sm font-semibold">Upload images</span>
                 <input
@@ -919,7 +919,7 @@ export function AdminProductsPanel() {
                   <div key={`${imageUrl}-${index}`} className="flex min-w-40 flex-col gap-2">
                     <button
                       type="button"
-                      className="h-24 overflow-hidden rounded-md border border-ui-primary/20 bg-bg-base"
+                      className="h-24 overflow-hidden rounded-md border border-ui-primary/20 bg-[var(--surface-admin-media)]"
                       onClick={() => openImagePreview(imageUrl)}
                       aria-label="Open banner image"
                     >
@@ -1125,7 +1125,7 @@ export function AdminProductsPanel() {
             />
           </div>
 
-          <div className="flex min-h-10 items-center rounded-md border border-ui-primary/20 bg-bg-base">
+          <div className="flex min-h-10 items-center rounded-md border border-ui-primary/20 bg-[var(--surface-admin-card)]">
             <span className="text-xs text-text-secondary">
               Discount formula: ((price before discount - discounted price) / price before discount) x 100
             </span>
@@ -1135,7 +1135,7 @@ export function AdminProductsPanel() {
             value={draftProduct.description}
             placeholder="Description"
             onChange={(event) => updateDraftProduct({ description: event.target.value })}
-            className="min-h-24 rounded-md border border-ui-primary/30 bg-bg-base p-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-ui-primary/30"
+            className="min-h-24 rounded-md border border-ui-primary/30 bg-[var(--surface-admin-card)] p-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-ui-primary/30"
           />
 
           <div className="flex flex-col gap-3 rounded-lg border border-ui-primary/20">
@@ -1145,7 +1145,7 @@ export function AdminProductsPanel() {
               placeholder="Image URL or uploaded image data"
               onChange={(event) => updateDraftProduct({ imageUrl: event.target.value })}
             />
-            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-bg-base py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-[var(--surface-admin-card)] py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
               <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
               <span className="text-sm font-semibold">Upload image</span>
               <input
@@ -1155,7 +1155,7 @@ export function AdminProductsPanel() {
                 onChange={(event) => handleImageUpload(event.target.files?.[0] ?? null)}
               />
             </label>
-            <div className="flex h-40 items-center justify-center overflow-hidden rounded-md border border-ui-primary/20 bg-bg-base">
+            <div className="flex h-40 items-center justify-center overflow-hidden rounded-md border border-ui-primary/20 bg-[var(--surface-admin-media)]">
               {draftProduct.imageUrl ? (
                 <button
                   type="button"
@@ -1266,7 +1266,7 @@ export function AdminProductsPanel() {
               />
             </div>
 
-            <div className="flex min-h-10 items-center rounded-md border border-ui-primary/20 bg-bg-base">
+            <div className="flex min-h-10 items-center rounded-md border border-ui-primary/20 bg-[var(--surface-admin-card)]">
               <span className="text-xs text-text-secondary">
                 Discount formula: ((price before discount - discounted price) / price before discount) x 100
               </span>
@@ -1276,7 +1276,7 @@ export function AdminProductsPanel() {
               value={editingProduct.description}
               placeholder="Description"
               onChange={(event) => updateEditingProduct({ description: event.target.value })}
-              className="min-h-24 rounded-md border border-ui-primary/30 bg-bg-base p-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-ui-primary/30"
+              className="min-h-24 rounded-md border border-ui-primary/30 bg-[var(--surface-admin-card)] p-3 text-sm text-text-primary outline-none focus:ring-2 focus:ring-ui-primary/30"
             />
 
             <div className="flex flex-col gap-3 rounded-lg border border-ui-primary/20">
@@ -1286,7 +1286,7 @@ export function AdminProductsPanel() {
                 placeholder="Image URL or uploaded image data"
                 onChange={(event) => updateEditingProduct({ imageUrl: event.target.value })}
               />
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-bg-base py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-ui-primary/40 bg-[var(--surface-admin-card)] py-4 text-sm font-semibold text-text-secondary transition hover:bg-ui-primary/10">
                 <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
                 <span className="text-sm font-semibold">Upload image</span>
                 <input
@@ -1296,7 +1296,7 @@ export function AdminProductsPanel() {
                   onChange={(event) => handleEditImageUpload(event.target.files?.[0] ?? null)}
                 />
               </label>
-              <div className="flex h-40 items-center justify-center overflow-hidden rounded-md border border-ui-primary/20 bg-bg-base">
+              <div className="flex h-40 items-center justify-center overflow-hidden rounded-md border border-ui-primary/20 bg-[var(--surface-admin-media)]">
                 {editingProduct.imageUrl ? (
                   <button
                     type="button"

@@ -31,10 +31,12 @@ export function CustomSelect({
   loading = "spinner",
   isLoading = false,
   loadingText,
+  style,
   ...rest
 }: CustomSelectProps) {
   const { theme } = useTheme();
   const colorStyle = resolveVariantColors(variant, theme);
+  const controlBackground = `color-mix(in srgb, ${colorStyle.backgroundColor} 10%, var(--bg-surface))`;
   const isDisabled = disabled || isLoading;
 
   return (
@@ -43,7 +45,7 @@ export function CustomSelect({
         {...rest}
         disabled={isDisabled}
         className={cx(
-          "bg-bg-surface text-text-primary",
+          "text-text-primary",
           "focus:outline-none focus:ring-2 focus:ring-ui-primary/30",
           sizeVariants[size],
           radiusVariants[rounded],
@@ -55,7 +57,9 @@ export function CustomSelect({
           className
         )}
         style={{
+          backgroundColor: controlBackground,
           borderColor: colorStyle.borderColor,
+          ...style,
         }}
       >
         {children}

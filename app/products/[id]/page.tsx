@@ -146,10 +146,10 @@ export default function ProductPage() {
     return (
       <main className="min-h-screen bg-bg-base text-text-primary">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 py-8 px-4">
-          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-bg-surface p-6 shadow-sm lg:flex-row lg:items-start">
+          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-[var(--surface-user-soft)] p-6 shadow-sm lg:flex-row lg:items-start">
             <div className="flex w-full flex-col gap-4 lg:max-w-md lg:shrink-0">
               <Loading loading="skeleton-item" isLoading>
-                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-[#e5e5e5] bg-[#eeeeee]">
+                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-[#e5e5e5] bg-[var(--surface-user-media)]">
                   <IoBagHandleOutline className="text-6xl text-neutral-400" aria-hidden="true" />
                 </div>
               </Loading>
@@ -178,7 +178,7 @@ export default function ProductPage() {
                   <span className="text-sm text-text-secondary">(128 reviews)</span>
                 </Loading>
               </div>
-              <div className="flex flex-col gap-1 rounded-xl border border-[#e5e5e5] bg-bg-base p-4">
+              <div className="flex flex-col gap-1 rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-card)] p-4">
                 <Loading loading="skeleton-item" isLoading>
                   <div className="text-sm text-red-admin-500 line-through">
                     {LOADING_PRODUCT.originalPrice}
@@ -213,7 +213,7 @@ export default function ProductPage() {
             </div>
           </section>
 
-          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-bg-surface p-6 shadow-sm">
+          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-[var(--surface-user-soft)] p-6 shadow-sm">
             <div className="flex flex-col gap-2 border-b border-[#e5e5e5] pb-6">
               <Loading loading="skeleton-item" isLoading>
                 <div className="text-2xl font-bold text-text-primary">Customer reviews</div>
@@ -226,7 +226,7 @@ export default function ProductPage() {
             </div>
             <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
               <div className="flex w-full flex-col gap-5 lg:max-w-xs">
-                <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-bg-base p-5">
+                <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-card)] p-5">
                   <Loading loading="skeleton-item" isLoading>
                     <div className="text-4xl font-bold">4.8</div>
                   </Loading>
@@ -239,12 +239,12 @@ export default function ProductPage() {
                 </div>
               </div>
               <div className="flex flex-1 flex-col gap-4">
-                <div className="flex flex-col gap-4 rounded-xl border border-[#e5e5e5] bg-bg-base p-5">
+                <div className="flex flex-col gap-4 rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-card)] p-5">
                   <Loading loading="skeleton-item" isLoading>
                     <div className="text-lg font-bold">Write a review</div>
                   </Loading>
                   <Loading loading="skeleton-item" isLoading>
-                    <div className="min-h-28 w-full rounded-lg border border-[#e5e5e5] bg-bg-surface" />
+                    <div className="min-h-28 w-full rounded-lg border border-[#e5e5e5] bg-[var(--surface-user-media)]" />
                   </Loading>
                 </div>
               </div>
@@ -272,14 +272,14 @@ export default function ProductPage() {
     <main className="min-h-screen bg-bg-base text-text-primary">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 py-8 px-4">
         {cartMessage ? (
-          <div className="rounded-lg border border-ui-primary/30 bg-bg-surface px-4 py-3 text-sm font-semibold text-ui-primary">
+          <div className="rounded-lg border border-ui-primary/30 bg-[var(--surface-user-card)] px-4 py-3 text-sm font-semibold text-ui-primary">
             {cartMessage}
           </div>
         ) : null}
 
-        <section className="flex w-full flex-col gap-8 rounded-2xl border border-ui-primary/25 bg-bg-surface p-6 shadow-sm lg:flex-row lg:items-start">
+        <section className="flex w-full flex-col gap-8 rounded-2xl border border-ui-primary/25 bg-[var(--surface-user-soft)] p-6 shadow-sm lg:flex-row lg:items-start">
           <div className="flex w-full flex-col gap-4 lg:max-w-md lg:shrink-0">
-            <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-ui-primary/15 bg-ui-primary/10">
+            <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-ui-primary/15 bg-[var(--surface-user-media)]">
               {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
@@ -319,7 +319,7 @@ export default function ProductPage() {
               </button>
             </div>
 
-            <div className="flex flex-col gap-1 rounded-xl border border-ui-primary/15 bg-bg-base p-4">
+            <div className="flex flex-col gap-1 rounded-xl border border-ui-primary/15 bg-[var(--surface-user-card)] p-4">
               {originalPrice && discountPercent > 0 ? (
                 <div className="text-sm text-red-admin-500 line-through">{originalPrice}</div>
               ) : null}
