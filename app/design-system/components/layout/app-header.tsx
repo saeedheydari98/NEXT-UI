@@ -14,6 +14,7 @@ import {
   ADMIN_ACCESS_UPDATED_EVENT,
   isAdminAccessUnlocked,
 } from "@/lib/admin-access";
+import { GiSpermWhale } from "react-icons/gi";
 
 const navItems = [
   { href: "/", label: "home", tone: "bg-primary text-primary-text" },
@@ -93,17 +94,19 @@ export function AppHeader() {
   return (
     <header
       className={`
-        sticky top-0 z-30 border-b border-secondary 
-        bg-secondary-panel backdrop-blur flex justify-center items-center 
+        sticky top-0 z-30 overflow-visible border-b border-primary-border 
+        bg-primary-panel backdrop-blur flex justify-center items-center 
         w-full h-20 transition-transform duration-300
         ${hideHeader ? '-translate-y-full' : 'translate-y-0'}
       `}
     >
-      <div className="relative flex justify-between items-center w-full px-4">
+      <div className="relative flex justify-between items-center w-full gap-3 px-4">
         {/* Left: logo, theme toggle, global search */}
-        <div className="flex items-center gap-4">
-          <div className="text-sm font-bold text-primary-text border-b-2 border-secondary">LiveUiBook</div>
-          <Toggle checked={mode === "dark"} onChange={(isDark: boolean) => setMode(isDark ? "dark" : "light")} />
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="shrink-0 text-blue-dark-700"><GiSpermWhale size={40}/></div>
+          <div className="shrink-0">
+            <Toggle checked={mode === "dark"} onChange={(isDark: boolean) => setMode(isDark ? "dark" : "light")} />
+          </div>
           <React.Suspense fallback={<div />}> 
             {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
             {/* @ts-ignore-next-line */}
@@ -123,7 +126,7 @@ export function AppHeader() {
         )}
 
         {/* Right: cart and mobile menu */}
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <CartLink count={cartCount} />
           {isMobile && (
             <button

@@ -271,11 +271,11 @@ export default function ShowcasePage() {
           {filteredProducts.length === 0 ? (
             <div className="text-sm text-secondary-text">No products found for this showcase.</div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,220px))] gap-3">
               {filteredProducts.map((product) => (
-                <div key={product.id} className="rounded-md border border-primary-border p-3 bg-primary-card">
-                  <div className="flex gap-3">
-                    <div className="w-24 h-24 overflow-hidden rounded bg-primary-media">
+                <div key={product.id} className="max-w-55 rounded-md border border-primary-border bg-primary-card p-2">
+                  <div className="flex gap-2">
+                    <div className="h-18 w-18 shrink-0 overflow-hidden rounded bg-primary-media">
                       {product.imageUrl ? (
                         <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" />
                       ) : (
@@ -284,8 +284,8 @@ export default function ShowcasePage() {
                     </div>
                     <div className="flex-1 flex flex-col justify-between">
                       <div className="flex flex-col h-full">
-                        <div className="text-sm font-bold">{product.title}</div>
-                        <div className="text-primary text-sm font-bold">{product.price}$</div>
+                        <div className="line-clamp-1 text-xs font-bold">{product.title}</div>
+                        <div className="text-primary text-xs font-bold">{product.price}$</div>
                         <div className="text-xs text-secondary-text line-clamp-2">{product.description}</div>
                       </div>
                       <div className=" flex gap-2">

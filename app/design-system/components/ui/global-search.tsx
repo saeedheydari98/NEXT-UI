@@ -48,11 +48,13 @@ export function GlobalSearch() {
   };
 
   return (
-    <div className="relative">
-      <div className="flex items-center">
+    <div className="relative min-w-0 flex-1 md:flex-none">
+      <div className="flex min-w-0 items-center">
         <div
-          className={`relative flex items-center transition-all duration-200 md:static md:h-auto md:w-72 ${
-            expanded ? "w-72" : "h-6 w-6 shrink-0 justify-center"
+          className={`relative flex items-center transition-all duration-200 ease-out md:static md:h-auto md:w-72 ${
+            expanded
+              ? "h-10 w-full min-w-0"
+              : "h-6 w-10 min-w-10 shrink-0 justify-center"
           }`}
         >
           <CustomInput
@@ -65,10 +67,10 @@ export function GlobalSearch() {
             border="none"
             className={
               isOpen
-                ? "h-10 bg-primary-media px-9 text-sm"
-                : "bg-primary-media h-6 w-6 min-w-6 p-0 text-center text-transparent caret-transparent placeholder:text-transparent md:h-10 md:w-full md:px-9 md:text-sm md:text-primary-text md:caret-auto md:placeholder:text-secondary-text"
+                ? "h-10 px-7 text-sm"
+                : "h-6 w-10 min-w-10 p-0 text-center text-transparent caret-transparent placeholder:text-transparent md:h-10 md:w-full md:px-7 md:text-sm md:text-primary-text md:caret-auto md:placeholder:text-secondary-text"
             }
-            style={{ backgroundColor: "var(--primary-media)" }}
+            style={{ backgroundColor: "color-mix(in srgb, var(--primary) 58%, var(--bg-base))" }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -91,7 +93,7 @@ export function GlobalSearch() {
               submit();
             }}
             aria-label="submit-search"
-            className={`absolute top-1/2 flex -translate-y-1/2 items-center justify-center text-secondary-text md:right-2 md:p-1 ${isOpen ? "right-2 p-1" : "left-1/2 -translate-x-1/2 p-0.5 md:left-auto md:translate-x-0"}`}
+            className={`absolute top-1/2 flex -translate-y-1/2 items-center justify-center text-secondary-text md:right-1.5 md:p-0.5 ${isOpen ? "right-1.5 p-0.5" : "left-1/2 -translate-x-1/2 p-0.5 md:left-auto md:translate-x-0"}`}
           >
             <FiSearch />
           </button>
@@ -101,7 +103,7 @@ export function GlobalSearch() {
               type="button"
               onClick={close}
               aria-label="close-search"
-              className="absolute left-2 top-1/2 flex -translate-y-1/2 items-center justify-center p-1 text-secondary-text"
+              className="absolute left-1.5 top-1/2 flex -translate-y-1/2 items-center justify-center p-0.5 text-secondary-text"
             >
               <IoClose />
             </button>
