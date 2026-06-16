@@ -33,7 +33,7 @@ export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerC
     return (
       <section className="flex flex-col gap-2">
         <Loading loading="skeleton-item" isLoading>
-          <div className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-media)]" />
+          <div className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-border-default bg-primary-media" />
         </Loading>
         <div className="flex justify-center gap-2">
           {banner.imageUrls.map((imageUrl, index) => (
@@ -52,7 +52,7 @@ export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerC
     <section className="flex flex-col gap-2">
       <button
         type="button"
-        className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-ui-primary/20 bg-[var(--surface-user-media)]"
+        className="flex h-56 w-full items-center justify-center overflow-hidden rounded-xl border border-primary-border bg-primary-media"
         onClick={() => onPreview(activeImage)}
         aria-label="Open banner image"
       >
@@ -69,7 +69,7 @@ export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerC
               key={`${imageUrl}-${index}`}
               type="button"
               className={`h-2 w-2 rounded-full transition ${
-                index === activeIndex ? "bg-ui-primary w-4" : "bg-ui-primary/25"
+                index === activeIndex ? "bg-primary w-4" : "bg-primary-border"
               }`}
               onClick={() => setActiveIndex(index)}
               aria-label={`Show banner image ${index + 1}`}

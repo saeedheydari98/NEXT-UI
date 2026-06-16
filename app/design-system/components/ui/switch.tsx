@@ -78,7 +78,7 @@ export function CustomSwitch({
         )}
       </button>
       {label && <span>{label}</span>}
-      {isLoading && loadingText && <span className="text-sm text-text-secondary">{loadingText}</span>}
+      {isLoading && loadingText && <span className="text-sm text-secondary-text">{loadingText}</span>}
     </label>
   );
 }

@@ -25,16 +25,16 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
   };
 
   return (
-    <section className="flex w-full max-w-md flex-col gap-4 rounded-lg border border-ui-primary/30 bg-[var(--surface-admin-card)] p-6 shadow-sm">
+    <section className="flex w-full max-w-md flex-col gap-4 rounded-lg border border-primary-border bg-primary-card p-6 shadow-sm">
       <div className="flex flex-col gap-1">
-        <div className="text-xl font-bold text-text-primary">Admin access</div>
-        <div className="text-sm text-text-secondary">
+        <div className="text-xl font-bold text-primary-text">Admin access</div>
+        <div className="text-sm text-secondary-text">
           Enter the security code to open the admin panel.
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="text-xs font-bold text-text-primary">Security code</div>
+        <div className="text-xs font-bold text-primary-text">Security code</div>
         <CustomInput
           value={code}
           type="password"
@@ -53,7 +53,7 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
       </div>
 
       {status ? (
-        <div className="rounded-md border border-red-admin-500/30 bg-[var(--surface-admin-soft)] px-3 py-2 text-sm font-semibold text-red-admin-500">
+        <div className="rounded-md border border-danger-border bg-primary-soft px-3 py-2 text-sm font-semibold text-danger-text">
           {status}
         </div>
       ) : null}

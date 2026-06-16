@@ -52,7 +52,7 @@ export function StarRating({
       ) : state === "half" ? (
         <IoStarHalf size={iconSize} className="text-amber-400" aria-hidden="true" />
       ) : (
-        <IoStarOutline size={iconSize} className="text-ui-primary/35" aria-hidden="true" />
+        <IoStarOutline size={iconSize} className="text-primary-border" aria-hidden="true" />
       );
 
     if (!interactive) {

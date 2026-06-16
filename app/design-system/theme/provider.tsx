@@ -29,6 +29,7 @@ type UserThemeConfig = {
   style: ThemeStyle;
   tone: ThemeTone;
   density: ThemeDensity;
+  isColorPanelLocked: boolean;
 };
 
 type ThemeContextType = {
@@ -58,6 +59,7 @@ const defaultUserTheme: UserThemeConfig = {
   style: "light",
   tone: 500,
   density: "comfortable",
+  isColorPanelLocked: false,
 };
 
 function readJsonFromStorage<T>(key: string): T | null {
@@ -191,7 +193,7 @@ export function ThemeProvider({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const tokenRegex = /^(text|bg)-([a-z]+)-([a-z]+)-([a-z0-9]+)$/i;
+    const tokenRegex = /^(text|bg|border)-(admin|user|mode|green|red|blue|yellow|gray|orange|purple)-(light|dark|fantasy|admin|user|mode)-(50|100|200|300|400|500|600|700|800|900|950|admin|user)$/i;
     const applyTokenStyles = (root?: ParentNode) => {
       const base = root ?? document.body;
       const elements: Element[] = [];
@@ -221,6 +223,10 @@ export function ThemeProvider({
 
           if (className.startsWith("bg-")) {
             htmlElement.style.setProperty("background-color", color);
+          }
+
+          if (className.startsWith("border-")) {
+            htmlElement.style.setProperty("border-color", color);
           }
         }
       }
@@ -256,8 +262,19 @@ export function ThemeProvider({
 
   const updateUserTheme = useCallback((next: Partial<UserThemeConfig>) => {
     setUserTheme((prev) => {
-      const optimistic = { ...prev, ...next };
-      return optimistic;
+      const lockUpdate =
+        typeof next.isColorPanelLocked === "boolean"
+          ? { isColorPanelLocked: next.isColorPanelLocked }
+          : {};
+
+      if (prev.isColorPanelLocked) {
+        return {
+          ...prev,
+          ...lockUpdate,
+        };
+      }
+
+      return { ...prev, ...next };
     });
   }, []);
 

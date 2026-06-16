@@ -2,13 +2,11 @@
 
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { useTheme } from "@/app/design-system/theme/provider";
-import { resolveColor } from "@/app/design-system/theme/theme";
-import { ThemePalettePicker, getContrastColor, hexToRgba } from "@/app/panel/theme-palette-picker";
+import { ThemePalettePicker } from "@/app/panel/theme-palette-picker";
 
 export function UserThemePanel() {
-  const { mode, modePreference, setModePreference, userTheme, updateUserTheme, theme } =
+  const { mode, modePreference, setModePreference, userTheme, updateUserTheme } =
     useTheme();
-  const accentColor = resolveColor(userTheme.preferredColor, userTheme.style, userTheme.tone);
 
   const updatePalette = (next: Parameters<typeof updateUserTheme>[0]) => {
     const themeUpdate: Parameters<typeof updateUserTheme>[0] = {};
@@ -37,11 +35,8 @@ export function UserThemePanel() {
         variant="secondary"
         rounded="full"
         size="sm"
-        style={{
-          backgroundColor: selected ? accentColor : "transparent",
-          borderColor: selected ? accentColor : hexToRgba(accentColor, 0.3),
-          color: selected ? getContrastColor(accentColor) : theme.tokens.colors.text.primary,
-        }}
+        unstyled
+        className={selected ? "border-secondary bg-secondary text-secondary-contrast" : "border-secondary-border bg-transparent text-primary-text"}
         onClick={() => setModePreference(value)}
       >
         {label}
@@ -51,21 +46,15 @@ export function UserThemePanel() {
 
   return (
     <section
-      className="flex w-full max-w-3xl flex-col gap-4 rounded-xl p-4"
-      style={{
-        border: `1px solid ${hexToRgba(accentColor, 0.3)}`,
-        backgroundColor: hexToRgba(accentColor, 0.1),
-        color: theme.tokens.colors.text.primary,
-      }}
+      className="flex w-full max-w-3xl flex-col gap-4 rounded-xl border border-secondary-border bg-secondary-card p-4 text-primary-text"
     >
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm font-semibold text-text-secondary">
+          <div className="text-sm font-semibold text-secondary-text">
             mode: <span className="font-bold text-user-user-user">{mode}</span>
           </div>
           <div
-            className="flex flex-wrap items-center gap-2 rounded-full border p-2"
-            style={{ borderColor: hexToRgba(accentColor, 0.3) }}
+            className="flex flex-wrap items-center gap-2 rounded-full border border-secondary-border p-2"
           >
             {renderModeButton("system", "device")}
             {renderModeButton("light", "light")}
@@ -74,12 +63,20 @@ export function UserThemePanel() {
         </div>
       </div>
 
+      {userTheme.isColorPanelLocked ? (
+          <div
+            className="rounded-lg border border-secondary-border bg-secondary-card p-3 text-sm font-semibold text-secondary-text"
+          >
+            <span>User color panel is locked by admin.</span>
+          </div>
+      ) : null}
+
       <ThemePalettePicker
-        accentColor={accentColor}
+        scope="user"
+        disabled={userTheme.isColorPanelLocked}
         selectedColor={userTheme.preferredColor}
         selectedStyle={userTheme.style}
         selectedTone={userTheme.tone}
-        textColor={theme.tokens.colors.text.primary}
         selectionClassName="text-user-user-user"
         onChange={(next) =>
           updatePalette({

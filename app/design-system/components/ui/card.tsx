@@ -43,7 +43,7 @@ export function CustomCard({
     <article
       {...rest}
       className={cx(
-        "bg-[var(--surface-user-card)] p-4",
+        "bg-secondary-card p-4",
         radiusVariants[rounded],
         borderVariants[border],
         shadowVariants[shadow],

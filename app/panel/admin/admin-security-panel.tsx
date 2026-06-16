@@ -29,16 +29,18 @@ export function AdminSecurityPanel() {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-ui-primary/30 bg-[var(--surface-admin-card)] p-4">
+    <section
+      className="flex flex-col gap-4 rounded-xl border border-primary-border bg-primary-bg p-4 text-primary-text"
+    >
       <div className="flex flex-col gap-1">
-        <div className="text-base font-bold text-text-primary">Admin security code</div>
-        <div className="text-sm text-text-secondary">
+        <div className="text-base font-bold text-primary-text">Admin security code</div>
+        <div className="text-sm text-primary-text">
           Set the code that unlocks admin access from the user panel.
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="text-xs font-bold text-text-primary">Security code</div>
+        <div className="text-xs font-bold text-primary-text">Security code</div>
         <CustomInput
           value={securityCode}
           placeholder="Enter admin code"
@@ -52,7 +54,9 @@ export function AdminSecurityPanel() {
       </div>
 
       {status ? (
-        <div className="rounded-md border border-ui-primary/30 bg-[var(--surface-admin-soft)] px-3 py-2 text-sm font-semibold text-text-primary">
+        <div
+          className="rounded-md border border-primary-border bg-primary-bg px-3 py-2 text-sm font-semibold text-primary-text"
+        >
           {status}
         </div>
       ) : null}

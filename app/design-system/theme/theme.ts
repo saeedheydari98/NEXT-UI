@@ -11,7 +11,7 @@ import { palette } from "./palette";
 export type ThemeMode = "light" | "dark";
 export type ThemeStyle = "light" | "dark" | "fantasy";
 export type ThemeSource = "developer" | "user" | "admin" | "mode";
-export type ThemeTarget = "bg" | "text";
+export type ThemeTarget = "bg" | "text" | "border";
 
 export type ThemeColorKey =
     | "green"
@@ -92,6 +92,7 @@ export interface Theme {
         style: ThemeStyle;
         tone: ThemeTone;
         density: "compact" | "comfortable" | "spacious";
+        isColorPanelLocked?: boolean;
     };
 
     tokens: {
@@ -264,7 +265,7 @@ export function resolveDynamicColor({
 }: ResolveDynamicColorInput): string {
     const [prefix, part1, part2, part3] = token.split("-");
 
-    if (prefix !== "bg" && prefix !== "text") {
+    if (prefix !== "bg" && prefix !== "text" && prefix !== "border") {
         return resolveColor("gray", state.style, toneFallback);
     }
 
@@ -362,18 +363,42 @@ export function createTheme(
                 text: {
                     primary:
                         mode === "dark"
-                            ? "#ffffff"
-                            : "#111111",
+                            ? resolveColor(
+                                admin?.primary || semanticThemeMap.primary,
+                                admin?.style ?? style,
+                                50
+                            )
+                            : resolveColor(
+                                admin?.primary || semanticThemeMap.primary,
+                                admin?.style ?? style,
+                                950
+                            ),
 
                     secondary:
                         mode === "dark"
-                            ? "#cfcfcf"
-                            : "#444444",
+                            ? resolveColor(
+                                admin?.primary || semanticThemeMap.primary,
+                                admin?.style ?? style,
+                                200
+                            )
+                            : resolveColor(
+                                admin?.primary || semanticThemeMap.primary,
+                                admin?.style ?? style,
+                                800
+                            ),
 
                     muted:
                         mode === "dark"
-                            ? "#8b8b8b"
-                            : "#777777",
+                            ? resolveColor(
+                                admin?.primary || semanticThemeMap.primary,
+                                admin?.style ?? style,
+                                300
+                            )
+                            : resolveColor(
+                                admin?.primary || semanticThemeMap.primary,
+                                admin?.style ?? style,
+                                700
+                            ),
                 },
 
                 background: {

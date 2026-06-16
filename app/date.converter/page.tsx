@@ -216,10 +216,10 @@ export default function Home() {
   const currentCalendar = calendarMap[fromType] || calendarMap.gregorian;
 
   return (
-    <div className="flex min-h-screen justify-center bg-bg-base text-text-primary p-4">
-      <div className="flex min-h-[calc(100vh-2rem)] w-full flex-col items-center gap-4 overflow-hidden rounded-2xl border border-ui-secondary/40 bg-bg-surface/40 p-6 shadow-2xl backdrop-blur-md md:w-1/2" dir="rtl">
+    <div className="flex min-h-screen justify-center bg-bg-base text-primary-text p-4">
+      <div className="flex min-h-[calc(100vh-2rem)] w-full flex-col items-center gap-4 overflow-hidden rounded-2xl border border-secondary-border bg-bg-surface/40 p-6 shadow-2xl backdrop-blur-md md:w-1/2" dir="rtl">
         <div className="flex w-full shrink-0 flex-col items-center justify-center gap-4">
-          <div className="text-2xl font-bold text-center bg-user-user-user bg-clip-text text-transparent">
+          <div className="text-2xl font-bold text-center bg-secondary bg-clip-text text-transparent">
             تبدیل تاریخ
           </div>
 
@@ -228,7 +228,7 @@ export default function Home() {
             size="xxl"
             rounded="lg"
             value={fromType}
-            className="text-user-user-800"
+            className="text-secondary-text"
             onChange={(e) => {
               const newFrom = e.target.value;
               setFromType(newFrom);
@@ -250,7 +250,7 @@ export default function Home() {
             size="xxl"
             rounded="lg"
             value={toType}
-            className="text-user-user-800"
+            className="text-secondary-text"
             onChange={(e) => setToType(e.target.value)}
           >
             {calendars
@@ -270,8 +270,8 @@ export default function Home() {
               locale={currentCalendar.locale}
               placeholder="انتخاب تاریخ"
               className="font-bold bg-bg-base"
-              inputClass="w-full border border-ui-secondary/40 bg-bg-surface/70 backdrop-blur-sm p-1 rounded-xl font-bold 
-            text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-ui-info hover:bg-bg-surface/80"
+              inputClass="w-full border border-secondary-border bg-bg-surface/70 backdrop-blur-sm p-1 rounded-xl font-bold 
+            text-primary-text placeholder:text-secondary-text focus:outline-none focus:ring-2 focus:ring-info-border hover:bg-bg-surface/80"
             />
             <CustomButton
               onClick={handleSubmit}
@@ -283,19 +283,19 @@ export default function Home() {
               isLoading={loading}
               loading="dots"
               loadingText="در حال تبدیل..."
-              className="text-user-user-100"
+              className="text-secondary-contrast"
             >
               تبدیل
             </CustomButton>
             <div className="flex min-h-10 flex-col items-center justify-center gap-2">
               {error && (
-                <div className="text-red-admin-600 font-bold text-sm bg-ui-danger/30 backdrop-blur-sm px-4 py-2 rounded-full  shadow-md border border-ui-danger/50">
+                <div className="text-danger-text font-bold text-sm bg-danger-bg backdrop-blur-sm px-4 py-2 rounded-full  shadow-md border border-danger-border">
                   {error}
                 </div>
               )}
 
               {!error && result && (
-                <div className="p-2 bg-admin-admin-100 backdrop-blur-sm rounded-xl text-center font-bold text-admin-admin-600 border border-admin-admin-600 shadow-md">
+                <div className="p-2 bg-primary-bg backdrop-blur-sm rounded-xl text-center font-bold text-primary-text border border-primary-border shadow-md">
                   {result}
                 </div>
               )}
@@ -303,13 +303,13 @@ export default function Home() {
           </div>
 
         <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-4">
-          <div className="font-bold text-xl bg-user-user-user bg-clip-text text-transparent">
+          <div className="font-bold text-xl bg-secondary bg-clip-text text-transparent">
             تاریخچه
           </div>
 
-          <div className="custom-scrollbar min-h-40 w-full flex-1 overflow-y-auto rounded-xl border border-ui-secondary/40 bg-bg-surface/30 p-2 backdrop-blur-sm">
+          <div className="custom-scrollbar min-h-40 w-full flex-1 overflow-y-auto rounded-xl border border-secondary-border bg-bg-surface/30 p-2 backdrop-blur-sm">
             {history.length === 0 && (
-              <div className="text-sm text-user-user-800 text-center py-8">موردی ثبت نشده</div>
+              <div className="text-sm text-secondary-text text-center py-8">موردی ثبت نشده</div>
             )}
 
             {history.map((item) => (
@@ -318,17 +318,17 @@ export default function Home() {
                 className="flex justify-between items-center bg-bg-surface/60 backdrop-blur-sm p-3 rounded-xl hover:bg-bg-surface/80 transition-all duration-200 text-sm w-full mb-2 last:mb-0 shadow-sm hover:shadow-md"
               >
                 <div>
-                  <div className="text-xs text-text-secondary">
+                  <div className="text-xs text-secondary-text">
                     {item.date}
                   </div>
-                  <div className="text-text-primary font-medium">
+                  <div className="text-primary-text font-medium">
                     {item.fromType} → {item.toType}
                   </div>
                   <div className="font-bold text-user-user-user bg-clip-text text-transparent">
                     {item.result}
                   </div>
                 </div>
-                <div className="p-1 min-w-6 flex justify-center rounded-full font-bold bg-user-user-user text-xs text-text-primary">
+                <div className="p-1 min-w-6 flex justify-center rounded-full font-bold bg-secondary text-xs text-primary-text">
                   {item.id}
                 </div>
               </div>

@@ -4,7 +4,7 @@ import React from "react";
 
 import { useTheme } from "../../theme/provider";
 import { resolveDynamicColor } from "../../theme/theme";
-import { resolveVariantColors, strengthenBorderColor, UICommonVariant } from "../../variants/ui.variant";
+import { resolveTokenTextColor, resolveVariantColors, strengthenBorderColor, UICommonVariant } from "../../variants/ui.variant";
 import { borderVariants, cursorVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 import Loading, { LoadingVariant } from "../loading/loading";
 
@@ -30,6 +30,7 @@ type CustomButtonProps = BaseProps & {
   iconAfter?: React.ReactNode;
   token?: string;
   className?: string;
+  unstyled?: boolean;
   href?: string;
 };
 
@@ -52,6 +53,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   token,
   onClick,
   className,
+  unstyled = false,
   style,
   href,
   ...rest
@@ -73,7 +75,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     if (token.startsWith("bg-")) {
       tokenStyle.backgroundColor = resolvedColor;
       tokenStyle.borderColor = strengthenBorderColor(resolvedColor);
-      tokenStyle.color = "#ffffff";
+      tokenStyle.color = resolveTokenTextColor(theme, token, 50);
     }
 
     if (token.startsWith("text-")) {
@@ -112,9 +114,13 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         href={href}
         onClick={onClick as any}
         style={{
-          backgroundColor: variantStyle.backgroundColor,
-          color: variantStyle.color,
-          borderColor: variantStyle.borderColor,
+          ...(unstyled
+            ? {}
+            : {
+                backgroundColor: variantStyle.backgroundColor,
+                color: variantStyle.color,
+                borderColor: variantStyle.borderColor,
+              }),
           ...style,
           ...tokenStyle,
         }}
@@ -131,9 +137,13 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       disabled={isDisabled}
       onClick={onClick}
       style={{
-        backgroundColor: variantStyle.backgroundColor,
-        color: variantStyle.color,
-        borderColor: variantStyle.borderColor,
+        ...(unstyled
+          ? {}
+          : {
+              backgroundColor: variantStyle.backgroundColor,
+              color: variantStyle.color,
+              borderColor: variantStyle.borderColor,
+            }),
         ...style,
         ...tokenStyle,
       }}

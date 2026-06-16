@@ -1,11 +1,12 @@
 "use client";
 
-import { ThemePalettePicker, hexToRgba } from "@/app/panel/theme-palette-picker";
+import { CustomSwitch } from "@/app/design-system/components/ui/switch";
+import { ThemePalettePicker } from "@/app/panel/theme-palette-picker";
 import { useTheme } from "../../design-system/theme/provider";
 import { resolveColor } from "../../design-system/theme/theme";
 
 export function AdminThemePanel() {
-  const { adminTheme, updateAdminTheme, theme } = useTheme();
+  const { adminTheme, userTheme, updateAdminTheme, updateUserTheme } = useTheme();
   const adminColor = resolveColor(adminTheme.primary, adminTheme.style, adminTheme.tone);
 
   const updatePalette = (next: Parameters<typeof updateAdminTheme>[0]) => {
@@ -28,19 +29,13 @@ export function AdminThemePanel() {
 
   return (
     <section
-      className="flex w-full max-w-3xl flex-col gap-4 rounded-xl p-4"
-      style={{
-        border: `1px solid ${hexToRgba(adminColor, 0.3)}`,
-        backgroundColor: hexToRgba(adminColor, 0.1),
-        color: theme.tokens.colors.text.primary,
-      }}
+      className="flex w-full max-w-3xl flex-col gap-4 rounded-xl border border-primary-border bg-primary-bg p-4 text-primary-text"
     >
       <ThemePalettePicker
-        accentColor={adminColor}
+        scope="admin"
         selectedColor={adminTheme.primary}
         selectedStyle={adminTheme.style}
         selectedTone={adminTheme.tone}
-        textColor={theme.tokens.colors.text.primary}
         selectionClassName="text-admin-admin-admin"
         onChange={(next) =>
           updatePalette({
@@ -50,6 +45,23 @@ export function AdminThemePanel() {
           })
         }
       />
+
+      <div
+        className="flex flex-col gap-3 rounded-xl border border-primary-border bg-primary-card p-3"
+      >
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-bold text-admin-admin-admin">User color panel</span>
+          <span className="text-xs font-semibold text-primary-text">
+            Lock user palette controls from the admin panel.
+          </span>
+        </div>
+        <CustomSwitch
+          checked={userTheme.isColorPanelLocked}
+          customColor={adminColor}
+          label={userTheme.isColorPanelLocked ? "Locked" : "Unlocked"}
+          onChange={(isColorPanelLocked) => updateUserTheme({ isColorPanelLocked })}
+        />
+      </div>
     </section>
   );
 }

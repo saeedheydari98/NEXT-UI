@@ -144,13 +144,13 @@ export default function ProductPage() {
 
   if (catalogLoading && !product) {
     return (
-      <main className="min-h-screen bg-bg-base text-text-primary">
+      <main className="min-h-screen bg-bg-base text-primary-text">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 py-8 px-4">
-          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-[var(--surface-user-soft)] p-6 shadow-sm lg:flex-row lg:items-start">
+          <section className="flex w-full flex-col gap-8 rounded-2xl border border-border-default bg-primary-soft p-6 shadow-sm lg:flex-row lg:items-start">
             <div className="flex w-full flex-col gap-4 lg:max-w-md lg:shrink-0">
               <Loading loading="skeleton-item" isLoading>
-                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-[#e5e5e5] bg-[var(--surface-user-media)]">
-                  <IoBagHandleOutline className="text-6xl text-neutral-400" aria-hidden="true" />
+                <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-border-default bg-primary-media">
+                  <IoBagHandleOutline className="text-6xl text-primary" aria-hidden="true" />
                 </div>
               </Loading>
             </div>
@@ -163,7 +163,7 @@ export default function ProductPage() {
                 </div>
               </Loading>
               <Loading loading="skeleton-item" isLoading>
-                <div className="text-3xl font-bold leading-tight text-text-primary">
+                <div className="text-3xl font-bold leading-tight text-primary-text">
                   {LOADING_PRODUCT.title}
                 </div>
               </Loading>
@@ -172,28 +172,28 @@ export default function ProductPage() {
                   <StarRating value={4} size="md" />
                 </Loading>
                 <Loading loading="skeleton-item" isLoading>
-                  <span className="text-sm font-semibold text-text-primary">4.8</span>
+                  <span className="text-sm font-semibold text-primary-text">4.8</span>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading>
-                  <span className="text-sm text-text-secondary">(128 reviews)</span>
+                  <span className="text-sm text-secondary-text">(128 reviews)</span>
                 </Loading>
               </div>
-              <div className="flex flex-col gap-1 rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-card)] p-4">
+              <div className="flex flex-col gap-1 rounded-xl border border-border-default bg-primary-card p-4">
                 <Loading loading="skeleton-item" isLoading>
-                  <div className="text-sm text-red-admin-500 line-through">
+                  <div className="text-sm text-danger-text-nomode line-through">
                     {LOADING_PRODUCT.originalPrice}
                   </div>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading>
-                  <div className="text-3xl font-bold text-ui-primary">{LOADING_PRODUCT.price}</div>
+                  <div className="text-3xl font-bold text-primary">{LOADING_PRODUCT.price}</div>
                 </Loading>
               </div>
               <div className="flex flex-col gap-2">
                 <Loading loading="skeleton-item" isLoading>
-                  <div className="text-sm font-bold text-text-primary">About this product</div>
+                  <div className="text-sm font-bold text-primary-text">About this product</div>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading>
-                  <div className="text-sm leading-7 text-text-secondary whitespace-pre-wrap">
+                  <div className="text-sm leading-7 text-secondary-text whitespace-pre-wrap">
                     {LOADING_PRODUCT.description}
                   </div>
                 </Loading>
@@ -213,20 +213,20 @@ export default function ProductPage() {
             </div>
           </section>
 
-          <section className="flex w-full flex-col gap-8 rounded-2xl border border-[#e5e5e5] bg-[var(--surface-user-soft)] p-6 shadow-sm">
-            <div className="flex flex-col gap-2 border-b border-[#e5e5e5] pb-6">
+          <section className="flex w-full flex-col gap-8 rounded-2xl border border-border-default bg-primary-soft p-6 shadow-sm">
+            <div className="flex flex-col gap-2 border-b border-border-default pb-6">
               <Loading loading="skeleton-item" isLoading>
-                <div className="text-2xl font-bold text-text-primary">Customer reviews</div>
+                <div className="text-2xl font-bold text-primary-text">Customer reviews</div>
               </Loading>
               <Loading loading="skeleton-item" isLoading>
-                <div className="text-sm text-text-secondary">
+                <div className="text-sm text-secondary-text">
                   Read what shoppers think about this product.
                 </div>
               </Loading>
             </div>
             <div className="flex flex-col gap-10 lg:flex-row lg:gap-12">
               <div className="flex w-full flex-col gap-5 lg:max-w-xs">
-                <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-card)] p-5">
+                <div className="flex flex-col gap-3 rounded-xl border border-border-default bg-primary-card p-5">
                   <Loading loading="skeleton-item" isLoading>
                     <div className="text-4xl font-bold">4.8</div>
                   </Loading>
@@ -234,17 +234,17 @@ export default function ProductPage() {
                     <StarRating value={4} size="lg" />
                   </Loading>
                   <Loading loading="skeleton-item" isLoading>
-                    <div className="text-sm text-text-secondary">128 rated reviews</div>
+                    <div className="text-sm text-secondary-text">128 rated reviews</div>
                   </Loading>
                 </div>
               </div>
               <div className="flex flex-1 flex-col gap-4">
-                <div className="flex flex-col gap-4 rounded-xl border border-[#e5e5e5] bg-[var(--surface-user-card)] p-5">
+                <div className="flex flex-col gap-4 rounded-xl border border-border-default bg-primary-card p-5">
                   <Loading loading="skeleton-item" isLoading>
                     <div className="text-lg font-bold">Write a review</div>
                   </Loading>
                   <Loading loading="skeleton-item" isLoading>
-                    <div className="min-h-28 w-full rounded-lg border border-[#e5e5e5] bg-[var(--surface-user-media)]" />
+                    <div className="min-h-28 w-full rounded-lg border border-border-default bg-primary-media" />
                   </Loading>
                 </div>
               </div>
@@ -258,8 +258,8 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 bg-bg-base p-6">
-        <div className="text-lg font-bold text-text-primary">Product not found</div>
-        <div className="text-sm text-text-secondary">The requested product could not be located.</div>
+        <div className="text-lg font-bold text-primary-text">Product not found</div>
+        <div className="text-sm text-secondary-text">The requested product could not be located.</div>
       </div>
     );
   }
@@ -269,17 +269,17 @@ export default function ProductPage() {
   const originalPrice = formatPrice(product.originalPrice);
 
   return (
-    <main className="min-h-screen bg-bg-base text-text-primary">
+    <main className="min-h-screen bg-bg-base text-primary-text">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 py-8 px-4">
         {cartMessage ? (
-          <div className="rounded-lg border border-ui-primary/30 bg-[var(--surface-user-card)] px-4 py-3 text-sm font-semibold text-ui-primary">
+          <div className="rounded-lg border border-primary-border bg-primary-card px-4 py-3 text-sm font-semibold text-primary">
             {cartMessage}
           </div>
         ) : null}
 
-        <section className="flex w-full flex-col gap-8 rounded-2xl border border-ui-primary/25 bg-[var(--surface-user-soft)] p-6 shadow-sm lg:flex-row lg:items-start">
+        <section className="flex w-full flex-col gap-8 rounded-2xl border border-primary-border bg-primary-soft p-6 shadow-sm lg:flex-row lg:items-start">
           <div className="flex w-full flex-col gap-4 lg:max-w-md lg:shrink-0">
-            <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-ui-primary/15 bg-[var(--surface-user-media)]">
+            <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-primary-border bg-primary-media">
               {product.imageUrl ? (
                 <img
                   src={product.imageUrl}
@@ -287,7 +287,7 @@ export default function ProductPage() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <IoBagHandleOutline className="text-6xl text-ui-primary/50" aria-hidden="true" />
+                <IoBagHandleOutline className="text-6xl text-primary" aria-hidden="true" />
               )}
             </div>
           </div>
@@ -302,7 +302,7 @@ export default function ProductPage() {
                 </div>
               ) : null}
 
-              <div className="text-3xl font-bold leading-tight text-text-primary">{product.title}</div>
+              <div className="text-3xl font-bold leading-tight text-primary-text">{product.title}</div>
 
               <button
                 type="button"
@@ -310,21 +310,21 @@ export default function ProductPage() {
                 className="flex w-fit flex-wrap items-center gap-3 rounded-lg text-left transition-opacity hover:opacity-80"
               >
                 <StarRating value={avgRating} size="md" />
-                <span className="text-sm font-semibold text-text-primary">
+                <span className="text-sm font-semibold text-primary-text">
                   {avgRating > 0 ? avgRating.toFixed(1) : "No ratings"}
                 </span>
-                <span className="text-sm text-text-secondary">
+                <span className="text-sm text-secondary-text">
                   ({reviews.length} review{reviews.length === 1 ? "" : "s"})
                 </span>
               </button>
             </div>
 
-            <div className="flex flex-col gap-1 rounded-xl border border-ui-primary/15 bg-[var(--surface-user-card)] p-4">
+            <div className="flex flex-col gap-1 rounded-xl border border-primary-border bg-primary-card p-4">
               {originalPrice && discountPercent > 0 ? (
-                <div className="text-sm text-red-admin-500 line-through">{originalPrice}</div>
+                <div className="text-sm text-danger-text-nomode line-through">{originalPrice}</div>
               ) : null}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="text-3xl font-bold text-ui-primary">{finalPrice || "No price"}</div>
+                <div className="text-3xl font-bold text-primary">{finalPrice || "No price"}</div>
                 {discountPercent > 0 ? (
                   <CustomTag size="xs" rounded="full" border="base">
                     {discountPercent}% off
@@ -334,8 +334,8 @@ export default function ProductPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="text-sm font-bold text-text-primary">About this product</div>
-              <div className="text-sm leading-7 text-text-secondary whitespace-pre-wrap">
+              <div className="text-sm font-bold text-primary-text">About this product</div>
+              <div className="text-sm leading-7 text-secondary-text whitespace-pre-wrap">
                 {product.description}
               </div>
             </div>

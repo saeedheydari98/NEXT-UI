@@ -4,7 +4,7 @@ import React from "react";
 
 import { useTheme } from "../../theme/provider";
 import { resolveDynamicColor } from "../../theme/theme";
-import { resolveVariantColors, strengthenBorderColor, UICommonVariant } from "../../variants/ui.variant";
+import { resolveTokenTextColor, resolveVariantColors, strengthenBorderColor, UICommonVariant } from "../../variants/ui.variant";
 import { borderVariants, cx, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
 type BaseProps = React.HTMLAttributes<HTMLSpanElement>;
@@ -58,7 +58,7 @@ export const CustomTag: React.FC<CustomTagProps> = ({
     if (token.startsWith("bg-")) {
       tokenStyle.backgroundColor = resolvedColor;
       tokenStyle.borderColor = strengthenBorderColor(resolvedColor);
-      tokenStyle.color = "#ffffff";
+      tokenStyle.color = resolveTokenTextColor(theme, token, 50);
     }
 
     if (token.startsWith("text-")) {

@@ -169,14 +169,14 @@ export default function CartPage() {
   };
 
   return (
-    <main className="min-h-screen bg-bg-base text-text-primary">
+    <main className="min-h-screen bg-bg-base text-primary-text">
       <section className="mx-auto flex w-full flex-col gap-6 px-4 py-8">
-        <div className="flex items-center justify-between gap-3 border-b border-ui-primary/30 pb-4">
+        <div className="flex items-center justify-between gap-3 border-b border-primary-border pb-4">
           <div>
             <div className="text-3xl font-bold">Cart</div>
-            <div className="text-sm text-text-secondary">{totalItems} item(s) in cart</div>
+            <div className="text-sm text-secondary-text">{totalItems} item(s) in cart</div>
             {items.length > 0 && (
-              <div className="mt-1 text-base font-bold text-ui-primary">
+              <div className="mt-1 text-base font-bold text-primary">
                 Total: {formatPrice(cartTotal)}
               </div>
             )}
@@ -199,13 +199,13 @@ export default function CartPage() {
         </div>
 
         {checkoutMessage ? (
-          <div className="rounded-md border border-ui-primary/30 bg-[var(--surface-user-card)] px-4 py-2 text-sm font-semibold text-ui-primary">
+          <div className="rounded-md border border-primary-border bg-primary-card px-4 py-2 text-sm font-semibold text-primary">
             {checkoutMessage}
           </div>
         ) : null}
 
         {items.length === 0 ? (
-          <div className="rounded-lg border border-ui-primary/30 bg-[var(--surface-user-card)] p-6 text-sm text-text-secondary">
+          <div className="rounded-lg border border-primary-border bg-primary-card p-6 text-sm text-secondary-text">
             Your cart is empty.
           </div>
         ) : (
@@ -213,11 +213,11 @@ export default function CartPage() {
             {items.map((item, index) => (
               <article
                 key={String(item.id ?? `${item.title}-${index}`)}
-                className="grid gap-4 rounded-lg border border-ui-primary/30 bg-[var(--surface-user-card)] p-4 sm:grid-cols-[120px_1fr_auto]"
+                className="grid gap-4 rounded-lg border border-primary-border bg-primary-card p-4 sm:grid-cols-[120px_1fr_auto]"
               >
                 <button
                   type="button"
-                  className="flex h-28 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-user-media)]"
+                  className="flex h-28 items-center justify-center overflow-hidden rounded-md bg-primary-media"
                   onClick={() => openImagePreview(item.imageUrl)}
                   disabled={!item.imageUrl}
                   aria-label="Open product image"
@@ -225,15 +225,15 @@ export default function CartPage() {
                   {item.imageUrl ? (
                     <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                   ) : (
-                    <IoBagHandleOutline className="text-4xl text-ui-primary" aria-hidden="true" />
+                    <IoBagHandleOutline className="text-4xl text-primary" aria-hidden="true" />
                   )}
                 </button>
                 <div className="grid gap-2">
                   <div className="text-lg font-bold">{item.title}</div>
-                  <div className="text-sm text-text-secondary">{item.description}</div>
-                  <div className="text-sm font-semibold text-ui-primary">
+                  <div className="text-sm text-secondary-text">{item.description}</div>
+                  <div className="text-sm font-semibold text-primary">
                     {item.originalPrice && getDiscountPercent(item) > 0 && (
-                      <span className="mr-2 text-text-secondary line-through">
+                      <span className="mr-2 text-danger-text-nomode line-through">
                         {formatPrice(item.originalPrice)}
                       </span>
                     )}
@@ -305,11 +305,11 @@ export default function CartPage() {
           shadow="lg"
         >
           <div className="flex flex-col gap-3">
-            <div className="text-sm text-text-secondary">
+            <div className="text-sm text-secondary-text">
               Please register your required profile information before checkout.
             </div>
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-text-primary">First name</div>
+              <div className="text-xs font-bold text-primary-text">First name</div>
               <CustomInput
                 value={profileDraft.firstName}
                 placeholder="نام"
@@ -319,7 +319,7 @@ export default function CartPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-text-primary">Last name</div>
+              <div className="text-xs font-bold text-primary-text">Last name</div>
               <CustomInput
                 value={profileDraft.lastName}
                 placeholder="نام خانوادگی"
@@ -329,7 +329,7 @@ export default function CartPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-text-primary">National ID</div>
+              <div className="text-xs font-bold text-primary-text">National ID</div>
               <CustomInput
                 value={profileDraft.nationalId}
                 placeholder="کد ملی"
@@ -340,7 +340,7 @@ export default function CartPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-text-primary">Phone</div>
+              <div className="text-xs font-bold text-primary-text">Phone</div>
               <CustomInput
                 value={profileDraft.phone}
                 placeholder="شماره تماس"
@@ -351,7 +351,7 @@ export default function CartPage() {
               />
             </div>
             {profileError ? (
-              <div className="rounded-md border border-red-admin-500/30 bg-bg-base px-3 py-2 text-sm font-semibold text-red-admin-500">
+              <div className="rounded-md border border-danger-border-nomode bg-bg-base px-3 py-2 text-sm font-semibold text-danger-text-nomode">
                 {profileError}
               </div>
             ) : null}

@@ -39,8 +39,8 @@ export function ShowcaseSection({
 }: ShowcaseSectionProps) {
   return (
     <section
-      className={`flex flex-col gap-3 rounded-xl border bg-[var(--surface-user-soft)] p-4 ${
-        isLoading ? "border-[#e5e5e5]" : "border-ui-primary/30"
+      className={`flex flex-col gap-3 rounded-xl border bg-primary-soft p-4 ${
+        isLoading ? "border-border-default" : "border-primary-border"
       }`}
     >
       <div className="flex items-center justify-between gap-3">
@@ -51,7 +51,7 @@ export function ShowcaseSection({
         </div>
         <div className="flex items-center gap-2">
           <Loading loading="skeleton-item" isLoading={isLoading}>
-            <span className="text-xs font-semibold text-text-secondary">{products.length} items</span>
+            <span className="text-xs font-semibold text-secondary-text">{products.length} items</span>
           </Loading>
           <Loading loading="skeleton-item" isLoading={isLoading}>
             <ShowcaseLink showcaseId={showcase.id}>See all</ShowcaseLink>
@@ -69,14 +69,14 @@ export function ShowcaseSection({
         {products.map((product, index) => (
           <article
             key={product.id ?? `${product.title}-${index}`}
-            className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border bg-[var(--surface-user-card)] shadow-sm ${
-              isLoading ? "border-[#e5e5e5]" : "border-ui-primary/25"
+            className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border bg-primary-card shadow-sm ${
+              isLoading ? "border-border-default" : "border-primary-border"
             }`}
           >
             <div className="flex min-h-36 flex-1 gap-3 p-3">
               <button
                 type="button"
-                className="relative flex min-h-28 w-1/3 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[var(--surface-user-media)]"
+                className="relative flex min-h-28 w-1/3 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media"
                 onClick={() => onPreview(product.imageUrl)}
                 disabled={isLoading || !product.imageUrl}
                 aria-label="Open product image"
@@ -90,7 +90,7 @@ export function ShowcaseSection({
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <IoBagHandleOutline className="text-4xl text-ui-primary" aria-hidden="true" />
+                      <IoBagHandleOutline className="text-4xl text-primary" aria-hidden="true" />
                     )}
                   </div>
                 </Loading>
@@ -108,19 +108,19 @@ export function ShowcaseSection({
                   <div className="line-clamp-1 text-sm font-bold">{product.title}</div>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading={isLoading}>
-                  <span className="line-clamp-2 text-xs leading-5 text-text-secondary">{product.description}</span>
+                  <span className="line-clamp-2 text-xs leading-5 text-secondary-text">{product.description}</span>
                 </Loading>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-col gap-1">
                     {product.originalPrice && getDiscountPercent(product) > 0 && (
                       <Loading loading="skeleton-item" isLoading={isLoading}>
-                        <div className="text-xs text-red-admin-500 line-through">
+                        <div className="text-xs text-danger-text-nomode line-through">
                           {formatPrice(product.originalPrice)}
                         </div>
                       </Loading>
                     )}
                     <Loading loading="skeleton-item" isLoading={isLoading}>
-                      <div className="text-sm font-semibold text-ui-primary">{formatPrice(getFinalPrice(product))}</div>
+                      <div className="text-sm font-semibold text-primary">{formatPrice(getFinalPrice(product))}</div>
                     </Loading>
                   </div>
                   {getDiscountPercent(product) > 0 && !isLoading ? (
@@ -133,7 +133,7 @@ export function ShowcaseSection({
             </div>
             <div
               className={`flex min-h-12 gap-2 border-t p-3 ${
-                isLoading ? "border-[#e5e5e5]" : "border-ui-primary/15"
+                isLoading ? "border-border-default" : "border-primary-border"
               }`}
             >
               <Loading loading="skeleton-item" isLoading={isLoading} className="flex-1">

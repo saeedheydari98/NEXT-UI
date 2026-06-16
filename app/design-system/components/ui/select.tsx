@@ -45,8 +45,8 @@ export function CustomSelect({
         {...rest}
         disabled={isDisabled}
         className={cx(
-          "text-text-primary",
-          "focus:outline-none focus:ring-2 focus:ring-ui-primary/30",
+          "text-primary-text",
+          "focus:outline-none focus:ring-2 focus:ring-primary-border",
           sizeVariants[size],
           radiusVariants[rounded],
           borderVariants[border],
@@ -65,7 +65,7 @@ export function CustomSelect({
         {children}
       </select>
       {isLoading && (
-        <span className="absolute right-3 flex items-center gap-2 text-text-secondary">
+        <span className="absolute right-3 flex items-center gap-2 text-secondary-text">
           <Loading loading={loading} size={size} />
           {loadingText && <span className="text-sm">{loadingText}</span>}
         </span>

@@ -45,14 +45,14 @@ export function CustomInput({
   return (
     <div className={cx("relative inline-flex items-center", fullWidth && "w-full")}>
       {!isLoading && icon && (
-        <span className="absolute left-3 text-text-secondary">{icon}</span>
+        <span className="absolute left-3 text-secondary-text">{icon}</span>
       )}
       <input
         {...rest}
         disabled={isDisabled}
         className={cx(
-          "text-text-primary placeholder:text-text-secondary",
-          "focus:outline-none focus:ring-2 focus:ring-ui-primary/30",
+          "text-primary-text placeholder:text-secondary-text",
+          "focus:outline-none focus:ring-2 focus:ring-primary-border",
           sizeVariants[size],
           radiusVariants[rounded],
           borderVariants[border],
@@ -72,13 +72,13 @@ export function CustomInput({
         }}
       />
       {isLoading && (
-        <span className="absolute right-3 flex items-center gap-2 text-text-secondary">
+        <span className="absolute right-3 flex items-center gap-2 text-secondary-text">
           <Loading loading={loading} size={size} />
           {loadingText && <span className="text-sm">{loadingText}</span>}
         </span>
       )}
       {!isLoading && iconAfter && (
-        <span className="absolute right-3 text-text-secondary">{iconAfter}</span>
+        <span className="absolute right-3 text-secondary-text">{iconAfter}</span>
       )}
     </div>
   );

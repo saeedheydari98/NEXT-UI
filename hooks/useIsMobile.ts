@@ -5,14 +5,13 @@ export function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < breakpoint);
-    };
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const syncIsMobile = () => setIsMobile(mediaQuery.matches);
 
-    checkIsMobile();
-    window.addEventListener("resize", checkIsMobile);
+    syncIsMobile();
+    mediaQuery.addEventListener("change", syncIsMobile);
 
-    return () => window.removeEventListener("resize", checkIsMobile);
+    return () => mediaQuery.removeEventListener("change", syncIsMobile);
   }, [breakpoint]);
 
   return isMobile;

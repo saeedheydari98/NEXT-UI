@@ -5,14 +5,12 @@ import { AdminAccessPanel } from "@/app/panel/admin/admin-access-panel";
 import { AdminThemePanel } from "@/app/panel/admin/admin-theme-panel";
 import { AdminProductsPanel } from "@/app/panel/admin/admin-products-panel";
 import { AdminSecurityPanel } from "@/app/panel/admin/admin-security-panel";
-import { useTheme } from "@/app/design-system/theme/provider";
 import {
   ADMIN_ACCESS_UPDATED_EVENT,
   isAdminAccessUnlocked,
 } from "@/lib/admin-access";
 
 export default function AdminPanelPage() {
-  const { theme } = useTheme();
   const [hasAdminAccess, setHasAdminAccess] = useState(false);
 
   useEffect(() => {
@@ -29,13 +27,7 @@ export default function AdminPanelPage() {
   }, []);
 
   return (
-    <main
-      className="min-h-screen p-6"
-      style={{
-        backgroundColor: theme.tokens.colors.background.base,
-        color: theme.tokens.colors.text.primary,
-      }}
-    >
+    <main className="min-h-screen bg-bg-base p-6 text-primary-text">
       {hasAdminAccess ? (
         <div className="flex w-full flex-col gap-6">
           <section className="flex flex-col  gap-4">
@@ -45,7 +37,7 @@ export default function AdminPanelPage() {
               <AdminSecurityPanel />
             </div>
           </section>
-          <div className="h-0.5 bg-ui-primary/30"></div>
+          <div className="h-0.5 bg-primary-border"></div>
           <AdminProductsPanel />
         </div>
       ) : (

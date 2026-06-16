@@ -41,19 +41,19 @@ export function AdminShowcaseList({
         return (
           <div
             key={showcase.id}
-            className={`flex w-full flex-col gap-3 rounded-xl border bg-[var(--surface-admin-card)] p-4 ${
-              isLoading ? "border-[#e5e5e5]" : "border-ui-primary/30"
+            className={`flex w-full flex-col gap-3 rounded-xl border bg-primary-soft p-4 ${
+              isLoading ? "border-border-default" : "border-primary-border"
             }`}
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Loading loading="skeleton-item" isLoading={isLoading}>
-                  <div className="text-sm font-bold text-text-primary">{showcase.title || "Untitled showcase"}</div>
+                  <div className="text-xl font-bold text-primary-text">{showcase.title || "Untitled showcase"}</div>
                 </Loading>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <Loading loading="skeleton-item" isLoading={isLoading}>
-                  <span className="text-xs font-semibold text-text-secondary">{showcaseProducts.length} items</span>
+                  <span className="text-xs font-semibold text-primary-text">{showcaseProducts.length} items</span>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading={isLoading}>
                   <CustomButton
@@ -67,11 +67,23 @@ export function AdminShowcaseList({
                     Edit
                   </CustomButton>
                 </Loading>
+                <Loading loading="skeleton-item" isLoading={isLoading}>
+                  <CustomButton
+                    variant="danger"
+                    rounded="full"
+                    size="sm"
+                    border="base"
+                    icon={<IoTrashOutline />}
+                    onClick={() => onDeleteShowcase(showcase)}
+                  >
+                    Delete
+                  </CustomButton>
+                </Loading>
               </div>
             </div>
 
             <div
-              className="flex cursor-grab gap-2 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing"
+              className="flex cursor-grab gap-3 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing"
               onMouseDown={onDragStart}
               onMouseMove={onDragMove}
               onMouseUp={onDragStop}
@@ -79,15 +91,15 @@ export function AdminShowcaseList({
             >
               {showcaseProducts.length === 0 && (
                 <div
-                  className={`flex min-h-28 min-w-44 flex-col justify-center gap-1 rounded-lg border border-dashed bg-[var(--surface-admin-soft)] p-3 ${
-                    isLoading ? "border-[#e5e5e5]" : "border-ui-primary/30"
+                  className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col justify-center gap-2 rounded-lg border border-dashed bg-primary-card p-5 ${
+                    isLoading ? "border-border-default" : "border-primary-border"
                   }`}
                 >
                   <Loading loading="skeleton-item" isLoading={isLoading}>
-                    <div className="text-xs font-bold text-text-primary">Empty showcase</div>
+                    <div className="text-xs font-bold text-primary-text">Empty showcase</div>
                   </Loading>
                   <Loading loading="skeleton-item" isLoading={isLoading}>
-                    <span className="text-[11px] text-text-secondary">Add a product to this showcase.</span>
+                    <span className="text-[11px] text-secondary-text">Add a product to this showcase.</span>
                   </Loading>
                 </div>
               )}
@@ -95,54 +107,74 @@ export function AdminShowcaseList({
               {showcaseProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  className={`flex min-h-44 min-w-36 max-w-36 shrink-0 flex-col gap-2 rounded-md border bg-[var(--surface-admin-soft)] p-2 shadow-sm ${
-                    isLoading ? "border-[#e5e5e5]" : "border-ui-primary/20"
+                  className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border bg-primary-card shadow-sm ${
+                    isLoading ? "border-border-default" : "border-primary-border"
                   }`}
                 >
-                  <button
-                    type="button"
-                    className="flex h-20 items-center justify-center overflow-hidden rounded bg-[var(--surface-admin-media)]"
-                    onClick={() => onPreview(product.imageUrl)}
-                    disabled={isLoading || !product.imageUrl}
-                    aria-label="Open product image"
-                  >
-                    <Loading loading="skeleton-item" isLoading={isLoading} className="h-full w-full">
-                      <div className="flex h-full w-full items-center justify-center">
-                        {product.imageUrl ? (
-                          <img
-                            src={product.imageUrl}
-                            alt={product.title || `Product ${index + 1}`}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <IoImageOutline className="text-2xl text-neutral-400" aria-hidden="true" />
-                        )}
-                      </div>
-                    </Loading>
-                  </button>
-                  <Loading loading="skeleton-item" isLoading={isLoading}>
-                    <div className="line-clamp-2 min-h-8 text-xs font-bold text-text-primary">
-                      {product.title || `Product ${index + 1}`}
-                    </div>
-                  </Loading>
-                  <Loading loading="skeleton-item" isLoading={isLoading}>
-                    <div className="text-xs font-bold text-ui-primary">
-                      {formatPrice(product.discountPrice || product.price) || "No price"}
-                    </div>
-                  </Loading>
-                  <Loading loading="skeleton-item" isLoading={isLoading}>
-                    <CustomButton
-                      fullWidth
-                      border="base"
-                      rounded="sm"
-                      size="sm"
-                      variant={product.active ? "primary" : "neutral"}
-                      icon={<IoCreateOutline />}
-                      onClick={() => onEditProduct(product)}
+                  <div className="flex min-h-36 flex-1 gap-3 p-3">
+                    <button
+                      type="button"
+                      className="flex min-h-28 w-1/3 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media"
+                      onClick={() => onPreview(product.imageUrl)}
+                      disabled={isLoading || !product.imageUrl}
+                      aria-label="Open product image"
                     >
-                      Open
-                    </CustomButton>
-                  </Loading>
+                      <Loading loading="skeleton-item" isLoading={isLoading} className="h-full w-full">
+                        <div className="flex h-full w-full items-center justify-center">
+                          {product.imageUrl ? (
+                            <img
+                              src={product.imageUrl}
+                              alt={product.title || `Product ${index + 1}`}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <IoImageOutline className="text-4xl text-primary" aria-hidden="true" />
+                          )}
+                        </div>
+                      </Loading>
+                    </button>
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <Loading loading="skeleton-item" isLoading={isLoading}>
+                        <div className="line-clamp-1 text-sm font-bold text-primary-text">
+                          {product.title || `Product ${index + 1}`}
+                        </div>
+                      </Loading>
+                      <Loading loading="skeleton-item" isLoading={isLoading}>
+                        <span className="line-clamp-2 text-xs leading-5 text-secondary-text">
+                          {product.description || "No description"}
+                        </span>
+                      </Loading>
+                      <Loading loading="skeleton-item" isLoading={isLoading}>
+                        <div className="text-sm font-semibold text-primary">
+                          {formatPrice(product.discountPrice || product.price) || "No price"}
+                        </div>
+                      </Loading>
+                      <Loading loading="skeleton-item" isLoading={isLoading}>
+                        <span className="text-xs font-semibold text-secondary-text">
+                          {product.active ? "Active" : "Hidden"}
+                        </span>
+                      </Loading>
+                    </div>
+                  </div>
+                  <div
+                    className={`flex min-h-12 gap-2 border-t p-3 ${
+                      isLoading ? "border-border-default" : "border-primary-border"
+                    }`}
+                  >
+                    <Loading loading="skeleton-item" isLoading={isLoading} className="flex-1">
+                      <CustomButton
+                        fullWidth
+                        border="base"
+                        rounded="md"
+                        size="sm"
+                        variant={product.active ? "primary" : "neutral"}
+                        icon={<IoCreateOutline />}
+                        onClick={() => onEditProduct(product)}
+                      >
+                        Open
+                      </CustomButton>
+                    </Loading>
+                  </div>
                 </div>
               ))}
             </div>

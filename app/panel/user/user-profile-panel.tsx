@@ -51,17 +51,19 @@ export function UserProfilePanel() {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-ui-secondary/30 bg-[var(--surface-user-card)] p-4">
+    <section
+      className="flex flex-col gap-4 rounded-xl border border-secondary-border bg-secondary-card p-4 text-primary-text"
+    >
       <div className="flex flex-col gap-1">
-        <div className="text-base font-bold text-text-secondary">Profile information</div>
-        <div className="text-sm text-text-secondary">
+        <div className="text-base font-bold text-secondary-text">Profile information</div>
+        <div className="text-sm text-secondary-text">
           Edit the information used for checkout.
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-text-secondary">First name</div>
+          <div className="text-xs font-bold text-secondary-text">First name</div>
           <CustomInput
             value={profileDraft.firstName}
             variant="secondary"
@@ -72,7 +74,7 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-text-secondary">Last name</div>
+          <div className="text-xs font-bold text-secondary-text">Last name</div>
           <CustomInput
             value={profileDraft.lastName}
             variant="secondary"
@@ -83,7 +85,7 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-text-secondary">National ID</div>
+          <div className="text-xs font-bold text-secondary-text">National ID</div>
           <CustomInput
             value={profileDraft.nationalId}
             variant="secondary"
@@ -95,7 +97,7 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-text-secondary">Phone</div>
+          <div className="text-xs font-bold text-secondary-text">Phone</div>
           <CustomInput
             value={profileDraft.phone}
             variant="secondary"
@@ -109,7 +111,9 @@ export function UserProfilePanel() {
       </div>
 
       {status ? (
-        <div className="rounded-md border border-ui-secondary/30 bg-[var(--surface-user-soft)] px-3 py-2 text-sm font-semibold text-text-secondary">
+        <div
+          className="rounded-md border border-secondary-border bg-secondary-card px-3 py-2 text-sm font-semibold text-secondary-text"
+        >
           {status}
         </div>
       ) : null}
