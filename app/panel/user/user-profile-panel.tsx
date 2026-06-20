@@ -53,6 +53,7 @@ export function UserProfilePanel() {
       lastName: profileDraft.lastName.trim(),
       nationalId: profileDraft.nationalId.trim(),
       phone: profileDraft.phone.trim(),
+      isAdminUnlocked: profileDraft.isAdminUnlocked,
     };
 
     try {

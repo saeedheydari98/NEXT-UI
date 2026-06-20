@@ -12,6 +12,8 @@ export type ProductForm = {
   ctaLabel: string;
   ctaHref: string;
   active: boolean;
+  stockQuantity: number;
+  colorStock: Record<string, number>;
   sortOrder: number;
 };
 

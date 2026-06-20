@@ -20,19 +20,26 @@ export type ProductPayload = {
   ctaLabel?: string;
   ctaHref?: string;
   active: boolean;
+  stockQuantity?: number | string;
+  colorStock?: unknown;
   sortOrder: number;
+  placement?: number | string;
 };
 
 type ShowcasePayload = {
+  type?: "showcase";
   id: string;
   title?: string;
   description?: string;
   imageUrl?: string;
   active?: boolean;
   sortOrder?: number | string;
+  placement?: number | string;
+  products?: Partial<ProductPayload>[];
 };
 
 type BannerPayload = {
+  type?: "banner";
   id: string;
   title?: string;
   showcaseId?: string;
@@ -40,6 +47,15 @@ type BannerPayload = {
   images?: unknown;
   active?: boolean;
   sortOrder?: number | string;
+  placement?: number | string;
+};
+
+type CatalogTreePayload = {
+  type?: string;
+  placement?: number | string;
+  children?: Array<ShowcasePayload | BannerPayload>;
+  showcases?: ShowcasePayload[];
+  banners?: BannerPayload[];
 };
 
 type BannerRecord = {
@@ -58,6 +74,12 @@ const hasShowcaseModel =
   prisma.showcase && typeof prisma.showcase.findMany === "function";
 
 function normalizeProduct(value: Partial<ProductPayload>, index: number): ProductPayload {
+  const placement = Number.isFinite(Number(value.placement))
+    ? Number(value.placement)
+    : Number.isFinite(Number(value.sortOrder))
+      ? Number(value.sortOrder)
+      : index + 1;
+
   return {
     id: value.id,
     showcaseId: String(value.showcaseId ?? "").trim(),
@@ -71,17 +93,33 @@ function normalizeProduct(value: Partial<ProductPayload>, index: number): Produc
     badge: String(value.badge ?? "").trim(),
     ctaLabel: String(value.ctaLabel ?? "").trim(),
     ctaHref: String(value.ctaHref ?? "").trim(),
-    active: Boolean(value.active),
-    sortOrder: Number.isFinite(Number(value.sortOrder)) ? Number(value.sortOrder) : index + 1,
+    active: value.active !== false,
+    stockQuantity: Number.isFinite(Number(value.stockQuantity)) ? Math.max(0, Math.round(Number(value.stockQuantity))) : 0,
+    colorStock: normalizeColorStock(value.colorStock),
+    sortOrder: placement,
+    placement,
   };
+}
+
+function normalizeColorStock(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .map(([color, count]) => [
+        color.trim(),
+        Math.max(0, Math.round(Number(count))),
+      ] as const)
+      .filter(([color, count]) => color && Number.isFinite(count))
+  );
 }
 
 function sortProducts(products: ProductPayload[]) {
   return [...products].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-function sortByOrder<T extends { sortOrder?: number | string }>(items: T[]) {
-  return [...items].sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0));
+function sortByOrder<T extends { sortOrder?: number | string; placement?: number | string }>(items: T[]) {
+  return [...items].sort((a, b) => getPlacement(a) - getPlacement(b));
 }
 
 function getProductKey(product: Partial<ProductPayload>) {
@@ -115,12 +153,53 @@ function toClientBanner(banner: BannerRecord) {
     : [];
 
   return {
+    type: "banner" as const,
     id: banner.id,
     title: banner.title ?? "",
     showcaseId: banner.showcaseId,
-    imageUrls,
+    images: imageUrls.map((url, index) => ({ url, placement: index + 1 })),
     active: banner.active,
-    sortOrder: banner.sortOrder,
+    placement: banner.sortOrder,
+  };
+}
+
+function toClientProduct(product: ProductPayload) {
+  return {
+    id: product.id,
+    showcaseId: product.showcaseId,
+    title: product.title,
+    description: product.description,
+    price: product.price,
+    originalPrice: product.originalPrice,
+    discountPrice: product.discountPrice,
+    discountPercent: product.discountPercent,
+    imageUrl: product.imageUrl,
+    badge: product.badge,
+    ctaLabel: product.ctaLabel,
+    ctaHref: product.ctaHref,
+    active: product.active,
+    stockQuantity: Number(product.stockQuantity ?? 0),
+    colorStock: normalizeColorStock(product.colorStock),
+    placement: Number(product.sortOrder ?? product.placement ?? 0),
+  };
+}
+
+function toClientShowcase(showcase: {
+  id: string;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  active: boolean;
+  sortOrder: number;
+}) {
+  return {
+    type: "showcase" as const,
+    id: showcase.id,
+    title: showcase.title ?? "",
+    description: showcase.description ?? "",
+    imageUrl: showcase.imageUrl ?? "",
+    active: showcase.active,
+    placement: showcase.sortOrder,
   };
 }
 
@@ -147,27 +226,84 @@ function buildCatalogTree(
     ? banners
     : banners.filter((banner) => banner.active !== false);
 
-  const bannerSections = visibleBanners.map((banner) => ({
-    type: "banner" as const,
-    sortOrder: banner.sortOrder,
-    item: toClientBanner(banner),
-  }));
+  const bannerSections = visibleBanners.map(toClientBanner);
 
   const showcaseSections = visibleShowcases
     .map((showcase) => ({
-      type: "showcase" as const,
-      sortOrder: showcase.sortOrder,
-      item: showcase,
+      ...toClientShowcase(showcase),
       products: visibleProducts.filter(
         (product) => String(product.showcaseId ?? "") === showcase.id
-      ),
+      ).map(toClientProduct),
     }))
     .filter((section) => includeInactive || section.products.length > 0);
 
   return {
-    sections: [...bannerSections, ...showcaseSections].sort(
-      (a, b) => a.sortOrder - b.sortOrder
+    type: "root" as const,
+    placement: 0,
+    children: [...bannerSections, ...showcaseSections].sort(
+      (a, b) => Number(a.placement ?? 0) - Number(b.placement ?? 0)
     ),
+  };
+}
+
+function getPlacement(value: { placement?: number | string; sortOrder?: number | string } | undefined, fallback = 0) {
+  if (Number.isFinite(Number(value?.placement))) return Number(value?.placement);
+  if (Number.isFinite(Number(value?.sortOrder))) return Number(value?.sortOrder);
+  return fallback;
+}
+
+function getImageUrls(value: BannerPayload) {
+  if (Array.isArray(value.imageUrls)) {
+    return value.imageUrls.map((item) => String(item)).filter(Boolean);
+  }
+
+  if (!Array.isArray(value.images)) return [];
+
+  return value.images
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object" && "url" in item) {
+        return String((item as { url?: unknown }).url ?? "");
+      }
+      return "";
+    })
+    .filter(Boolean);
+}
+
+function splitTreePayload(tree: CatalogTreePayload | null) {
+  const children = Array.isArray(tree?.children) ? tree.children : [];
+  const showcaseChildren = children.filter((item) => item.type === "showcase") as ShowcasePayload[];
+  const bannerChildren = children.filter((item) => item.type === "banner") as BannerPayload[];
+
+  return {
+    showcases: Array.isArray(tree?.showcases) ? tree.showcases : showcaseChildren,
+    banners: Array.isArray(tree?.banners) ? tree.banners : bannerChildren,
+  };
+}
+
+function buildShowcaseProductsNode(
+  showcase: {
+    id: string;
+    title: string | null;
+    description: string | null;
+    imageUrl: string | null;
+    active: boolean;
+    sortOrder: number;
+  } | null,
+  showcaseId: string,
+  products: ProductPayload[]
+) {
+  return {
+    type: "showcase" as const,
+    id: showcase?.id ?? showcaseId,
+    title: showcase?.title ?? "",
+    description: showcase?.description ?? "",
+    imageUrl: showcase?.imageUrl ?? "",
+    active: showcase?.active ?? true,
+    placement: showcase?.sortOrder ?? 0,
+    products: products
+      .map(toClientProduct)
+      .sort((a, b) => Number(a.placement ?? 0) - Number(b.placement ?? 0)),
   };
 }
 
@@ -190,7 +326,7 @@ export async function GET(request: Request) {
   };
 
   if (!hasProductModel) {
-    return NextResponse.json({ ok: true, data: { products: [], showcases: [], tree: [] } });
+    return NextResponse.json({ ok: true, data: { type: "root", placement: 0, children: [] } });
   }
 
   try {
@@ -204,15 +340,17 @@ export async function GET(request: Request) {
       if (!item) {
         return NextResponse.json({ ok: false, data: { product: null } }, { status: 404 });
       }
-      return NextResponse.json({ ok: true, data: { product: item } });
+      return NextResponse.json({ ok: true, data: { product: toClientProduct(item as ProductPayload) } });
     }
 
     const productsData = await prisma.product.findMany({
-      where: includeInactive ? undefined : { active: true },
+      where: {
+        ...(includeInactive ? {} : { active: true }),
+        ...(showcaseId ? { showcaseId } : {}),
+      },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     });
     const products = dedupeProducts(productsData as ProductPayload[]).filter((product) => {
-      if (showcaseId && String(product.showcaseId ?? "") !== showcaseId) return false;
       if (query && !matchesSearchQuery(product, query)) return false;
       if (onlyDiscounted) {
         const percent = Number(product.discountPercent || 0);
@@ -225,6 +363,17 @@ export async function GET(request: Request) {
       if (Number.isFinite(priceMax) && Number.isFinite(productPrice) && productPrice > priceMax) return false;
       return true;
     });
+
+    if (showcaseId) {
+      const showcase = hasShowcaseModel
+        ? await prisma.showcase.findUnique({ where: { id: showcaseId } })
+        : null;
+
+      return NextResponse.json({
+        ok: true,
+        data: buildShowcaseProductsNode(showcase, showcaseId, products),
+      });
+    }
 
     const showcases = hasShowcaseModel
       ? await prisma.showcase.findMany({
@@ -239,7 +388,6 @@ export async function GET(request: Request) {
             orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
           })
         : [];
-    const clientBanners = (banners as BannerRecord[]).map(toClientBanner);
     const tree = buildCatalogTree(
       products,
       showcases,
@@ -249,19 +397,53 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      data: { products, showcases, banners: clientBanners, tree, search: { query, count: products.length } },
+      data: tree,
     });
   } catch (error) {
     console.error("Products GET error:", error);
-    return NextResponse.json({ ok: false, error: "server error", data: { products: [], showcases: [], banners: [] } }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "server error", data: { type: "root", placement: 0, children: [] } },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
-  const products = Array.isArray(body.products) ? body.products : [];
-  const showcases = Array.isArray(body.showcases) ? (body.showcases as ShowcasePayload[]) : [];
-  const banners = Array.isArray(body.banners) ? (body.banners as BannerPayload[]) : [];
+  const treePayload =
+    body.tree && typeof body.tree === "object"
+      ? (body.tree as CatalogTreePayload)
+      : body.catalog && typeof body.catalog === "object"
+        ? (body.catalog as CatalogTreePayload)
+        : body.type === "root" || Array.isArray(body.children)
+          ? (body as CatalogTreePayload)
+          : null;
+  const treeParts = splitTreePayload(treePayload);
+  const catalogShowcases = treeParts.showcases;
+  const catalogBanners = treeParts.banners;
+  const bodyProducts = Array.isArray(body.products) ? body.products : [];
+  const products = catalogShowcases.length > 0
+    ? catalogShowcases.flatMap((showcase) =>
+        Array.isArray(showcase.products)
+          ? showcase.products.map((product, productIndex) => ({
+              ...product,
+              showcaseId: String(product.showcaseId ?? showcase.id ?? "").trim(),
+              sortOrder: getPlacement(product, productIndex + 1),
+              placement: getPlacement(product, productIndex + 1),
+            }))
+          : []
+      )
+    : bodyProducts;
+  const showcases = catalogShowcases.length > 0
+    ? catalogShowcases
+    : Array.isArray(body.showcases)
+      ? (body.showcases as ShowcasePayload[])
+      : [];
+  const banners = catalogBanners.length > 0
+    ? catalogBanners
+    : Array.isArray(body.banners)
+      ? (body.banners as BannerPayload[])
+      : [];
   const normalized = dedupeProducts(
     products
       .map((item: Partial<ProductPayload>, index: number) => normalizeProduct(item, index))
@@ -317,7 +499,7 @@ export async function POST(request: Request) {
             description: meta?.description ?? undefined,
             imageUrl: meta?.imageUrl ?? undefined,
             active: meta?.active ?? undefined,
-            sortOrder: Number.isFinite(Number(meta?.sortOrder)) ? Number(meta?.sortOrder) : undefined,
+            sortOrder: Number.isFinite(Number(getPlacement(meta, NaN))) ? getPlacement(meta) : undefined,
           },
           create: {
             id: showcaseId,
@@ -325,7 +507,7 @@ export async function POST(request: Request) {
             description: meta?.description ?? null,
             imageUrl: meta?.imageUrl ?? null,
             active: meta?.active ?? true,
-            sortOrder: Number.isFinite(Number(meta?.sortOrder)) ? Number(meta?.sortOrder) : 0,
+            sortOrder: getPlacement(meta, 0),
           },
         });
       }
@@ -345,6 +527,10 @@ export async function POST(request: Request) {
             ctaLabel: item.ctaLabel || null,
             ctaHref: item.ctaHref || null,
             active: item.active,
+            stockQuantity: Number(item.stockQuantity) || 0,
+            colorStock: Object.keys(normalizeColorStock(item.colorStock)).length > 0
+              ? normalizeColorStock(item.colorStock)
+              : Prisma.JsonNull,
             sortOrder: item.sortOrder,
           },
         });
@@ -353,9 +539,7 @@ export async function POST(request: Request) {
       if ("banner" in tx && typeof tx.banner?.create === "function") {
         for (const item of sortByOrder(banners)) {
           const bannerId = String(item.id ?? "").trim();
-          const imageUrls = Array.isArray(item.imageUrls)
-            ? item.imageUrls.map((value) => String(value)).filter(Boolean)
-            : [];
+          const imageUrls = getImageUrls(item);
           await tx.banner.create({
             data: {
               id: bannerId || undefined,
@@ -363,7 +547,7 @@ export async function POST(request: Request) {
               showcaseId: item.showcaseId ? String(item.showcaseId) : null,
               images: imageUrls.length > 0 ? imageUrls : Prisma.JsonNull,
               active: item.active ?? true,
-              sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : 0,
+              sortOrder: getPlacement(item, 0),
             },
           });
         }
@@ -385,7 +569,6 @@ export async function POST(request: Request) {
             orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
           })
         : [];
-    const clientBanners = (savedBanners as BannerRecord[]).map(toClientBanner);
     const tree = buildCatalogTree(
       data as ProductPayload[],
       savedShowcases,
@@ -395,7 +578,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      data: { products: data, showcases: savedShowcases, banners: clientBanners, tree },
+      data: tree,
     });
   } catch (error) {
     console.error("Products POST error:", error);

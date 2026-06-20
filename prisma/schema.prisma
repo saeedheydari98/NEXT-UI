@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -25,16 +25,6 @@ model AdminTheme {
   updatedAt DateTime @updatedAt
 }
 
-model UserTheme {
-  id             Int      @id @default(autoincrement())
-  preferredColor String
-  style          String
-  tone           Int
-  density        String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
 model AdminSecurity {
   id        Int      @id @default(autoincrement())
   code      String
@@ -42,60 +32,74 @@ model AdminSecurity {
   updatedAt DateTime @updatedAt
 }
 
+model UserTheme {
+  id                 Int      @id @default(autoincrement())
+  preferredColor     String
+  style              String
+  tone               Int
+  density            String
+  isColorPanelLocked Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 model CustomerProfile {
-  id         String   @id @default(cuid())
-  firstName  String
-  lastName   String
-  nationalId String   @unique
-  phone      String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  carts      Cart[]
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  nationalId      String   @unique
+  phone           String
+  isAdminUnlocked Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  carts           Cart[]
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
-  showcaseId  String?
-  showcase    Showcase? @relation(fields: [showcaseId], references: [id])
-  title       String
-  description String
-  price       String
+  id              Int        @id @default(autoincrement())
+  showcaseId      String?
+  showcase        Showcase?  @relation(fields: [showcaseId], references: [id])
+  title           String
+  description     String
+  price           String
   originalPrice   String?
   discountPrice   String?
   discountPercent Int?
-  imageUrl    String?
-  badge       String?
-  ctaLabel    String?
-  ctaHref     String?
-  active      Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  cartItems   CartItem[]
+  imageUrl        String?
+  badge           String?
+  ctaLabel        String?
+  ctaHref         String?
+  active          Boolean    @default(true)
+  stockQuantity   Int        @default(0)
+  colorStock      Json?
+  sortOrder       Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  cartItems       CartItem[]
 }
 
 model Showcase {
-  id        String    @id @default(cuid())
-  title     String?
+  id          String    @id @default(cuid())
+  title       String?
   description String?
-  imageUrl  String?
-  active    Boolean   @default(true)
-  sortOrder Int       @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
-  banners   Banner[]
+  imageUrl    String?
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+  banners     Banner[]
 }
 
 model Banner {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   title      String?
   showcaseId String?
-  active     Boolean  @default(true)
-  sortOrder  Int      @default(0)
+  active     Boolean   @default(true)
+  sortOrder  Int       @default(0)
   images     Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   showcase   Showcase? @relation(fields: [showcaseId], references: [id])
 }
 
@@ -122,6 +126,7 @@ model CartItem {
   discountPrice   String?
   discountPercent Int?
   imageUrl        String?
+  selectedColor   String?
   quantity        Int      @default(1)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

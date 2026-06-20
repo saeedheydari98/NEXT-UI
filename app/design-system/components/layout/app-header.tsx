@@ -11,9 +11,9 @@ import { useScrollHeaderHide } from "@/hooks/useScrollHeaderHide";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { RiShoppingCartFill } from "react-icons/ri";
 import {
-  ADMIN_ACCESS_UPDATED_EVENT,
-  fetchAdminSecurityCode,
+  fetchAdminAccess,
   isAdminAccessUnlocked,
+  subscribeAdminAccess,
 } from "@/lib/admin-access";
 import {
   CART_UPDATED_EVENT,
@@ -24,10 +24,10 @@ import {
 import { GiSpermWhale } from "react-icons/gi";
 
 const navItems = [
-  { href: "/", label: "home", tone: "bg-primary-contrast text-primary-text-nomode" },
-  { href: "/products", label: "products", tone: "bg-primary-contrast text-primary-text-nomode" },
-  { href: "/panel/admin", label: "admin panel", tone: "bg-primary-contrast text-primary-text-nomode", adminOnly: true },
-  { href: "/panel/user", label: "user panel", tone: "bg-primary-contrast text-primary-text-nomode" },
+  { href: "/", label: "home", tone: "bg-primary-soft text-primary-text" },
+  { href: "/products", label: "products", tone: "bg-primary-soft text-primary-text" },
+  { href: "/panel/admin", label: "admin panel", tone: "bg-primary-soft text-primary-text", adminOnly: true },
+  { href: "/panel/user", label: "user panel", tone: "bg-primary-soft text-primary-text" },
 ];
 
 function CartLink({ count, onClick }: { count: number; onClick?: () => void }) {
@@ -65,8 +65,7 @@ export function AppHeader() {
     };
     const syncAdminAccess = () => setHasAdminAccess(isAdminAccessUnlocked());
     const syncAdminAccessFromApi = async () => {
-      await fetchAdminSecurityCode();
-      setHasAdminAccess(isAdminAccessUnlocked());
+      setHasAdminAccess(await fetchAdminAccess());
     };
 
     syncCartCount();
@@ -74,15 +73,13 @@ export function AppHeader() {
     syncAdminAccess();
     void syncAdminAccessFromApi();
     window.addEventListener("storage", syncCartCount);
-    window.addEventListener("storage", syncAdminAccess);
     window.addEventListener(CART_UPDATED_EVENT, syncCartCount);
-    window.addEventListener(ADMIN_ACCESS_UPDATED_EVENT, syncAdminAccess);
+    const unsubscribeAdminAccess = subscribeAdminAccess(syncAdminAccess);
 
     return () => {
       window.removeEventListener("storage", syncCartCount);
-      window.removeEventListener("storage", syncAdminAccess);
       window.removeEventListener(CART_UPDATED_EVENT, syncCartCount);
-      window.removeEventListener(ADMIN_ACCESS_UPDATED_EVENT, syncAdminAccess);
+      unsubscribeAdminAccess();
     };
   }, []);
 
@@ -115,7 +112,7 @@ export function AppHeader() {
 
         {/* Center: desktop nav */}
         {!isMobile && (
-          <nav className="flex-1 flex justify-center items-center gap-3">
+          <nav className="flex-1 flex justify-end items-center gap-3">
             {visibleNavItems.map((item) => (
               <Link key={item.href} className={`rounded-md px-4 py-2 text-sm font-semibold transition-all hover:scale-105 ${item.tone}`} href={item.href}>
                 {item.label}

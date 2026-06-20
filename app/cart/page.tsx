@@ -7,6 +7,7 @@ import { CustomInput } from "../design-system/components/ui/input";
 import { CustomModal } from "../design-system/components/ui/modal";
 import {
   clearCart as clearCartData,
+  checkoutCart,
   getCart,
   persistCart,
   removeCartItem,
@@ -120,6 +121,7 @@ export default function CartPage() {
       lastName: profileDraft.lastName.trim(),
       nationalId: profileDraft.nationalId.trim(),
       phone: profileDraft.phone.trim(),
+      isAdminUnlocked: profileDraft.isAdminUnlocked,
     };
 
     void saveUserProfile(nextProfile)
@@ -145,8 +147,15 @@ export default function CartPage() {
     }
 
     setProfile(savedProfile);
-    void persistCart(items, savedProfile).then(setItems);
-    setCheckoutMessage("Profile found. Your cart is synced.");
+    void persistCart(items, savedProfile)
+      .then(() => checkoutCart(savedProfile))
+      .then((nextItems) => {
+        setItems(nextItems);
+        setCheckoutMessage("Checkout completed. Inventory was updated.");
+      })
+      .catch((error) => {
+        setCheckoutMessage(error instanceof Error ? error.message : "Checkout failed.");
+      });
   };
 
   return (
@@ -212,6 +221,11 @@ export default function CartPage() {
                 <div className="grid gap-2">
                   <div className="text-lg font-bold">{item.title}</div>
                   <div className="text-sm text-secondary-text">{item.description}</div>
+                  {item.selectedColor ? (
+                    <span className="text-xs font-semibold text-secondary-text">
+                      Color: {item.selectedColor}
+                    </span>
+                  ) : null}
                   <div className="text-sm font-semibold text-primary">
                     {item.originalPrice && getDiscountPercent(item) > 0 && (
                       <span className="mr-2 text-danger-text-nomode line-through">

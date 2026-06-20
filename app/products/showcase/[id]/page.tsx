@@ -29,6 +29,32 @@ const LOADING_PRODUCTS = [
   },
 ];
 
+function extractShowcaseProductsFromTree(payload: unknown, showcaseId: string) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const directNode = payload as { id?: unknown; type?: unknown; products?: unknown };
+  if (
+    directNode.type === "showcase" &&
+    String(directNode.id ?? "") === String(showcaseId)
+  ) {
+    return Array.isArray(directNode.products) ? directNode.products : [];
+  }
+
+  const children = (payload as { children?: unknown }).children;
+  if (!Array.isArray(children)) return null;
+
+  const showcaseNode = children.find((item) => {
+    if (!item || typeof item !== "object") return false;
+    const record = item as { id?: unknown; type?: unknown };
+    return record.type === "showcase" && String(record.id ?? "") === String(showcaseId);
+  });
+
+  if (!showcaseNode || typeof showcaseNode !== "object") return null;
+
+  const products = (showcaseNode as { products?: unknown }).products;
+  return Array.isArray(products) ? products : [];
+}
+
 export default function ShowcasePage() {
   const params = useParams();
   const showcaseId = Array.isArray(params?.id) ? params.id[0] : (params?.id ?? "");
@@ -131,9 +157,10 @@ export default function ShowcasePage() {
         });
         const data = await res.json();
         if (!res.ok || data?.ok === false) throw new Error(data?.error || "Search failed");
-        if (!cancelled) setFilteredProducts(Array.isArray(data?.data?.products) ? data.data.products : []);
+        const nextProducts = extractShowcaseProductsFromTree(data?.data, String(showcaseId));
+        if (!cancelled) setFilteredProducts(nextProducts ?? products);
       } catch {
-        if (!cancelled) setFilteredProducts([]);
+        if (!cancelled) setFilteredProducts(products);
       }
     }, q && !isImmediate ? 2000 : 0);
 
@@ -142,7 +169,7 @@ export default function ShowcasePage() {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [onlyActive, onlyDiscounted, priceMax, priceMin, searchQuery, searchSubmitCount, selectedCategory, selectedType, showcaseId, yearMax, yearMin]);
+  }, [onlyActive, onlyDiscounted, priceMax, priceMin, products, searchQuery, searchSubmitCount, selectedCategory, selectedType, showcaseId, yearMax, yearMin]);
 
   if (loading && !showcase) {
     return (

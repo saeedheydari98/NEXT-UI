@@ -41,10 +41,19 @@ const hasAdminThemeModel =
   (prisma as any).adminTheme &&
   typeof (prisma as any).adminTheme.findFirst === "function";
 
+function toThemeResponse(theme: AdminThemeConfig) {
+  return NextResponse.json({
+    ok: true,
+    data: {
+      theme,
+    },
+  });
+}
+
 export async function GET() {
   if (!hasAdminThemeModel) {
     // No Prisma model available (dev, no migrate/generate) → just return default
-    return NextResponse.json(defaultAdminTheme);
+    return toThemeResponse(defaultAdminTheme);
   }
 
   try {
@@ -57,9 +66,9 @@ export async function GET() {
         }
       : defaultAdminTheme;
 
-    return NextResponse.json(theme);
+    return toThemeResponse(theme);
   } catch {
-    return NextResponse.json(defaultAdminTheme);
+    return toThemeResponse(defaultAdminTheme);
   }
 }
 
@@ -78,7 +87,7 @@ export async function POST(request: Request) {
 
   // If Prisma client doesn't have AdminTheme (no migrate/generate), just echo back.
   if (!hasAdminThemeModel) {
-    return NextResponse.json(nextTheme);
+    return toThemeResponse(nextTheme);
   }
 
   try {
@@ -102,7 +111,7 @@ export async function POST(request: Request) {
           },
         });
 
-    return NextResponse.json({
+    return toThemeResponse({
       primary: record.primary,
       style: record.style,
       tone: record.tone,
@@ -110,6 +119,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Theme POST error:", error);
     // Fallback: don't break UI, just return validated input
-    return NextResponse.json(nextTheme);
+    return toThemeResponse(nextTheme);
   }
 }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { IoLockOpenOutline } from "react-icons/io5";
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { CustomInput } from "@/app/design-system/components/ui/input";
-import { unlockAdminAccess } from "@/lib/admin-access";
+import { unlockAdminAccessWithCode } from "@/lib/admin-access";
 
 type AdminAccessPanelProps = {
   onUnlock: () => void;
@@ -13,15 +13,26 @@ type AdminAccessPanelProps = {
 export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submitCode = () => {
-    if (unlockAdminAccess(code)) {
-      setStatus("");
-      onUnlock();
-      return;
+  const submitCode = async () => {
+    setIsSubmitting(true);
+    setStatus("");
+
+    try {
+      const unlocked = await unlockAdminAccessWithCode(code);
+      if (unlocked) {
+        setCode("");
+        onUnlock();
+        return;
+      }
+
+      setStatus("Security code was not accepted.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Security code was not accepted.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setStatus("Security code was not accepted.");
   };
 
   return (
@@ -29,7 +40,7 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
       <div className="flex flex-col gap-1">
         <div className="text-xl font-bold text-primary-text">Admin access</div>
         <div className="text-sm text-secondary-text">
-          Enter the security code to open the admin panel.
+          Enter the security code to open the admin panel for the active profile.
         </div>
       </div>
 
@@ -46,19 +57,25 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
           }}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
-              submitCode();
+              void submitCode();
             }
           }}
         />
       </div>
 
       {status ? (
-        <div className="rounded-md border border-danger-border bg-primary-soft px-3 py-2 text-sm font-semibold text-danger-text">
+        <div className="rounded-md border border-primary-border bg-bg-base px-3 py-2 text-sm font-semibold text-primary-text">
           {status}
         </div>
       ) : null}
 
-      <CustomButton border="base" fullWidth icon={<IoLockOpenOutline />} onClick={submitCode}>
+      <CustomButton
+        border="base"
+        fullWidth
+        icon={<IoLockOpenOutline />}
+        isLoading={isSubmitting}
+        onClick={submitCode}
+      >
         Open admin panel
       </CustomButton>
     </section>

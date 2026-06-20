@@ -12,6 +12,8 @@ export type Product = {
   ctaLabel?: string;
   ctaHref?: string;
   active: boolean;
+  stockQuantity?: number | string;
+  colorStock?: unknown;
   sortOrder: number;
 };
 

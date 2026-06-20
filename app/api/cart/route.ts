@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +10,7 @@ type ProfilePayload = {
   lastName?: string;
   nationalId?: string;
   phone?: string;
+  isAdminUnlocked?: boolean;
 };
 
 type CartItemPayload = {
@@ -22,6 +23,7 @@ type CartItemPayload = {
   discountPrice?: string | null;
   discountPercent?: number | string | null;
   imageUrl?: string | null;
+  selectedColor?: string | null;
   quantity?: number | string;
 };
 
@@ -31,6 +33,7 @@ function normalizeProfile(profile: ProfilePayload) {
     lastName: String(profile.lastName ?? "").trim(),
     nationalId: String(profile.nationalId ?? "").trim(),
     phone: String(profile.phone ?? "").trim(),
+    isAdminUnlocked: profile.isAdminUnlocked === true,
   };
 }
 
@@ -56,12 +59,13 @@ function normalizeCartItem(value: CartItemPayload) {
       ? Math.max(0, Math.round(Number(value.discountPercent)))
       : null,
     imageUrl: value.imageUrl ? String(value.imageUrl) : null,
+    selectedColor: value.selectedColor ? String(value.selectedColor).trim() : null,
     quantity: Math.max(1, Math.round(Number(value.quantity ?? 1))),
   };
 }
 
 function itemKey(item: ReturnType<typeof normalizeCartItem>) {
-  return String(item.productId ?? `${item.title}-${item.description}-${item.price}`);
+  return String(item.productId ?? `${item.title}-${item.description}-${item.price}`) + `|${item.selectedColor ?? ""}`;
 }
 
 function normalizeCartItems(items: CartItemPayload[]) {
@@ -93,6 +97,7 @@ function toClientCartItem(item: {
   discountPrice: string | null;
   discountPercent: number | null;
   imageUrl: string | null;
+  selectedColor: string | null;
   quantity: number;
 }) {
   return {
@@ -105,7 +110,22 @@ function toClientCartItem(item: {
     discountPrice: item.discountPrice ?? "",
     discountPercent: item.discountPercent ?? "",
     imageUrl: item.imageUrl ?? "",
+    selectedColor: item.selectedColor ?? "",
     quantity: item.quantity,
+  };
+}
+
+function toCartResponse(profile: unknown, items: ReturnType<typeof toClientCartItem>[]) {
+  return {
+    ok: true,
+    data: {
+      user: {
+        profile,
+      },
+      cart: {
+        items,
+      },
+    },
   };
 }
 
@@ -138,8 +158,27 @@ async function upsertProfile(profile: ReturnType<typeof normalizeProfile>) {
       lastName: profile.lastName,
       phone: profile.phone,
     },
-    create: profile,
+    create: {
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      nationalId: profile.nationalId,
+      phone: profile.phone,
+      isAdminUnlocked: profile.isAdminUnlocked,
+    },
   });
+}
+
+function normalizeColorStock(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .map(([color, count]) => [
+        color.trim(),
+        Math.max(0, Math.round(Number(count))),
+      ] as const)
+      .filter(([color, count]) => color && Number.isFinite(count))
+  );
 }
 
 export async function GET(request: Request) {
@@ -148,7 +187,7 @@ export async function GET(request: Request) {
 
   if (!nationalId) {
     return NextResponse.json(
-      { ok: false, error: "profile nationalId is required", data: { items: [] } },
+      { ok: false, error: "profile nationalId is required", data: { user: { profile: null }, cart: { items: [] } } },
       { status: 400 }
     );
   }
@@ -159,22 +198,16 @@ export async function GET(request: Request) {
     });
 
     if (!profile) {
-      return NextResponse.json({ ok: true, data: { profile: null, items: [] } });
+      return NextResponse.json(toCartResponse(null, []));
     }
 
     const cart = await getActiveCart(profile.id);
 
-    return NextResponse.json({
-      ok: true,
-      data: {
-        profile,
-        items: cart.items.map(toClientCartItem),
-      },
-    });
+    return NextResponse.json(toCartResponse(profile, cart.items.map(toClientCartItem)));
   } catch (error) {
     console.error("Cart GET error:", error);
     return NextResponse.json(
-      { ok: false, error: "server error", data: { items: [] } },
+      { ok: false, error: "server error", data: { user: { profile: null }, cart: { items: [] } } },
       { status: 500 }
     );
   }
@@ -201,7 +234,13 @@ export async function POST(request: Request) {
           lastName: profile.lastName,
           phone: profile.phone,
         },
-        create: profile,
+        create: {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          nationalId: profile.nationalId,
+          phone: profile.phone,
+          isAdminUnlocked: profile.isAdminUnlocked,
+        },
       });
 
       const cart = await tx.cart.upsert({
@@ -232,6 +271,7 @@ export async function POST(request: Request) {
             discountPrice: item.discountPrice,
             discountPercent: item.discountPercent,
             imageUrl: item.imageUrl,
+            selectedColor: item.selectedColor,
             quantity: item.quantity,
           },
         });
@@ -248,16 +288,89 @@ export async function POST(request: Request) {
       });
     });
 
-    return NextResponse.json({
-      ok: true,
-      data: {
-        profile: result?.profile ?? null,
-        items: result?.items.map(toClientCartItem) ?? [],
-      },
-    });
+    return NextResponse.json(toCartResponse(result?.profile ?? null, result?.items.map(toClientCartItem) ?? []));
   } catch (error) {
     console.error("Cart POST error:", error);
     return NextResponse.json({ ok: false, error: "server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  const body = await request.json().catch(() => ({}));
+  const profile = normalizeProfile(body.profile ?? {});
+
+  if (!profile.nationalId) {
+    return NextResponse.json(
+      { ok: false, error: "profile nationalId is required" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const savedProfile = await tx.customerProfile.findUnique({
+        where: { nationalId: profile.nationalId },
+      });
+
+      if (!savedProfile) {
+        throw new Error("profile not found");
+      }
+
+      const cart = await tx.cart.findUnique({
+        where: {
+          profileId_status: {
+            profileId: savedProfile.id,
+            status: "active",
+          },
+        },
+        include: { items: true },
+      });
+
+      if (!cart || cart.items.length === 0) {
+        return { profile: savedProfile, items: [] };
+      }
+
+      for (const item of cart.items) {
+        if (!item.productId) continue;
+
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+        });
+        if (!product) continue;
+
+        if (product.stockQuantity < item.quantity) {
+          throw new Error(`${product.title} is out of stock`);
+        }
+
+        const colorStock = normalizeColorStock(product.colorStock);
+        if (item.selectedColor) {
+          const currentColorStock = colorStock[item.selectedColor] ?? 0;
+          if (currentColorStock < item.quantity) {
+            throw new Error(`${product.title} ${item.selectedColor} is out of stock`);
+          }
+          colorStock[item.selectedColor] = currentColorStock - item.quantity;
+        }
+
+        await tx.product.update({
+          where: { id: product.id },
+          data: {
+            stockQuantity: Math.max(0, product.stockQuantity - item.quantity),
+            colorStock: Object.keys(colorStock).length > 0 ? colorStock : Prisma.JsonNull,
+          },
+        });
+      }
+
+      await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+      return { profile: savedProfile, items: [] };
+    });
+
+    return NextResponse.json(toCartResponse(result.profile, result.items));
+  } catch (error) {
+    console.error("Cart checkout error:", error);
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -278,13 +391,13 @@ export async function DELETE(request: Request) {
     });
 
     if (!savedProfile) {
-      return NextResponse.json({ ok: true, data: { items: [] } });
+      return NextResponse.json(toCartResponse(null, []));
     }
 
     const cart = await getActiveCart(savedProfile.id);
     await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
 
-    return NextResponse.json({ ok: true, data: { items: [] } });
+    return NextResponse.json(toCartResponse(savedProfile, []));
   } catch (error) {
     console.error("Cart DELETE error:", error);
     return NextResponse.json({ ok: false, error: "server error" }, { status: 500 });

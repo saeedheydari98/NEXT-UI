@@ -20,6 +20,7 @@ export type CartItemRecord = {
   discountPrice?: string | null;
   discountPercent?: number | string | null;
   imageUrl?: string | null;
+  selectedColor?: string | null;
   quantity: number;
 };
 
@@ -28,17 +29,22 @@ export type CartSnapshot = {
   profile: UserProfile | null;
 };
 
+function readCartItemsFromApiData(data: any) {
+  return data?.data?.cart?.items ?? data?.data?.items ?? [];
+}
+
 function emitCartUpdated() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event(CART_UPDATED_EVENT));
 }
 
 function getItemKey(item: Partial<CartItemRecord>) {
-  return String(
+  const base = String(
     item.productId ??
       item.id ??
       `${item.title ?? ""}-${item.description ?? ""}-${item.price ?? ""}`
   );
+  return `${base}|${item.selectedColor ?? ""}`;
 }
 
 function normalizeCartItem(item: Partial<CartItemRecord>, index: number): CartItemRecord {
@@ -52,6 +58,7 @@ function normalizeCartItem(item: Partial<CartItemRecord>, index: number): CartIt
     discountPrice: item.discountPrice ? String(item.discountPrice) : "",
     discountPercent: item.discountPercent ?? "",
     imageUrl: item.imageUrl ? String(item.imageUrl) : "",
+    selectedColor: item.selectedColor ? String(item.selectedColor) : "",
     quantity: Math.max(1, Math.round(Number(item.quantity ?? index + 1))),
   };
 }
@@ -111,8 +118,9 @@ async function saveCartToApi(items: CartItemRecord[], profile: UserProfile) {
   if (!res.ok || data?.ok === false) {
     throw new Error(data?.error || "Cart save failed");
   }
-  return Array.isArray(data?.data?.items)
-    ? data.data.items.map(normalizeCartItem)
+  const apiItems = readCartItemsFromApiData(data);
+  return Array.isArray(apiItems)
+    ? apiItems.map(normalizeCartItem)
     : items;
 }
 
@@ -131,8 +139,9 @@ export async function getCart(): Promise<CartSnapshot> {
       throw new Error(data?.error || "Cart load failed");
     }
 
-    const apiItems = Array.isArray(data?.data?.items)
-      ? data.data.items.map(normalizeCartItem)
+    const items = readCartItemsFromApiData(data);
+    const apiItems = Array.isArray(items)
+      ? items.map(normalizeCartItem)
       : [];
 
     if (apiItems.length === 0 && localItems.length > 0) {
@@ -167,9 +176,9 @@ export async function persistCart(items: CartItemRecord[], profile = readUserPro
   }
 }
 
-export async function addProductToCart(product: ProductRecord, quantity = 1) {
+export async function addProductToCart(product: ProductRecord, quantity = 1, selectedColor = "") {
   const productId = product.id ?? null;
-  const key = String(productId ?? `${product.title}-${product.description}-${product.price}`);
+  const key = `${String(productId ?? `${product.title}-${product.description}-${product.price}`)}|${selectedColor}`;
   const currentCart = readLocalCart();
   const existing = currentCart.find((item) => getItemKey(item) === key);
   const nextCart = existing
@@ -184,6 +193,7 @@ export async function addProductToCart(product: ProductRecord, quantity = 1) {
           {
             ...product,
             productId,
+            selectedColor,
             quantity,
           },
           currentCart.length
@@ -212,6 +222,25 @@ export async function removeCartItem(target: CartItemRecord) {
 
 export async function clearCart() {
   return persistCart([]);
+}
+
+export async function checkoutCart(profile = readUserProfile()) {
+  if (!profile || !isUserProfileComplete(profile)) {
+    throw new Error("Complete profile is required.");
+  }
+
+  const res = await fetch("/api/cart", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile }),
+  });
+  const data = await res.json();
+  if (!res.ok || data?.ok === false) {
+    throw new Error(data?.error || "Checkout failed");
+  }
+
+  writeLocalCart([]);
+  return [];
 }
 
 export function getCartCount(items = readLocalCart()) {

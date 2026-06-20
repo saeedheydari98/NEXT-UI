@@ -1,5 +1,12 @@
-export const ADMIN_SECURITY_CODE_STORAGE_KEY = "admin-security-code";
-export const ADMIN_ACCESS_UNLOCKED_STORAGE_KEY = "admin-access-unlocked";
+import {
+  fetchUserProfile,
+  isUserProfileComplete,
+  normalizeUserProfile,
+  readUserProfile,
+  writeUserProfile,
+  USER_PROFILE_UPDATED_EVENT,
+} from "@/lib/user-profile";
+
 export const ADMIN_ACCESS_UPDATED_EVENT = "admin-access-updated";
 
 function emitAdminAccessUpdated() {
@@ -7,71 +14,86 @@ function emitAdminAccessUpdated() {
   window.dispatchEvent(new Event(ADMIN_ACCESS_UPDATED_EVENT));
 }
 
-export function readAdminSecurityCode() {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem(ADMIN_SECURITY_CODE_STORAGE_KEY) ?? "";
+export function isAdminAccessUnlocked(profile = readUserProfile()) {
+  return profile?.isAdminUnlocked === true;
 }
 
-export async function fetchAdminSecurityCode() {
+export async function fetchAdminAccess() {
+  const profile = await fetchUserProfile();
+  return isAdminAccessUnlocked(profile);
+}
+
+export async function unlockAdminAccessWithCode(code: string, profile = readUserProfile()) {
+  if (!profile || !isUserProfileComplete(profile)) {
+    throw new Error("Complete profile is required before changing admin access.");
+  }
+
+  const res = await fetch("/api/admin/access", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, profile }),
+  });
+  const data = await res.json();
+  if (!res.ok || data?.ok === false) {
+    throw new Error(data?.error || "Admin code was not accepted.");
+  }
+
+  const savedProfile = normalizeUserProfile(data?.data?.user?.profile ?? data?.data?.profile ?? {
+    ...profile,
+    isAdminUnlocked: true,
+  });
+  writeUserProfile(savedProfile);
+  emitAdminAccessUpdated();
+  return savedProfile.isAdminUnlocked;
+}
+
+export async function fetchAdminSecurity() {
   const res = await fetch("/api/admin/security", { cache: "no-store" });
   const data = await res.json();
   if (!res.ok || data?.ok === false) {
     throw new Error(data?.error || "Admin security load failed");
   }
-  const code = String(data?.data?.code ?? "");
-  if (typeof window !== "undefined") {
-    localStorage.setItem(ADMIN_SECURITY_CODE_STORAGE_KEY, code);
-  }
-  return code;
+
+  return {
+    hasCode: data?.data?.security?.hasCode === true,
+  };
 }
 
-export function writeAdminSecurityCode(code: string) {
-  if (typeof window === "undefined") return;
-
-  const normalizedCode = code.trim();
-  localStorage.setItem(ADMIN_SECURITY_CODE_STORAGE_KEY, normalizedCode);
-  localStorage.setItem(ADMIN_ACCESS_UNLOCKED_STORAGE_KEY, normalizedCode ? "1" : "0");
-  emitAdminAccessUpdated();
-}
-
-export async function saveAdminSecurityCode(code: string) {
-  const normalizedCode = code.trim();
+export async function saveAdminAccessCode(code: string, confirmCode: string) {
   const res = await fetch("/api/admin/security", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code: normalizedCode }),
+    body: JSON.stringify({ code, confirmCode }),
   });
   const data = await res.json();
   if (!res.ok || data?.ok === false) {
     throw new Error(data?.error || "Admin security save failed");
   }
-  writeAdminSecurityCode(String(data?.data?.code ?? normalizedCode));
-  return String(data?.data?.code ?? normalizedCode);
-}
 
-export function isAdminAccessUnlocked() {
-  if (typeof window === "undefined") return false;
-  const securityCode = readAdminSecurityCode();
-  if (!securityCode) return true;
-  return localStorage.getItem(ADMIN_ACCESS_UNLOCKED_STORAGE_KEY) === "1";
-}
-
-export function unlockAdminAccess(code: string) {
-  if (typeof window === "undefined") return false;
-
-  const securityCode = readAdminSecurityCode();
-  const isUnlocked = Boolean(securityCode) && code.trim() === securityCode;
-
-  if (isUnlocked) {
-    localStorage.setItem(ADMIN_ACCESS_UNLOCKED_STORAGE_KEY, "1");
-    emitAdminAccessUpdated();
+  const profile = readUserProfile();
+  if (profile) {
+    writeUserProfile({
+      ...profile,
+      isAdminUnlocked: false,
+    });
   }
+  emitAdminAccessUpdated();
 
-  return isUnlocked;
+  return {
+    hasCode: data?.data?.security?.hasCode === true,
+  };
 }
 
-export function lockAdminAccess() {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(ADMIN_ACCESS_UNLOCKED_STORAGE_KEY, "0");
-  emitAdminAccessUpdated();
+export function subscribeAdminAccess(listener: () => void) {
+  if (typeof window === "undefined") return () => undefined;
+
+  window.addEventListener(ADMIN_ACCESS_UPDATED_EVENT, listener);
+  window.addEventListener(USER_PROFILE_UPDATED_EVENT, listener);
+  window.addEventListener("storage", listener);
+
+  return () => {
+    window.removeEventListener(ADMIN_ACCESS_UPDATED_EVENT, listener);
+    window.removeEventListener(USER_PROFILE_UPDATED_EVENT, listener);
+    window.removeEventListener("storage", listener);
+  };
 }

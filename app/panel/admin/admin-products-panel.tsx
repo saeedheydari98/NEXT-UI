@@ -5,6 +5,7 @@ import { IoAdd, IoCloudUploadOutline, IoSaveOutline, IoTrashOutline } from "reac
 import { CustomButton } from "../../design-system/components/ui/button";
 import { CustomInput } from "../../design-system/components/ui/input";
 import { CustomModal } from "../../design-system/components/ui/modal";
+import { CustomSelect } from "../../design-system/components/ui/select";
 import { CustomSwitch } from "../../design-system/components/ui/switch";
 import { FloatButton } from "@/app/design-system/components/ui/float-button";
 import { clearProductsCache, getProducts } from "@/lib/products-client";
@@ -43,8 +44,134 @@ const createProduct = (): ProductForm => ({
   ctaLabel: "View product",
   ctaHref: "#",
   active: true,
+  stockQuantity: 0,
+  colorStock: {},
   sortOrder: 1,
 });
+
+const STOCK_OPTIONS = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 40, 50, 75, 100,
+];
+
+const PRODUCT_COLOR_OPTIONS = [
+  "black",
+  "white",
+  "gray",
+  "red",
+  "blue",
+  "green",
+  "yellow",
+  "orange",
+  "purple",
+  "pink",
+];
+
+type InventoryControlsProps = {
+  product: ProductForm;
+  onChange: (patch: Partial<ProductForm>) => void;
+};
+
+function InventoryControls({ product, onChange }: InventoryControlsProps) {
+  const colorStock = normalizeColorStock(product.colorStock);
+  const selectedColors = Object.keys(colorStock);
+  const availableColors = PRODUCT_COLOR_OPTIONS.filter(
+    (color) => !selectedColors.includes(color)
+  );
+
+  const updateColorStock = (color: string, count: number) => {
+    onChange({
+      colorStock: {
+        ...colorStock,
+        [color]: count,
+      },
+    });
+  };
+
+  const removeColorStock = (color: string) => {
+    const nextColorStock = { ...colorStock };
+    delete nextColorStock[color];
+    onChange({ colorStock: nextColorStock });
+  };
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
+      <div className="flex flex-col gap-1">
+        <div className="text-sm font-bold text-primary-text">Inventory</div>
+        <span className="text-xs text-secondary-text">
+          Select total stock and stock by color.
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="text-xs font-bold text-secondary-text">Total stock quantity</div>
+        <CustomSelect
+          value={String(product.stockQuantity)}
+          aria-label="Total stock quantity"
+          onChange={(event) => onChange({ stockQuantity: Number(event.target.value) })}
+        >
+          {STOCK_OPTIONS.map((count) => (
+            <option key={count} value={count}>
+              {count}
+            </option>
+          ))}
+        </CustomSelect>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <div className="text-xs font-bold text-secondary-text">Add color stock</div>
+        <CustomSelect
+          value=""
+          aria-label="Add color stock"
+          onChange={(event) => {
+            const color = event.target.value;
+            if (!color) return;
+            updateColorStock(color, colorStock[color] ?? 0);
+          }}
+        >
+          <option value="">Select color</option>
+          {availableColors.map((color) => (
+            <option key={color} value={color}>
+              {color}
+            </option>
+          ))}
+        </CustomSelect>
+      </div>
+
+      {selectedColors.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {selectedColors.map((color) => (
+            <div
+              key={color}
+              className="flex flex-col gap-2 rounded-md border border-primary-border bg-primary-bg p-2 sm:flex-row sm:items-center"
+            >
+              <span className="min-w-20 text-sm font-bold text-primary-text">{color}</span>
+              <CustomSelect
+                value={String(colorStock[color] ?? 0)}
+                aria-label={`${color} stock quantity`}
+                onChange={(event) => updateColorStock(color, Number(event.target.value))}
+              >
+                {STOCK_OPTIONS.map((count) => (
+                  <option key={count} value={count}>
+                    {count}
+                  </option>
+                ))}
+              </CustomSelect>
+              <CustomButton
+                variant="danger"
+                size="sm"
+                border="base"
+                icon={<IoTrashOutline />}
+                onClick={() => removeColorStock(color)}
+              >
+                Remove
+              </CustomButton>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 
 function getProductKey(product: Partial<ProductForm>) {
@@ -88,8 +215,43 @@ function normalizeProduct(item: Partial<ProductForm>, index: number): ProductFor
     ctaLabel: String(item.ctaLabel ?? "View product"),
     ctaHref: String(item.ctaHref ?? "#"),
     active: Boolean(item.active),
+    stockQuantity: Number.isFinite(Number(item.stockQuantity)) ? Math.max(0, Math.round(Number(item.stockQuantity))) : 0,
+    colorStock: normalizeColorStock(item.colorStock),
     sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
   };
+}
+
+function normalizeColorStock(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .map(([color, count]) => [
+        color.trim(),
+        Math.max(0, Math.round(Number(count))),
+      ] as const)
+      .filter(([color, count]) => color && Number.isFinite(count))
+  );
+}
+
+function colorStockToText(value: unknown) {
+  return Object.entries(normalizeColorStock(value))
+    .map(([color, count]) => `${color}:${count}`)
+    .join(", ");
+}
+
+function parseColorStockText(value: string) {
+  return Object.fromEntries(
+    value
+      .split(/[\n,]+/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const [color, count] = part.split(":");
+        return [String(color ?? "").trim(), Math.max(0, Math.round(Number(count ?? 0)))] as const;
+      })
+      .filter(([color, count]) => color && Number.isFinite(count))
+  );
 }
 
 function normalizeShowcase(item: Partial<ShowcaseForm>, index: number): ShowcaseForm {
@@ -1059,6 +1221,7 @@ export function AdminProductsPanel() {
               placeholder="Badge"
               onChange={(event) => updateDraftProduct({ badge: event.target.value })}
             />
+            <InventoryControls product={draftProduct} onChange={updateDraftProduct} />
             <CustomInput
               type="number"
               value={draftProduct.sortOrder}
@@ -1200,6 +1363,7 @@ export function AdminProductsPanel() {
                 placeholder="Badge"
                 onChange={(event) => updateEditingProduct({ badge: event.target.value })}
               />
+              <InventoryControls product={editingProduct} onChange={updateEditingProduct} />
               <CustomInput
                 type="number"
                 value={editingProduct.sortOrder}

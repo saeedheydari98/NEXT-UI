@@ -154,6 +154,11 @@ export function AdminShowcaseList({
                           {product.active ? "Active" : "Hidden"}
                         </span>
                       </Loading>
+                      <Loading loading="skeleton-item" isLoading={isLoading}>
+                        <span className="text-xs font-semibold text-secondary-text">
+                          Stock: {product.stockQuantity}
+                        </span>
+                      </Loading>
                     </div>
                   </div>
                   <div

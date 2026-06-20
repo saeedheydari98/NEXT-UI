@@ -13,6 +13,7 @@ import React, {
 import { applyCSSVariables } from "./engine";
 import { generateCSSVariables } from "./css-vars";
 import { createTheme, resolveDynamicColor, ThemeStyle, ThemeColorKey, ThemeTone } from "./theme";
+import { readUserProfile, USER_PROFILE_UPDATED_EVENT } from "@/lib/user-profile";
 
 type ThemeMode = "light" | "dark";
 type ThemeModePreference = ThemeMode | "system";
@@ -61,6 +62,21 @@ const defaultUserTheme: UserThemeConfig = {
   density: "comfortable",
   isColorPanelLocked: false,
 };
+
+function readThemePayload<T>(payload: unknown, fallback: T): T {
+  if (!payload || typeof payload !== "object") return fallback;
+  const record = payload as { data?: { theme?: unknown } };
+  return (record.data?.theme && typeof record.data.theme === "object"
+    ? record.data.theme
+    : fallback) as T;
+}
+
+function getUserThemeUrl() {
+  const profile = readUserProfile();
+  const nationalId = profile?.nationalId.trim();
+  if (!nationalId) return "/api/theme/user";
+  return `/api/theme/user?nationalId=${encodeURIComponent(nationalId)}`;
+}
 
 export function ThemeProvider({
   children,
@@ -241,21 +257,31 @@ export function ThemeProvider({
   useEffect(() => {
     let cancelled = false;
 
-    void Promise.all([
+    const loadThemes = () => void Promise.all([
       fetch("/api/theme/admin", { cache: "no-store" }).then((res) => res.json()),
-      fetch("/api/theme/user", { cache: "no-store" }).then((res) => res.json()),
+      fetch(getUserThemeUrl(), { cache: "no-store" }).then((res) => res.json()),
     ])
       .then(([nextAdminTheme, nextUserTheme]) => {
         if (cancelled) return;
-        setAdminTheme((current) => ({ ...current, ...nextAdminTheme }));
-        setUserTheme((current) => ({ ...current, ...nextUserTheme }));
+        setAdminTheme((current) => ({
+          ...current,
+          ...readThemePayload(nextAdminTheme, defaultAdminTheme),
+        }));
+        setUserTheme((current) => ({
+          ...current,
+          ...readThemePayload(nextUserTheme, defaultUserTheme),
+        }));
       })
       .catch((error) => {
         console.error("Failed to load theme API settings:", error);
       });
 
+    loadThemes();
+    window.addEventListener(USER_PROFILE_UPDATED_EVENT, loadThemes);
+
     return () => {
       cancelled = true;
+      window.removeEventListener(USER_PROFILE_UPDATED_EVENT, loadThemes);
     };
   }, []);
 

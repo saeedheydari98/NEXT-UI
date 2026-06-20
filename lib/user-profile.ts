@@ -3,6 +3,7 @@ export type UserProfile = {
   lastName: string;
   nationalId: string;
   phone: string;
+  isAdminUnlocked: boolean;
 };
 
 export const USER_PROFILE_STORAGE_KEY = "user-profile";
@@ -13,7 +14,12 @@ export const EMPTY_USER_PROFILE: UserProfile = {
   lastName: "",
   nationalId: "",
   phone: "",
+  isAdminUnlocked: false,
 };
+
+function readProfileFromApiData(data: any) {
+  return data?.data?.user?.profile ?? data?.data?.profile ?? null;
+}
 
 export function normalizeUserProfile(value: Partial<UserProfile> | null | undefined): UserProfile {
   return {
@@ -21,6 +27,7 @@ export function normalizeUserProfile(value: Partial<UserProfile> | null | undefi
     lastName: String(value?.lastName ?? ""),
     nationalId: String(value?.nationalId ?? ""),
     phone: String(value?.phone ?? ""),
+    isAdminUnlocked: value?.isAdminUnlocked === true,
   };
 }
 
@@ -68,8 +75,9 @@ export async function fetchUserProfile(nationalId?: string) {
     throw new Error(data?.error || "Profile load failed");
   }
 
-  const profile = data?.data?.profile
-    ? normalizeUserProfile(data.data.profile as Partial<UserProfile>)
+  const profileData = readProfileFromApiData(data);
+  const profile = profileData
+    ? normalizeUserProfile(profileData as Partial<UserProfile>)
     : null;
   if (profile && isUserProfileComplete(profile)) {
     writeUserProfile(profile);
@@ -91,7 +99,7 @@ export async function saveUserProfile(profile: UserProfile) {
     throw new Error(data?.error || "Profile save failed");
   }
 
-  const savedProfile = normalizeUserProfile(data?.data?.profile ?? nextProfile);
+  const savedProfile = normalizeUserProfile(readProfileFromApiData(data) ?? nextProfile);
   writeUserProfile(savedProfile);
   return savedProfile;
 }

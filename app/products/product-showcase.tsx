@@ -30,6 +30,24 @@ function getDiscountPercent(product: Product) {
   return Number.isFinite(percent) && percent > 0 ? Math.round(percent) : 0;
 }
 
+function normalizeColorStock(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .map(([color, count]) => [
+        color.trim(),
+        Math.max(0, Math.round(Number(count))),
+      ] as const)
+      .filter(([color, count]) => color && Number.isFinite(count))
+  );
+}
+
+function getFirstAvailableColor(product: Product) {
+  const colorStock = normalizeColorStock(product.colorStock);
+  return Object.entries(colorStock).find(([, count]) => count > 0)?.[0] ?? "";
+}
+
 function normalizeShowcase(item: Partial<Showcase>, index: number): Showcase {
   return {
     id: String(item.id ?? `showcase-${index + 1}`),
@@ -191,7 +209,14 @@ export function ProductShowcase() {
   };
 
   const addToCart = async (product: Product) => {
-    await addProductToCart(product);
+    if (Number(product.stockQuantity ?? 0) <= 0) {
+      setCartMessage(`${product.title} is out of stock.`);
+      window.setTimeout(() => setCartMessage(""), 1800);
+      return;
+    }
+
+    const selectedColor = getFirstAvailableColor(product);
+    await addProductToCart(product, 1, selectedColor);
     setCartMessage(`${product.title} added to cart.`);
     window.setTimeout(() => setCartMessage(""), 1800);
   };

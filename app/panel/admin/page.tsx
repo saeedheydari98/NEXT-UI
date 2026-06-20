@@ -6,8 +6,9 @@ import { AdminThemePanel } from "@/app/panel/admin/admin-theme-panel";
 import { AdminProductsPanel } from "@/app/panel/admin/admin-products-panel";
 import { AdminSecurityPanel } from "@/app/panel/admin/admin-security-panel";
 import {
-  ADMIN_ACCESS_UPDATED_EVENT,
+  fetchAdminAccess,
   isAdminAccessUnlocked,
+  subscribeAdminAccess,
 } from "@/lib/admin-access";
 
 export default function AdminPanelPage() {
@@ -17,13 +18,13 @@ export default function AdminPanelPage() {
     const syncAccess = () => setHasAdminAccess(isAdminAccessUnlocked());
 
     syncAccess();
-    window.addEventListener(ADMIN_ACCESS_UPDATED_EVENT, syncAccess);
-    window.addEventListener("storage", syncAccess);
+    void fetchAdminAccess()
+      .then(setHasAdminAccess)
+      .catch((error) => {
+        console.error("Admin access profile load error:", error);
+      });
 
-    return () => {
-      window.removeEventListener(ADMIN_ACCESS_UPDATED_EVENT, syncAccess);
-      window.removeEventListener("storage", syncAccess);
-    };
+    return subscribeAdminAccess(syncAccess);
   }, []);
 
   return (

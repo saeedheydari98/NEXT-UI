@@ -44,6 +44,19 @@ function getDiscountPercent(product: ProductRecord) {
   return Number.isFinite(percent) && percent > 0 ? Math.round(percent) : 0;
 }
 
+function normalizeColorStock(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .map(([color, count]) => [
+        color.trim(),
+        Math.max(0, Math.round(Number(count))),
+      ] as const)
+      .filter(([color, count]) => color && Number.isFinite(count))
+  );
+}
+
 export default function ProductPage() {
   const params = useParams();
   const productId = Array.isArray(params?.id) ? params.id[0] : (params?.id ?? "");
@@ -54,6 +67,7 @@ export default function ProductPage() {
   const [rating, setRating] = useState<number | undefined>(undefined);
   const [isPurchased, setIsPurchased] = useState(false);
   const [cartMessage, setCartMessage] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem(`product-comments:${productId}`) || "[]";
@@ -66,6 +80,14 @@ export default function ProductPage() {
 
     setIsPurchased(localStorage.getItem(`purchased:${productId}`) === "1");
   }, [productId]);
+
+  const colorStock = useMemo(() => normalizeColorStock(product?.colorStock), [product]);
+  const colorOptions = useMemo(() => Object.entries(colorStock), [colorStock]);
+
+  useEffect(() => {
+    const firstAvailableColor = colorOptions.find(([, count]) => count > 0)?.[0] ?? "";
+    setSelectedColor(firstAvailableColor);
+  }, [colorOptions]);
 
   const ratedReviews = useMemo(
     () => reviews.filter((review) => Number(review.rating) > 0),
@@ -105,7 +127,19 @@ export default function ProductPage() {
   };
 
   const addToCart = async (item: ProductRecord) => {
-    await addProductToCart(item);
+    if (Number(item.stockQuantity ?? 0) <= 0) {
+      setCartMessage(`${item.title} is out of stock.`);
+      window.setTimeout(() => setCartMessage(""), 2000);
+      return;
+    }
+
+    if (colorOptions.length > 0 && !selectedColor) {
+      setCartMessage("Select an available color.");
+      window.setTimeout(() => setCartMessage(""), 2000);
+      return;
+    }
+
+    await addProductToCart(item, 1, selectedColor);
     setCartMessage(`${item.title} added to cart.`);
     window.setTimeout(() => setCartMessage(""), 2000);
   };
@@ -310,6 +344,31 @@ export default function ProductPage() {
               <div className="text-sm leading-7 text-secondary-text whitespace-pre-wrap">
                 {product.description}
               </div>
+            </div>
+
+            <div className="flex flex-col gap-2 rounded-xl border border-primary-border bg-primary-card p-4">
+              <div className="text-sm font-bold text-primary-text">Inventory</div>
+              <span className="text-sm font-semibold text-secondary-text">
+                Total stock: {Number(product.stockQuantity ?? 0)}
+              </span>
+              {colorOptions.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {colorOptions.map(([color, count]) => (
+                    <CustomButton
+                      key={color}
+                      type="button"
+                      variant={selectedColor === color ? "primary" : "neutral"}
+                      size="sm"
+                      rounded="full"
+                      border="base"
+                      disabled={count <= 0}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {color} ({count})
+                    </CustomButton>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <div className="flex flex-wrap gap-3">
