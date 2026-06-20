@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoSaveOutline } from "react-icons/io5";
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { CustomInput } from "@/app/design-system/components/ui/input";
+import { RequiredLabel } from "@/app/design-system/components/ui/required-label";
 import { persistCart, readLocalCart } from "@/lib/cart-client";
+import { scrollToFirstInvalidField } from "@/lib/form-validation";
 import {
   EMPTY_USER_PROFILE,
   fetchUserProfile,
@@ -18,6 +20,8 @@ import {
 export function UserProfilePanel() {
   const [profileDraft, setProfileDraft] = useState<UserProfile>(EMPTY_USER_PROFILE);
   const [status, setStatus] = useState("");
+  const [showRequiredErrors, setShowRequiredErrors] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const syncProfile = () => {
@@ -44,7 +48,9 @@ export function UserProfilePanel() {
 
   const saveProfile = async () => {
     if (!isUserProfileComplete(profileDraft)) {
+      setShowRequiredErrors(true);
       setStatus("All profile fields are required.");
+      window.setTimeout(() => scrollToFirstInvalidField(formRef.current), 0);
       return;
     }
 
@@ -59,6 +65,7 @@ export function UserProfilePanel() {
     try {
       const savedProfile = await saveUserProfile(nextProfile);
       setProfileDraft(savedProfile);
+      setShowRequiredErrors(false);
       void persistCart(readLocalCart(), savedProfile);
       setStatus("Profile saved to database.");
     } catch {
@@ -77,48 +84,52 @@ export function UserProfilePanel() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div ref={formRef} className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-secondary-text">First name</div>
+          <RequiredLabel required className="text-secondary-text">First name</RequiredLabel>
           <CustomInput
             value={profileDraft.firstName}
             variant="secondary"
             placeholder="نام"
             required
+            invalid={showRequiredErrors && !profileDraft.firstName.trim()}
             aria-label="First name"
             onChange={(event) => updateProfileDraft({ firstName: event.target.value })}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-secondary-text">Last name</div>
+          <RequiredLabel required className="text-secondary-text">Last name</RequiredLabel>
           <CustomInput
             value={profileDraft.lastName}
             variant="secondary"
             placeholder="نام خانوادگی"
             required
+            invalid={showRequiredErrors && !profileDraft.lastName.trim()}
             aria-label="Last name"
             onChange={(event) => updateProfileDraft({ lastName: event.target.value })}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-secondary-text">National ID</div>
+          <RequiredLabel required className="text-secondary-text">National ID</RequiredLabel>
           <CustomInput
             value={profileDraft.nationalId}
             variant="secondary"
             placeholder="کد ملی"
             required
+            invalid={showRequiredErrors && !profileDraft.nationalId.trim()}
             inputMode="numeric"
             aria-label="National ID"
             onChange={(event) => updateProfileDraft({ nationalId: event.target.value })}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-xs font-bold text-secondary-text">Phone</div>
+          <RequiredLabel required className="text-secondary-text">Phone</RequiredLabel>
           <CustomInput
             value={profileDraft.phone}
             variant="secondary"
             placeholder="شماره تماس"
             required
+            invalid={showRequiredErrors && !profileDraft.phone.trim()}
             inputMode="tel"
             aria-label="Phone"
             onChange={(event) => updateProfileDraft({ phone: event.target.value })}

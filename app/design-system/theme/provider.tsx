@@ -74,8 +74,8 @@ function readThemePayload<T>(payload: unknown, fallback: T): T {
 function getUserThemeUrl() {
   const profile = readUserProfile();
   const nationalId = profile?.nationalId.trim();
-  if (!nationalId) return "/api/theme/user";
-  return `/api/theme/user?nationalId=${encodeURIComponent(nationalId)}`;
+  if (!nationalId) return "/api/user/theme";
+  return `/api/user/theme?nationalId=${encodeURIComponent(nationalId)}`;
 }
 
 export function ThemeProvider({
@@ -258,7 +258,7 @@ export function ThemeProvider({
     let cancelled = false;
 
     const loadThemes = () => void Promise.all([
-      fetch("/api/theme/admin", { cache: "no-store" }).then((res) => res.json()),
+      fetch("/api/admin/theme", { cache: "no-store" }).then((res) => res.json()),
       fetch(getUserThemeUrl(), { cache: "no-store" }).then((res) => res.json()),
     ])
       .then(([nextAdminTheme, nextUserTheme]) => {
@@ -307,8 +307,8 @@ export function ThemeProvider({
     });
 
     try {
-      const res = await fetch("/api/theme/user", {
-        method: "POST",
+      const res = await fetch("/api/user/theme", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(optimistic),
       });
@@ -324,8 +324,8 @@ export function ThemeProvider({
     setAdminTheme(optimistic);
 
     try {
-      const res = await fetch("/api/theme/admin", {
-        method: "POST",
+      const res = await fetch("/api/admin/theme", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(optimistic),
       });

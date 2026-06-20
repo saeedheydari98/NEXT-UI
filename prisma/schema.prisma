@@ -26,10 +26,11 @@ model AdminTheme {
 }
 
 model AdminSecurity {
-  id        Int      @id @default(autoincrement())
-  code      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  code          String
+  isPanelLocked Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model UserTheme {

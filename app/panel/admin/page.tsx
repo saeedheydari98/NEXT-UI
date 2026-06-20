@@ -16,10 +16,12 @@ export default function AdminPanelPage() {
 
   useEffect(() => {
     const syncAccess = () => setHasAdminAccess(isAdminAccessUnlocked());
+    const syncAccessFromApi = async () => {
+      setHasAdminAccess(await fetchAdminAccess());
+    };
 
     syncAccess();
-    void fetchAdminAccess()
-      .then(setHasAdminAccess)
+    void syncAccessFromApi()
       .catch((error) => {
         console.error("Admin access profile load error:", error);
       });

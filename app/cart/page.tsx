@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IoBagHandleOutline, IoCardOutline, IoTrashOutline } from "react-icons/io5";
 import { CustomButton } from "../design-system/components/ui/button";
 import { CustomInput } from "../design-system/components/ui/input";
 import { CustomModal } from "../design-system/components/ui/modal";
+import { RequiredLabel } from "../design-system/components/ui/required-label";
 import {
   clearCart as clearCartData,
   checkoutCart,
@@ -14,6 +15,7 @@ import {
   updateCartQuantity,
   type CartItemRecord,
 } from "@/lib/cart-client";
+import { scrollToFirstInvalidField } from "@/lib/form-validation";
 import {
   EMPTY_USER_PROFILE,
   fetchUserProfile,
@@ -57,7 +59,9 @@ export default function CartPage() {
   const [profileDraft, setProfileDraft] = useState<UserProfile>(EMPTY_USER_PROFILE);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const [showProfileRequiredErrors, setShowProfileRequiredErrors] = useState(false);
   const [checkoutMessage, setCheckoutMessage] = useState("");
+  const profileFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +116,9 @@ export default function CartPage() {
 
   const saveProfileDraft = () => {
     if (!isUserProfileComplete(profileDraft)) {
+      setShowProfileRequiredErrors(true);
       setProfileError("All profile fields are required.");
+      window.setTimeout(() => scrollToFirstInvalidField(profileFormRef.current), 0);
       return;
     }
 
@@ -130,6 +136,7 @@ export default function CartPage() {
         void persistCart(items, savedProfile).then(setItems);
         setProfile(savedProfile);
         setProfileDraft(savedProfile);
+        setShowProfileRequiredErrors(false);
         setIsProfileModalOpen(false);
         setCheckoutMessage("Profile saved. Your cart is synced.");
       })
@@ -303,47 +310,53 @@ export default function CartPage() {
             <div className="text-sm text-secondary-text">
               Please register your required profile information before checkout.
             </div>
+            <div ref={profileFormRef} className="flex flex-col gap-3">
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-primary-text">First name</div>
+              <RequiredLabel required className="text-primary-text">First name</RequiredLabel>
               <CustomInput
                 value={profileDraft.firstName}
                 placeholder="نام"
                 required
+                invalid={showProfileRequiredErrors && !profileDraft.firstName.trim()}
                 aria-label="First name"
                 onChange={(event) => updateProfileDraft({ firstName: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-primary-text">Last name</div>
+              <RequiredLabel required className="text-primary-text">Last name</RequiredLabel>
               <CustomInput
                 value={profileDraft.lastName}
                 placeholder="نام خانوادگی"
                 required
+                invalid={showProfileRequiredErrors && !profileDraft.lastName.trim()}
                 aria-label="Last name"
                 onChange={(event) => updateProfileDraft({ lastName: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-primary-text">National ID</div>
+              <RequiredLabel required className="text-primary-text">National ID</RequiredLabel>
               <CustomInput
                 value={profileDraft.nationalId}
                 placeholder="کد ملی"
                 required
+                invalid={showProfileRequiredErrors && !profileDraft.nationalId.trim()}
                 inputMode="numeric"
                 aria-label="National ID"
                 onChange={(event) => updateProfileDraft({ nationalId: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-primary-text">Phone</div>
+              <RequiredLabel required className="text-primary-text">Phone</RequiredLabel>
               <CustomInput
                 value={profileDraft.phone}
                 placeholder="شماره تماس"
                 required
+                invalid={showProfileRequiredErrors && !profileDraft.phone.trim()}
                 inputMode="tel"
                 aria-label="Phone"
                 onChange={(event) => updateProfileDraft({ phone: event.target.value })}
               />
+            </div>
             </div>
             {profileError ? (
               <div className="rounded-md border border-danger-border-nomode bg-bg-base px-3 py-2 text-sm font-semibold text-danger-text-nomode">

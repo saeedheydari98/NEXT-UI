@@ -18,6 +18,7 @@ type CustomInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'
   loadingText?: string;
   icon?: React.ReactNode;
   iconAfter?: React.ReactNode;
+  invalid?: boolean;
 };
 
 export function CustomInput({
@@ -34,6 +35,7 @@ export function CustomInput({
   loadingText,
   icon,
   iconAfter,
+  invalid = false,
   style,
   ...rest
 }: CustomInputProps) {
@@ -49,10 +51,11 @@ export function CustomInput({
       )}
       <input
         {...rest}
+        aria-invalid={invalid || rest["aria-invalid"]}
         disabled={isDisabled}
         className={cx(
           "text-primary-text placeholder:text-secondary-text",
-          "focus:outline-none focus:ring-2 focus:ring-primary-border",
+          invalid ? "focus:outline-none focus:ring-2 focus:ring-danger-border-nomode" : "focus:outline-none focus:ring-2 focus:ring-primary-border",
           sizeVariants[size],
           radiusVariants[rounded],
           borderVariants[border],
@@ -67,7 +70,7 @@ export function CustomInput({
         )}
         style={{
           backgroundColor: controlBackground,
-          borderColor: colorStyle.borderColor,
+          borderColor: invalid ? "var(--danger-border-nomode)" : colorStyle.borderColor,
           ...style,
         }}
       />

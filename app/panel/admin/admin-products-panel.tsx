@@ -5,10 +5,12 @@ import { IoAdd, IoCloudUploadOutline, IoSaveOutline, IoTrashOutline } from "reac
 import { CustomButton } from "../../design-system/components/ui/button";
 import { CustomInput } from "../../design-system/components/ui/input";
 import { CustomModal } from "../../design-system/components/ui/modal";
+import { RequiredLabel } from "../../design-system/components/ui/required-label";
 import { CustomSelect } from "../../design-system/components/ui/select";
 import { CustomSwitch } from "../../design-system/components/ui/switch";
 import { FloatButton } from "@/app/design-system/components/ui/float-button";
 import { clearProductsCache, getProducts } from "@/lib/products-client";
+import { scrollToFirstInvalidField } from "@/lib/form-validation";
 import { AdminBannerList } from "./products-panel/admin-banner-list";
 import { AdminShowcaseList } from "./products-panel/admin-showcase-list";
 import type { BannerForm, ProductForm, ShowcaseForm } from "./products-panel/types";
@@ -348,6 +350,7 @@ export function AdminProductsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
+  const [requiredErrors, setRequiredErrors] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState("");
   const [draftBannerImageUrl, setDraftBannerImageUrl] = useState("");
   const [editingBannerImageUrl, setEditingBannerImageUrl] = useState("");
@@ -356,6 +359,14 @@ export function AdminProductsPanel() {
     startX: 0,
     scrollLeft: 0,
   });
+
+  const hasRequiredError = (key: string) => requiredErrors.includes(key);
+
+  const showRequiredErrors = (keys: string[], message: string) => {
+    setRequiredErrors(keys);
+    setStatus(message);
+    window.setTimeout(() => scrollToFirstInvalidField(document), 0);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -532,27 +543,32 @@ export function AdminProductsPanel() {
 
   const openCreateModal = () => {
     const firstShowcase = sortedShowcases[0]?.id ?? "";
+    setRequiredErrors([]);
     setDraftProduct({ ...createProduct(), showcaseId: firstShowcase, sortOrder: products.length + 1 });
     setIsCreateOpen(true);
   };
 
   const openShowcaseModal = () => {
+    setRequiredErrors([]);
     setDraftShowcase({ ...createShowcase(), sortOrder: nextDisplayOrder });
     setIsShowcaseOpen(true);
   };
 
   const openBannerModal = () => {
+    setRequiredErrors([]);
     setDraftBanner({ ...createBanner(), sortOrder: nextDisplayOrder });
     setDraftBannerImageUrl("");
     setIsBannerOpen(true);
   };
 
   const openEditShowcaseModal = (showcase: ShowcaseForm) => {
+    setRequiredErrors([]);
     setEditingShowcase(showcase);
     setIsEditShowcaseOpen(true);
   };
 
   const openEditBannerModal = (banner: BannerForm) => {
+    setRequiredErrors([]);
     setEditingBanner(banner);
     setEditingBannerImageUrl("");
     setIsEditBannerOpen(true);
@@ -691,6 +707,7 @@ export function AdminProductsPanel() {
   };
 
   const openEditModal = (product: ProductForm) => {
+    setRequiredErrors([]);
     setEditingProduct(product);
     setIsEditOpen(true);
   };
@@ -698,11 +715,18 @@ export function AdminProductsPanel() {
   const submitDraftProduct = async () => {
     if (saving) return;
 
-    if (!draftProduct.title.trim() || !draftProduct.description.trim() || !draftProduct.discountPrice.trim()) {
-      setStatus("Title, description, and new price are required.");
+    const errors = [
+      !draftProduct.title.trim() && "draftProduct.title",
+      !draftProduct.description.trim() && "draftProduct.description",
+      !draftProduct.discountPrice.trim() && "draftProduct.discountPrice",
+    ].filter(Boolean) as string[];
+
+    if (errors.length > 0) {
+      showRequiredErrors(errors, "Title, description, and new price are required.");
       return;
     }
 
+    setRequiredErrors([]);
     const nextProducts = [...products, draftProduct];
     setProducts(nextProducts);
     setIsCreateOpen(false);
@@ -711,10 +735,11 @@ export function AdminProductsPanel() {
 
   const submitDraftShowcase = async () => {
     if (!draftShowcase.title.trim()) {
-      setStatus("Showcase title is required.");
+      showRequiredErrors(["draftShowcase.title"], "Showcase title is required.");
       return;
     }
 
+    setRequiredErrors([]);
     const nextShowcases = [...sortedShowcases, draftShowcase];
     setShowcases(nextShowcases);
     setIsShowcaseOpen(false);
@@ -723,10 +748,11 @@ export function AdminProductsPanel() {
 
   const submitDraftBanner = async () => {
     if (draftBanner.imageUrls.length === 0) {
-      setStatus("Banner needs at least one image.");
+      showRequiredErrors(["draftBanner.images"], "Banner needs at least one image.");
       return;
     }
 
+    setRequiredErrors([]);
     const nextBanners = [...sortedBanners, draftBanner];
     setBanners(nextBanners);
     setIsBannerOpen(false);
@@ -737,10 +763,11 @@ export function AdminProductsPanel() {
     if (!editingShowcase) return;
 
     if (!editingShowcase.title.trim()) {
-      setStatus("Showcase title is required.");
+      showRequiredErrors(["editingShowcase.title"], "Showcase title is required.");
       return;
     }
 
+    setRequiredErrors([]);
     const nextShowcases = sortedShowcases.map((showcase) =>
       showcase.id === editingShowcase.id ? editingShowcase : showcase
     );
@@ -754,10 +781,11 @@ export function AdminProductsPanel() {
     if (!editingBanner) return;
 
     if (editingBanner.imageUrls.length === 0) {
-      setStatus("Banner needs at least one image.");
+      showRequiredErrors(["editingBanner.images"], "Banner needs at least one image.");
       return;
     }
 
+    setRequiredErrors([]);
     const nextBanners = sortedBanners.map((banner) =>
       banner.id === editingBanner.id ? editingBanner : banner
     );
@@ -799,11 +827,18 @@ export function AdminProductsPanel() {
     if (saving) return;
     if (!editingProduct) return;
 
-    if (!editingProduct.title.trim() || !editingProduct.description.trim() || !editingProduct.discountPrice.trim()) {
-      setStatus("Title, description, and new price are required.");
+    const errors = [
+      !editingProduct.title.trim() && "editingProduct.title",
+      !editingProduct.description.trim() && "editingProduct.description",
+      !editingProduct.discountPrice.trim() && "editingProduct.discountPrice",
+    ].filter(Boolean) as string[];
+
+    if (errors.length > 0) {
+      showRequiredErrors(errors, "Title, description, and new price are required.");
       return;
     }
 
+    setRequiredErrors([]);
     const nextProducts = products.map((item) =>
       item.id === editingProduct.id ? editingProduct : item
     );
@@ -902,19 +937,23 @@ export function AdminProductsPanel() {
         shadow="lg"
       >
         <div className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto rounded-lg border border-primary-border bg-primary-card p-3">
-          <CustomInput
-            value={draftBanner.title}
-            placeholder="Banner title"
-            onChange={(event) => updateDraftBanner({ title: event.target.value })}
-          />
+            <CustomInput
+              value={draftBanner.title}
+              placeholder="Banner title"
+              onChange={(event) => updateDraftBanner({ title: event.target.value })}
+            />
           <CustomInput
             type="number"
             value={draftBanner.sortOrder}
             placeholder="Sort order"
             onChange={(event) => updateDraftBanner({ sortOrder: Number(event.target.value) })}
           />
-          <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-soft p-3">
-            <div className="text-sm font-bold text-primary-text">Banner images</div>
+          <div
+            data-invalid={hasRequiredError("draftBanner.images") && draftBanner.imageUrls.length === 0 ? "true" : undefined}
+            tabIndex={-1}
+            className={`flex flex-col gap-3 rounded-lg border bg-primary-soft p-3 outline-none ${hasRequiredError("draftBanner.images") && draftBanner.imageUrls.length === 0 ? "border-danger-border-nomode" : "border-primary-border"}`}
+          >
+            <RequiredLabel required className="text-primary-text">Banner images</RequiredLabel>
             <div className="flex gap-2">
               <CustomInput
                 value={draftBannerImageUrl}
@@ -1005,8 +1044,12 @@ export function AdminProductsPanel() {
               placeholder="Sort order"
               onChange={(event) => updateEditingBanner({ sortOrder: Number(event.target.value) })}
             />
-            <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-soft p-3">
-              <div className="text-sm font-bold">Banner images</div>
+            <div
+              data-invalid={hasRequiredError("editingBanner.images") && editingBanner.imageUrls.length === 0 ? "true" : undefined}
+              tabIndex={-1}
+              className={`flex flex-col gap-3 rounded-lg border bg-primary-soft p-3 outline-none ${hasRequiredError("editingBanner.images") && editingBanner.imageUrls.length === 0 ? "border-danger-border-nomode" : "border-primary-border"}`}
+            >
+            <RequiredLabel required>Banner images</RequiredLabel>
               <div className="flex gap-2">
                 <CustomInput
                   value={editingBannerImageUrl}
@@ -1091,9 +1134,11 @@ export function AdminProductsPanel() {
         shadow="lg"
       >
         <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
+          <RequiredLabel required className="text-primary-text">Showcase title</RequiredLabel>
           <CustomInput
             value={draftShowcase.title}
             placeholder="Showcase title"
+            invalid={hasRequiredError("draftShowcase.title") && !draftShowcase.title.trim()}
             onChange={(event) => updateDraftShowcase({ title: event.target.value })}
           />
           <CustomInput
@@ -1133,9 +1178,11 @@ export function AdminProductsPanel() {
       >
         {editingShowcase && (
           <div className="flex flex-col gap-3">
+            <RequiredLabel required className="text-primary-text">Showcase title</RequiredLabel>
             <CustomInput
               value={editingShowcase.title}
               placeholder="Showcase title"
+              invalid={hasRequiredError("editingShowcase.title") && !editingShowcase.title.trim()}
               onChange={(event) => updateEditingShowcase({ title: event.target.value })}
             />
             <CustomInput
@@ -1201,9 +1248,11 @@ export function AdminProductsPanel() {
                 ))}
               </div>
             </div>
+            <RequiredLabel required className="text-primary-text">Title</RequiredLabel>
             <CustomInput
               value={draftProduct.title}
               placeholder="Title"
+              invalid={hasRequiredError("draftProduct.title") && !draftProduct.title.trim()}
               onChange={(event) => updateDraftProduct({ title: event.target.value })}
             />
             <CustomInput
@@ -1211,9 +1260,11 @@ export function AdminProductsPanel() {
               placeholder="Price before discount"
               onChange={(event) => updateDraftPricing({ originalPrice: event.target.value })}
             />
+            <RequiredLabel required className="text-primary-text">Discounted price</RequiredLabel>
             <CustomInput
               value={draftProduct.discountPrice}
               placeholder="Discounted price"
+              invalid={hasRequiredError("draftProduct.discountPrice") && !draftProduct.discountPrice.trim()}
               onChange={(event) => updateDraftPricing({ discountPrice: event.target.value })}
             />
             <CustomInput
@@ -1246,11 +1297,14 @@ export function AdminProductsPanel() {
             </span>
           </div>
 
+          <RequiredLabel required className="text-primary-text">Description</RequiredLabel>
           <textarea
             value={draftProduct.description}
             placeholder="Description"
+            aria-invalid={hasRequiredError("draftProduct.description") && !draftProduct.description.trim()}
+            data-invalid={hasRequiredError("draftProduct.description") && !draftProduct.description.trim() ? "true" : undefined}
             onChange={(event) => updateDraftProduct({ description: event.target.value })}
-            className="min-h-24 rounded-md border border-primary-border bg-primary-card p-3 text-sm text-primary-text outline-none focus:ring-2 focus:ring-primary-border"
+            className={`min-h-24 rounded-md border bg-primary-card p-3 text-sm text-primary-text outline-none focus:ring-2 ${hasRequiredError("draftProduct.description") && !draftProduct.description.trim() ? "border-danger-border-nomode focus:ring-danger-border-nomode" : "border-primary-border focus:ring-primary-border"}`}
           />
 
           <div className="flex flex-col gap-3 rounded-lg border border-primary-border">
@@ -1343,9 +1397,11 @@ export function AdminProductsPanel() {
                   ))}
                 </div>
               </div>
+              <RequiredLabel required className="text-primary-text">Title</RequiredLabel>
               <CustomInput
                 value={editingProduct.title}
                 placeholder="Title"
+                invalid={hasRequiredError("editingProduct.title") && !editingProduct.title.trim()}
                 onChange={(event) => updateEditingProduct({ title: event.target.value })}
               />
               <CustomInput
@@ -1353,9 +1409,11 @@ export function AdminProductsPanel() {
                 placeholder="Price before discount"
                 onChange={(event) => updateEditingPricing({ originalPrice: event.target.value })}
               />
+              <RequiredLabel required className="text-primary-text">Discounted price</RequiredLabel>
               <CustomInput
                 value={editingProduct.discountPrice}
                 placeholder="Discounted price"
+                invalid={hasRequiredError("editingProduct.discountPrice") && !editingProduct.discountPrice.trim()}
                 onChange={(event) => updateEditingPricing({ discountPrice: event.target.value })}
               />
               <CustomInput
@@ -1388,11 +1446,14 @@ export function AdminProductsPanel() {
               </span>
             </div>
 
+            <RequiredLabel required className="text-primary-text">Description</RequiredLabel>
             <textarea
               value={editingProduct.description}
               placeholder="Description"
+              aria-invalid={hasRequiredError("editingProduct.description") && !editingProduct.description.trim()}
+              data-invalid={hasRequiredError("editingProduct.description") && !editingProduct.description.trim() ? "true" : undefined}
               onChange={(event) => updateEditingProduct({ description: event.target.value })}
-              className="min-h-24 rounded-md border border-primary-border bg-primary-card p-3 text-sm text-primary-text outline-none focus:ring-2 focus:ring-primary-border"
+              className={`min-h-24 rounded-md border bg-primary-card p-3 text-sm text-primary-text outline-none focus:ring-2 ${hasRequiredError("editingProduct.description") && !editingProduct.description.trim() ? "border-danger-border-nomode focus:ring-danger-border-nomode" : "border-primary-border focus:ring-primary-border"}`}
             />
 
             <div className="flex flex-col gap-3 rounded-lg border border-primary-border">

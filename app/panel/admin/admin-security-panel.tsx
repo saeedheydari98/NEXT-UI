@@ -1,44 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { CustomInput } from "@/app/design-system/components/ui/input";
+import { RequiredLabel } from "@/app/design-system/components/ui/required-label";
+import { CustomSwitch } from "@/app/design-system/components/ui/switch";
+import { scrollToFirstInvalidField } from "@/lib/form-validation";
 import {
   fetchAdminSecurity,
+  saveAdminPanelLock,
   saveAdminAccessCode,
 } from "@/lib/admin-access";
 
 export function AdminSecurityPanel() {
   const [hasAdminCode, setHasAdminCode] = useState(false);
+  const [isPanelLocked, setIsPanelLocked] = useState(false);
+  const [currentAdminCode, setCurrentAdminCode] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [confirmAdminCode, setConfirmAdminCode] = useState("");
+  const [showCurrentCode, setShowCurrentCode] = useState(false);
+  const [showAdminCode, setShowAdminCode] = useState(false);
+  const [showConfirmAdminCode, setShowConfirmAdminCode] = useState(false);
+  const [savingLock, setSavingLock] = useState(false);
   const [savingCode, setSavingCode] = useState(false);
   const [status, setStatus] = useState("");
+  const [showCodeRequiredErrors, setShowCodeRequiredErrors] = useState(false);
+  const codeFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void fetchAdminSecurity()
-      .then((security) => setHasAdminCode(security.hasCode))
+      .then((security) => {
+        setHasAdminCode(security.hasCode);
+        setIsPanelLocked(security.isPanelLocked);
+      })
       .catch((error) => {
         console.error("Admin security load error:", error);
       });
   }, []);
 
+  const togglePanelLock = async (nextLocked: boolean) => {
+    const previousLocked = isPanelLocked;
+    setIsPanelLocked(nextLocked);
+    setSavingLock(true);
+    setStatus("");
+
+    try {
+      const saved = await saveAdminPanelLock(nextLocked);
+      setHasAdminCode(saved.hasCode);
+      setIsPanelLocked(saved.isPanelLocked);
+      setStatus(saved.isPanelLocked ? "Admin panel is locked for everyone else." : "Admin panel is open for everyone.");
+    } catch (error) {
+      setIsPanelLocked(previousLocked);
+      setStatus(error instanceof Error ? error.message : "Admin lock update failed.");
+    } finally {
+      setSavingLock(false);
+    }
+  };
+
   const saveSecurityCode = async () => {
+    if ((hasAdminCode && !currentAdminCode.trim()) || !adminCode.trim() || !confirmAdminCode.trim()) {
+      setShowCodeRequiredErrors(true);
+      setStatus("Required admin code fields must be filled.");
+      window.setTimeout(() => scrollToFirstInvalidField(codeFormRef.current), 0);
+      return;
+    }
+
     setSavingCode(true);
     setStatus("");
 
     try {
-      const saved = await saveAdminAccessCode(adminCode, confirmAdminCode);
+      const saved = await saveAdminAccessCode(currentAdminCode, adminCode, confirmAdminCode);
       setHasAdminCode(saved.hasCode);
+      setIsPanelLocked(saved.isPanelLocked);
+      setCurrentAdminCode("");
       setAdminCode("");
       setConfirmAdminCode("");
-      setStatus("Admin security code saved. Admin access is locked until the code is entered again.");
+      setShowCodeRequiredErrors(false);
+      setStatus(
+        saved.isPanelLocked
+          ? "Admin security code saved. Admin access is locked until the code is entered again."
+          : "Admin security code saved. Admin panel remains open for everyone until locked."
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Admin security code save failed.");
     } finally {
       setSavingCode(false);
     }
   };
+
+  const passwordVisibilityButton = (isVisible: boolean, onClick: () => void, label: string) => (
+    <button
+      type="button"
+      aria-label={label}
+      className="flex items-center justify-center text-lg text-secondary-text transition-colors hover:text-primary-text"
+      onClick={onClick}
+    >
+      {isVisible ? <IoEyeOffOutline /> : <IoEyeOutline />}
+    </button>
+  );
 
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-primary-border bg-primary-bg p-4 text-primary-text">
@@ -49,6 +109,23 @@ export function AdminSecurityPanel() {
         </div>
       </div>
 
+      <div ref={codeFormRef} className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="text-sm font-bold text-primary-text">Panel access</div>
+            <span className="text-xs text-secondary-text">
+              {isPanelLocked ? "Locked: only unlocked profiles can open admin." : "Unlocked: everyone can open admin."}
+            </span>
+          </div>
+          <CustomSwitch
+            checked={isPanelLocked}
+            onChange={togglePanelLock}
+            isLoading={savingLock}
+            label={isPanelLocked ? "Locked" : "Open"}
+          />
+        </div>
+      </div>
+
       <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
         <div className="flex flex-col gap-1">
           <div className="text-sm font-bold text-primary-text">Admin security code</div>
@@ -56,26 +133,65 @@ export function AdminSecurityPanel() {
             {hasAdminCode ? "Custom code is active." : "Set a custom code for admin access."}
           </span>
         </div>
+        {hasAdminCode ? (
+          <div className="flex flex-col gap-2">
+          <RequiredLabel required className="text-primary-text">Current code</RequiredLabel>
+          <CustomInput
+            value={currentAdminCode}
+            type={showCurrentCode ? "text" : "password"}
+            placeholder="Current code"
+            aria-label="Current admin security code"
+            invalid={showCodeRequiredErrors && !currentAdminCode.trim()}
+            iconAfter={passwordVisibilityButton(
+              showCurrentCode,
+              () => setShowCurrentCode((isVisible) => !isVisible),
+              showCurrentCode ? "Hide current admin code" : "Show current admin code"
+            )}
+            onChange={(event) => {
+              setCurrentAdminCode(event.target.value);
+              setStatus("");
+            }}
+          />
+          </div>
+        ) : null}
+        <div className="flex flex-col gap-2">
+        <RequiredLabel required className="text-primary-text">New code</RequiredLabel>
         <CustomInput
           value={adminCode}
-          type="password"
+          type={showAdminCode ? "text" : "password"}
           placeholder="New code"
           aria-label="New admin security code"
+          invalid={showCodeRequiredErrors && !adminCode.trim()}
+          iconAfter={passwordVisibilityButton(
+            showAdminCode,
+            () => setShowAdminCode((isVisible) => !isVisible),
+            showAdminCode ? "Hide new admin code" : "Show new admin code"
+          )}
           onChange={(event) => {
             setAdminCode(event.target.value);
             setStatus("");
           }}
         />
+        </div>
+        <div className="flex flex-col gap-2">
+        <RequiredLabel required className="text-primary-text">Confirm new code</RequiredLabel>
         <CustomInput
           value={confirmAdminCode}
-          type="password"
+          type={showConfirmAdminCode ? "text" : "password"}
           placeholder="Confirm new code"
           aria-label="Confirm new admin security code"
+          invalid={showCodeRequiredErrors && !confirmAdminCode.trim()}
+          iconAfter={passwordVisibilityButton(
+            showConfirmAdminCode,
+            () => setShowConfirmAdminCode((isVisible) => !isVisible),
+            showConfirmAdminCode ? "Hide confirmed admin code" : "Show confirmed admin code"
+          )}
           onChange={(event) => {
             setConfirmAdminCode(event.target.value);
             setStatus("");
           }}
         />
+        </div>
         <CustomButton
           border="base"
           fullWidth

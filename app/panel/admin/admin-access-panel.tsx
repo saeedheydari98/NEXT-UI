@@ -4,6 +4,7 @@ import { useState } from "react";
 import { IoLockOpenOutline } from "react-icons/io5";
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { CustomInput } from "@/app/design-system/components/ui/input";
+import { RequiredLabel } from "@/app/design-system/components/ui/required-label";
 import { unlockAdminAccessWithCode } from "@/lib/admin-access";
 
 type AdminAccessPanelProps = {
@@ -14,8 +15,15 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRequiredError, setShowRequiredError] = useState(false);
 
   const submitCode = async () => {
+    if (!code.trim()) {
+      setShowRequiredError(true);
+      setStatus("Security code is required.");
+      return;
+    }
+
     setIsSubmitting(true);
     setStatus("");
 
@@ -23,6 +31,7 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
       const unlocked = await unlockAdminAccessWithCode(code);
       if (unlocked) {
         setCode("");
+        setShowRequiredError(false);
         onUnlock();
         return;
       }
@@ -45,14 +54,16 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="text-xs font-bold text-primary-text">Security code</div>
+        <RequiredLabel required className="text-primary-text">Security code</RequiredLabel>
         <CustomInput
           value={code}
           type="password"
           placeholder="Enter admin code"
           aria-label="Admin access code"
+          invalid={showRequiredError && !code.trim()}
           onChange={(event) => {
             setCode(event.target.value);
+            setShowRequiredError(false);
             setStatus("");
           }}
           onKeyDown={(event) => {

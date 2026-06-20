@@ -21,6 +21,18 @@ function readProfileFromApiData(data: any) {
   return data?.data?.user?.profile ?? data?.data?.profile ?? null;
 }
 
+function areProfilesEqual(first: UserProfile | null, second: UserProfile | null) {
+  if (!first || !second) return first === second;
+
+  return (
+    first.firstName === second.firstName &&
+    first.lastName === second.lastName &&
+    first.nationalId === second.nationalId &&
+    first.phone === second.phone &&
+    first.isAdminUnlocked === second.isAdminUnlocked
+  );
+}
+
 export function normalizeUserProfile(value: Partial<UserProfile> | null | undefined): UserProfile {
   return {
     firstName: String(value?.firstName ?? ""),
@@ -55,19 +67,24 @@ export function readUserProfile(): UserProfile | null {
   }
 }
 
-export function writeUserProfile(profile: UserProfile) {
+export function writeUserProfile(profile: UserProfile, options?: { emit?: boolean }) {
   if (typeof window === "undefined") return;
 
   const nextProfile = normalizeUserProfile(profile);
+  const currentProfile = readUserProfile();
+  if (areProfilesEqual(currentProfile, nextProfile)) return;
+
   localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
-  window.dispatchEvent(new Event(USER_PROFILE_UPDATED_EVENT));
+  if (options?.emit !== false) {
+    window.dispatchEvent(new Event(USER_PROFILE_UPDATED_EVENT));
+  }
 }
 
-export async function fetchUserProfile(nationalId?: string) {
+export async function fetchUserProfile(nationalId?: string, options?: { write?: boolean; emit?: boolean }) {
   const id = String(nationalId ?? readUserProfile()?.nationalId ?? "").trim();
   if (!id) return null;
 
-  const res = await fetch(`/api/profile?nationalId=${encodeURIComponent(id)}`, {
+  const res = await fetch(`/api/user/profile?nationalId=${encodeURIComponent(id)}`, {
     cache: "no-store",
   });
   const data = await res.json();
@@ -80,7 +97,9 @@ export async function fetchUserProfile(nationalId?: string) {
     ? normalizeUserProfile(profileData as Partial<UserProfile>)
     : null;
   if (profile && isUserProfileComplete(profile)) {
-    writeUserProfile(profile);
+    if (options?.write !== false) {
+      writeUserProfile(profile, { emit: options?.emit });
+    }
     return profile;
   }
 
@@ -89,8 +108,8 @@ export async function fetchUserProfile(nationalId?: string) {
 
 export async function saveUserProfile(profile: UserProfile) {
   const nextProfile = normalizeUserProfile(profile);
-  const res = await fetch("/api/profile", {
-    method: "POST",
+  const res = await fetch("/api/user/profile", {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ profile: nextProfile }),
   });
