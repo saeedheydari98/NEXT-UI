@@ -9,7 +9,9 @@ function normalizeProfile(value: any) {
     firstName: String(value?.firstName ?? "").trim(),
     lastName: String(value?.lastName ?? "").trim(),
     nationalId: String(value?.nationalId ?? "").trim(),
+    birthDate: String(value?.birthDate ?? "").trim(),
     phone: String(value?.phone ?? "").trim(),
+    address: String(value?.address ?? "").trim(),
   };
 }
 
@@ -18,7 +20,7 @@ function readAdminUnlocked(value: any) {
 }
 
 function isComplete(profile: ReturnType<typeof normalizeProfile>) {
-  return Boolean(profile.firstName && profile.lastName && profile.nationalId && profile.phone);
+  return Boolean(profile.firstName && profile.lastName && profile.nationalId && profile.birthDate && profile.phone && profile.address);
 }
 
 export async function GET(request: Request) {
@@ -56,7 +58,9 @@ export async function POST(request: Request) {
       update: {
         firstName: profile.firstName,
         lastName: profile.lastName,
+        birthDate: profile.birthDate,
         phone: profile.phone,
+        address: profile.address,
         ...(includesAdminUnlocked
           ? { isAdminUnlocked: readAdminUnlocked(rawProfile) }
           : {}),

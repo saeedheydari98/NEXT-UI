@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 import { useTheme } from "../../theme/provider";
 import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
 import { borderVariants, cx, interactionStates, motionVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
@@ -19,6 +20,8 @@ type CustomInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'
   icon?: React.ReactNode;
   iconAfter?: React.ReactNode;
   invalid?: boolean;
+  label?: string;
+  showLabel?: boolean;
 };
 
 export function CustomInput({
@@ -36,21 +39,62 @@ export function CustomInput({
   icon,
   iconAfter,
   invalid = false,
+  label,
+  showLabel = true,
   style,
+  onChange,
+  onBlur,
+  value,
+  type,
   ...rest
 }: CustomInputProps) {
   const { theme } = useTheme();
+  const inputId = React.useId();
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [numberDraft, setNumberDraft] = React.useState<string | null>(null);
   const colorStyle = resolveVariantColors(variant, theme);
   const controlBackground = `color-mix(in srgb, ${colorStyle.backgroundColor} 10%, var(--bg-surface))`;
   const isDisabled = disabled || isLoading;
-
-  return (
+  const isPassword = type === "password";
+  const isNumber = type === "number";
+  const visibleLabel = showLabel ? label || String(rest["aria-label"] || rest.placeholder || "") : "";
+  const resolvedId = rest.id || inputId;
+  const displayedValue = isNumber && numberDraft !== null ? numberDraft : value;
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isNumber && event.target.value === "") {
+      setNumberDraft("");
+      return;
+    }
+    if (isNumber) setNumberDraft(null);
+    onChange?.(event);
+  };
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    if (isNumber && numberDraft !== null) setNumberDraft(null);
+    onBlur?.(event);
+  };
+  const resolvedIconAfter = iconAfter ?? (isPassword ? (
+    <button
+      type="button"
+      aria-label={showPassword ? "Hide password" : "Show password"}
+      className="flex items-center justify-center text-lg text-secondary-text transition-colors hover:text-primary-text"
+      onClick={() => setShowPassword((current) => !current)}
+      disabled={isDisabled}
+    >
+      {showPassword ? <IoEyeOffOutline /> : <IoEyeOutline />}
+    </button>
+  ) : null);
+  const control = (
     <div className={cx("relative inline-flex items-center", fullWidth && "w-full")}>
       {!isLoading && icon && (
         <span className="absolute left-3 text-secondary-text">{icon}</span>
       )}
       <input
         {...rest}
+        id={resolvedId}
+        type={isPassword && showPassword ? "text" : type}
+        value={displayedValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
         aria-invalid={invalid || rest["aria-invalid"]}
         disabled={isDisabled}
         className={cx(
@@ -65,7 +109,7 @@ export function CustomInput({
           isDisabled && interactionStates.disabled.base,
           fullWidth && "w-full",
           icon !== undefined && "pl-10",
-          iconAfter !== undefined && "pr-10",
+          resolvedIconAfter !== null && "pr-10",
           className
         )}
         style={{
@@ -80,9 +124,20 @@ export function CustomInput({
           {loadingText && <span className="text-sm">{loadingText}</span>}
         </span>
       )}
-      {!isLoading && iconAfter && (
-        <span className="absolute right-3 text-secondary-text">{iconAfter}</span>
+      {!isLoading && resolvedIconAfter && (
+        <span className="absolute right-3 text-secondary-text">{resolvedIconAfter}</span>
       )}
+    </div>
+  );
+
+  if (!visibleLabel) return control;
+
+  return (
+    <div className={cx("flex flex-col gap-1", fullWidth && "w-full")}>
+      <label htmlFor={resolvedId} className="text-xs font-bold text-secondary-text">
+        <span>{visibleLabel}</span>
+      </label>
+      {control}
     </div>
   );
 }

@@ -75,6 +75,8 @@ function normalizeBanner(item: Partial<Banner> & { bannerUrl?: string; images?: 
     title: String(item.title ?? `Banner ${index + 1}`),
     imageUrls,
     active: item.active !== false,
+    intervalSeconds: Number.isFinite(Number(item.intervalSeconds)) ? Math.max(1, Math.round(Number(item.intervalSeconds))) : 5,
+    heightPercent: Number.isFinite(Number(item.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(item.heightPercent)))) : 28,
     sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
   };
 }

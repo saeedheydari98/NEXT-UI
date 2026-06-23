@@ -14,8 +14,9 @@ export function GlobalSearch() {
   const isMobile = useIsMobile();
   const [value, setValue] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const returnPathRef = useRef("/");
-  const INPUT_ID = "global-search-input";
+  const INPUT_ID = "site-global-search-input";
   const isOpen = !isMobile || expanded;
 
   const submit = (q?: string) => {
@@ -44,6 +45,8 @@ export function GlobalSearch() {
   }, [pathname, searchParams]);
 
   useEffect(() => {
+    if (!isSearchFocused) return;
+
     const trimmed = value.trim();
     const timer = window.setTimeout(() => {
       const currentQuery = searchParams.get("q") ?? "";
@@ -57,7 +60,7 @@ export function GlobalSearch() {
     }, 2000);
 
     return () => window.clearTimeout(timer);
-  }, [pathname, router, searchParams, value]);
+  }, [isSearchFocused, pathname, router, searchParams, value]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -97,9 +100,15 @@ export function GlobalSearch() {
         >
           <CustomInput
             id={INPUT_ID}
+            name="site-global-search"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder=" search products ..."
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            data-lpignore="true"
+            showLabel={false}
             fullWidth={isOpen}
             rounded="full"
             border="none"
@@ -115,6 +124,8 @@ export function GlobalSearch() {
                 submit();
               }
             }}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
             aria-label="global-search"
           />
 

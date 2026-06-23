@@ -16,6 +16,7 @@ import { AdminShowcaseList } from "./products-panel/admin-showcase-list";
 import type { BannerForm, CategoryForm, ProductForm, ShowcaseForm } from "./products-panel/types";
 
 export type AdminCatalogSection = "products" | "banners" | "showcases" | "categories" | "storefront";
+type ProductRelationMode = "category" | "showcase";
 
 // No default showcase id
 
@@ -568,6 +569,9 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
   const [status, setStatus] = useState("");
   const [requiredErrors, setRequiredErrors] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState("");
+  const [relationProduct, setRelationProduct] = useState<ProductForm | null>(null);
+  const [relationMode, setRelationMode] = useState<ProductRelationMode>("category");
+  const [draggingProductId, setDraggingProductId] = useState<number | string | null>(null);
   const [draftBannerImageUrl, setDraftBannerImageUrl] = useState("");
   const [editingBannerImageUrl, setEditingBannerImageUrl] = useState("");
   const dragRef = useRef({
@@ -820,6 +824,27 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
   const stopProductRailDrag = () => {
     dragRef.current.active = false;
+  };
+
+  const reorderProducts = async (sourceId: number | string, targetId: number | string) => {
+    if (String(sourceId) === String(targetId)) return;
+
+    const ordered = [...sortedProducts];
+    const sourceIndex = ordered.findIndex((product) => String(product.id) === String(sourceId));
+    const targetIndex = ordered.findIndex((product) => String(product.id) === String(targetId));
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const [moved] = ordered.splice(sourceIndex, 1);
+    ordered.splice(targetIndex, 0, moved);
+    const reordered = ordered.map((product, index) => ({ ...product, sortOrder: index + 1 }));
+    setProducts(reordered);
+    await persistProducts(reordered, sortedShowcases, sortedBanners, sortedCategories, false);
+    setStatus("Product order saved.");
+  };
+
+  const openProductRelations = (product: ProductForm, mode: ProductRelationMode) => {
+    setRelationProduct(product);
+    setRelationMode(mode);
   };
 
   const openImagePreview = (imageUrl?: string) => {
@@ -1257,7 +1282,9 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     const nextProducts = products.map((item) =>
       item.id === product.id ? { ...item, ...patch } : item
     );
+    const nextProduct = nextProducts.find((item) => item.id === product.id) ?? null;
     setProducts(nextProducts);
+    setRelationProduct((current) => current?.id === product.id ? nextProduct : current);
     await persistProducts(nextProducts, sortedShowcases, sortedBanners, sortedCategories, false);
   };
 
@@ -1314,7 +1341,29 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
       {section === "products" ? (
         <div className="flex flex-wrap gap-3">
           {sortedProducts.map((product) => (
-            <div key={product.id} className="flex w-full max-w-80 flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
+            <div
+              key={product.id}
+              draggable
+              onDragStart={(event) => {
+                setDraggingProductId(product.id);
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", String(product.id));
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const sourceId = event.dataTransfer.getData("text/plain") || draggingProductId;
+                if (sourceId) void reorderProducts(sourceId, product.id);
+                setDraggingProductId(null);
+              }}
+              onDragEnd={() => setDraggingProductId(null)}
+              className={`flex w-full max-w-80 cursor-grab flex-col gap-3 rounded-lg border bg-primary-card p-3 active:cursor-grabbing ${
+                draggingProductId === product.id ? "border-primary opacity-70" : "border-primary-border"
+              }`}
+            >
               <button type="button" className="flex gap-3 text-left" onClick={() => openEditModal(product)}>
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media">
                   {product.imageUrl ? (
@@ -1329,33 +1378,25 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   <span className="text-xs text-secondary-text">{product.categoryIds.length} categories / {product.showcaseIds.length} showcases</span>
                 </div>
               </button>
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-wrap gap-1">
-                  {sortedCategories.map((category) => (
-                    <CustomButton
-                      key={category.id}
-                      size="sm"
-                      variant={product.categoryIds.includes(category.id) ? "primary" : "neutral"}
-                      border="base"
-                      onClick={() => void toggleCategoryProduct(category, product)}
-                    >
-                      {category.title}
-                    </CustomButton>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {sortedShowcases.map((showcase) => (
-                    <CustomButton
-                      key={showcase.id}
-                      size="sm"
-                      variant={product.showcaseIds.includes(showcase.id) ? "primary" : "neutral"}
-                      border="base"
-                      onClick={() => void toggleShowcaseProduct(showcase, product)}
-                    >
-                      {showcase.title || showcase.id}
-                    </CustomButton>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-2">
+                <CustomButton
+                  size="sm"
+                  rounded="full"
+                  variant="neutral"
+                  border="base"
+                  onClick={() => openProductRelations(product, "category")}
+                >
+                  Category
+                </CustomButton>
+                <CustomButton
+                  size="sm"
+                  rounded="full"
+                  variant="neutral"
+                  border="base"
+                  onClick={() => openProductRelations(product, "showcase")}
+                >
+                  Showcase
+                </CustomButton>
               </div>
             </div>
           ))}
@@ -2305,6 +2346,68 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             </div>
           </div>
         )}
+      </CustomModal>
+
+      <CustomModal
+        open={Boolean(relationProduct)}
+        onClose={() => setRelationProduct(null)}
+        title={relationMode === "category" ? "Product categories" : "Product showcases"}
+        closeText="Close"
+        rounded="lg"
+        border="base"
+        shadow="lg"
+      >
+        {relationProduct ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-bold text-primary-text">{relationProduct.title || "Untitled product"}</div>
+              <span className="text-xs text-secondary-text">
+                {relationMode === "category" ? "At least one category is required." : "Showcase selection can be empty."}
+              </span>
+            </div>
+
+            {relationMode === "category" ? (
+              <div className="flex flex-col gap-2">
+                {sortedCategories.map((category) => {
+                  const selected = relationProduct.categoryIds.includes(category.id);
+                  const isLastCategory = selected && relationProduct.categoryIds.length <= 1;
+                  return (
+                    <CustomButton
+                      key={category.id}
+                      border="base"
+                      variant={selected ? "primary" : "neutral"}
+                      disabled={isLastCategory}
+                      onClick={() => void toggleCategoryProduct(category, relationProduct)}
+                    >
+                      {category.title}
+                    </CustomButton>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {sortedShowcases.length === 0 ? (
+                  <div className="rounded-md border border-primary-border bg-primary-card p-3 text-sm text-secondary-text">
+                    No showcases are available.
+                  </div>
+                ) : null}
+                {sortedShowcases.map((showcase) => {
+                  const selected = relationProduct.showcaseIds.includes(showcase.id);
+                  return (
+                    <CustomButton
+                      key={showcase.id}
+                      border="base"
+                      variant={selected ? "primary" : "neutral"}
+                      onClick={() => void toggleShowcaseProduct(showcase, relationProduct)}
+                    >
+                      {showcase.title || showcase.id}
+                    </CustomButton>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : null}
       </CustomModal>
 
       <CustomModal

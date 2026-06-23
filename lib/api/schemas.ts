@@ -1,17 +1,45 @@
 import { z } from "zod";
 
+const USERNAME_REGEX = /^[a-z0-9._-]+$/;
+const NAME_REGEX = /^[\p{L}][\p{L}\s'-]{1,49}$/u;
+const NATIONAL_ID_REGEX = /^\d{10}$/;
+const PHONE_REGEX = /^09\d{9}$/;
+const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)\S{8,72}$/;
+
+const passwordSchema = z.string()
+  .min(8)
+  .max(72)
+  .regex(PASSWORD_REGEX, "password must include at least one letter, one number, and no spaces");
+
+const customerProfileSchema = z.object({
+  firstName: z.string().trim().regex(NAME_REGEX),
+  lastName: z.string().trim().regex(NAME_REGEX),
+  nationalId: z.string().trim().regex(NATIONAL_ID_REGEX),
+  birthDate: z.string().trim().min(1).refine((value) => {
+    const date = new Date(value);
+    return !Number.isNaN(date.getTime()) && date.getTime() <= Date.now();
+  }, "birth date must not be in the future"),
+  phone: z.string().trim().regex(PHONE_REGEX),
+  address: z.string().trim().min(5).max(200),
+});
+
 export const idParamSchema = z.object({
   id: z.string().min(1),
 });
 
 export const authRegisterSchema = z.object({
   email: z.email().trim().toLowerCase().optional(),
-  username: z.string().trim().toLowerCase().min(3).regex(/^[a-z0-9._-]+$/).optional(),
-  password: z.string().min(8),
+  username: z.string().trim().toLowerCase().min(3).max(32).regex(USERNAME_REGEX).optional(),
+  password: passwordSchema,
+  passwordConfirm: passwordSchema.optional(),
   name: z.string().trim().min(1).optional(),
+  profile: customerProfileSchema.optional(),
 }).refine((value) => Boolean(value.email || value.username), {
   message: "email or username is required",
   path: ["username"],
+}).refine((value) => !value.passwordConfirm || value.password === value.passwordConfirm, {
+  message: "password confirmation does not match",
+  path: ["passwordConfirm"],
 });
 
 export const authLoginSchema = z.object({
@@ -30,19 +58,15 @@ export const resetRequestSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(16),
-  password: z.string().min(8),
+  password: passwordSchema,
 });
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  password: z.string().min(8),
+  password: passwordSchema,
 });
 
-export const profileSchema = z.object({
-  firstName: z.string().trim().min(1),
-  lastName: z.string().trim().min(1),
-  nationalId: z.string().trim().min(1),
-  phone: z.string().trim().min(1),
+export const profileSchema = customerProfileSchema.extend({
   avatarUrl: z.string().trim().optional().nullable(),
   isAdminUnlocked: z.boolean().optional(),
 });
@@ -67,6 +91,8 @@ export const bannerSchema = z.object({
   images: z.unknown().optional(),
   active: z.boolean().optional(),
   sortOrder: z.coerce.number().int().optional(),
+  intervalSeconds: z.coerce.number().int().min(1).optional(),
+  heightPercent: z.coerce.number().int().min(10).max(100).optional(),
 });
 
 export const showcaseSchema = z.object({

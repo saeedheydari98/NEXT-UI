@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { createPortal } from "react-dom";
 import { CustomButton } from "./button";
 import { CustomCard } from "./card";
 import { UICommonVariant } from "../../variants/ui.variant";
@@ -38,9 +39,15 @@ export function CustomModal({
   isLoading = false,
   loadingText,
 }: CustomModalProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!open) return null;
 
-  return (
+  const modal = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
@@ -72,4 +79,6 @@ export function CustomModal({
       </CustomCard>
     </div>
   );
+
+  return mounted ? createPortal(modal, document.body) : modal;
 }

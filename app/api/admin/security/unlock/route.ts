@@ -5,6 +5,7 @@ import { rateLimit } from "@/lib/api/rate-limit";
 import { parseJsonBody } from "@/lib/api/validation";
 import {
   getAuthUser,
+  requireUser,
 } from "@/lib/api/auth";
 import {
   readAdminSecurity,
@@ -26,6 +27,16 @@ const unlockSchema = z.object({
     phone: z.string().trim().min(1),
   }).optional(),
 });
+const SUPERADMIN_USERNAME = "saeedheydari98";
+
+async function requireSuperadmin(request: Request) {
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth;
+  if (auth.user.username !== SUPERADMIN_USERNAME || auth.user.role !== "superadmin") {
+    return { ok: false as const, response: apiFail("superadmin required", 403) };
+  }
+  return auth;
+}
 
 export async function POST(request: Request) {
   const limited = rateLimit(request);
@@ -37,18 +48,21 @@ export async function POST(request: Request) {
   try {
     const security = await readAdminSecurity();
     const adminCode = security.code || readFallbackAdminCode();
+    const authUser = await getAuthUser(request);
 
-    if (!parsed.data.code) {
-      const unlocked = await upsertAdminSecurityLock(false);
+    if (authUser?.role === "superadmin" || authUser?.role === "admin") {
       return apiOk({
-        ...toAdminSecurityData(unlocked),
+        ...toAdminSecurityData(security),
         access: { isAdminUnlocked: true },
       });
     }
 
-    if (!security.isPanelLocked) {
+    if (!parsed.data.code) {
+      const superadmin = await requireSuperadmin(request);
+      if (!superadmin.ok) return superadmin.response;
+      const unlocked = await upsertAdminSecurityLock(false);
       return apiOk({
-        ...toAdminSecurityData(security),
+        ...toAdminSecurityData(unlocked),
         access: { isAdminUnlocked: true },
       });
     }
@@ -57,15 +71,7 @@ export async function POST(request: Request) {
       return apiFail("invalid admin code", 401);
     }
 
-    const authUser = await getAuthUser(request);
     if (!authUser) return apiFail("sign in is required", 401);
-
-    if (authUser.role === "superadmin" || authUser.role === "admin") {
-      return apiOk({
-        ...toAdminSecurityData(security),
-        access: { isAdminUnlocked: true },
-      });
-    }
 
     const username = String(parsed.data.username || authUser.username || "").trim().toLowerCase();
     if (!username || username !== authUser.username) {

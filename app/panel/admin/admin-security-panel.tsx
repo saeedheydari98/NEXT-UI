@@ -33,6 +33,7 @@ export function AdminSecurityPanel() {
   const [savingCode, setSavingCode] = useState(false);
   const [status, setStatus] = useState("");
   const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [checkedSuperadmin, setCheckedSuperadmin] = useState(false);
   const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
   const [showCodeRequiredErrors, setShowCodeRequiredErrors] = useState(false);
   const codeFormRef = useRef<HTMLDivElement>(null);
@@ -53,15 +54,16 @@ export function AdminSecurityPanel() {
       .catch((error) => {
         console.error("Admin security load error:", error);
       });
-    void fetch("/api/auth/me", { cache: "no-store" })
+    void fetch("/api/auth/session", { cache: "no-store" })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => {
         const user = data?.data?.user;
         const superadmin = user?.username === "saeedheydari98" && user?.role === "superadmin";
         setIsSuperadmin(superadmin);
+        setCheckedSuperadmin(true);
         if (superadmin) void loadAdminRequests();
       })
-      .catch(() => undefined);
+      .catch(() => setCheckedSuperadmin(true));
   }, []);
 
   const reviewAdminRequest = async (id: string, approved: boolean) => {
@@ -151,6 +153,14 @@ export function AdminSecurityPanel() {
         </div>
       </div>
 
+      {checkedSuperadmin && !isSuperadmin ? (
+        <div className="rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+          Only the superadmin account can change admin security settings.
+        </div>
+      ) : null}
+
+      {isSuperadmin ? (
+        <>
       <div ref={codeFormRef} className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -184,6 +194,7 @@ export function AdminSecurityPanel() {
             placeholder="Current code"
             aria-label="Current admin security code"
             invalid={showCodeRequiredErrors && !currentAdminCode.trim()}
+            showLabel={false}
             iconAfter={passwordVisibilityButton(
               showCurrentCode,
               () => setShowCurrentCode((isVisible) => !isVisible),
@@ -204,6 +215,7 @@ export function AdminSecurityPanel() {
           placeholder="New code"
           aria-label="New admin security code"
           invalid={showCodeRequiredErrors && !adminCode.trim()}
+          showLabel={false}
           iconAfter={passwordVisibilityButton(
             showAdminCode,
             () => setShowAdminCode((isVisible) => !isVisible),
@@ -223,6 +235,7 @@ export function AdminSecurityPanel() {
           placeholder="Confirm new code"
           aria-label="Confirm new admin security code"
           invalid={showCodeRequiredErrors && !confirmAdminCode.trim()}
+          showLabel={false}
           iconAfter={passwordVisibilityButton(
             showConfirmAdminCode,
             () => setShowConfirmAdminCode((isVisible) => !isVisible),
@@ -252,7 +265,6 @@ export function AdminSecurityPanel() {
         </div>
       ) : null}
 
-      {isSuperadmin ? (
         <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
           <div className="flex flex-col gap-1">
             <div className="text-sm font-bold text-primary-text">Admin requests</div>
@@ -281,6 +293,7 @@ export function AdminSecurityPanel() {
             </div>
           )}
         </div>
+        </>
       ) : null}
     </section>
   );

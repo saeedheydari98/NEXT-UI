@@ -116,6 +116,8 @@ export async function POST(request: Request, context: Context) {
           images: images(parsed.data),
           active: parsed.data.active ?? true,
           sortOrder: parsed.data.sortOrder ?? 0,
+          intervalSeconds: parsed.data.intervalSeconds ?? 5,
+          heightPercent: parsed.data.heightPercent ?? 28,
         },
       });
       return apiOk({ banner }, { status: 201 });
@@ -192,6 +194,8 @@ async function updateEntity(request: Request, context: Context, partial: boolean
           ...(parsed.data.images !== undefined || parsed.data.imageUrls !== undefined ? { images: images(parsed.data) } : {}),
           ...(parsed.data.active !== undefined ? { active: parsed.data.active } : {}),
           ...(parsed.data.sortOrder !== undefined ? { sortOrder: parsed.data.sortOrder } : {}),
+          ...(parsed.data.intervalSeconds !== undefined ? { intervalSeconds: parsed.data.intervalSeconds } : {}),
+          ...(parsed.data.heightPercent !== undefined ? { heightPercent: parsed.data.heightPercent } : {}),
         },
       });
       return apiOk({ banner });

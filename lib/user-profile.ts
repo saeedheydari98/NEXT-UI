@@ -2,7 +2,9 @@ export type UserProfile = {
   firstName: string;
   lastName: string;
   nationalId: string;
+  birthDate: string;
   phone: string;
+  address: string;
   isAdminUnlocked: boolean;
 };
 
@@ -13,7 +15,9 @@ export const EMPTY_USER_PROFILE: UserProfile = {
   firstName: "",
   lastName: "",
   nationalId: "",
+  birthDate: "",
   phone: "",
+  address: "",
   isAdminUnlocked: false,
 };
 
@@ -28,7 +32,9 @@ function areProfilesEqual(first: UserProfile | null, second: UserProfile | null)
     first.firstName === second.firstName &&
     first.lastName === second.lastName &&
     first.nationalId === second.nationalId &&
+    first.birthDate === second.birthDate &&
     first.phone === second.phone &&
+    first.address === second.address &&
     first.isAdminUnlocked === second.isAdminUnlocked
   );
 }
@@ -38,7 +44,9 @@ export function normalizeUserProfile(value: Partial<UserProfile> | null | undefi
     firstName: String(value?.firstName ?? ""),
     lastName: String(value?.lastName ?? ""),
     nationalId: String(value?.nationalId ?? ""),
+    birthDate: String(value?.birthDate ?? ""),
     phone: String(value?.phone ?? ""),
+    address: String(value?.address ?? ""),
     isAdminUnlocked: value?.isAdminUnlocked === true,
   };
 }
@@ -50,7 +58,9 @@ export function isUserProfileComplete(profile: Partial<UserProfile> | null | und
     normalized.firstName.trim() &&
       normalized.lastName.trim() &&
       normalized.nationalId.trim() &&
-      normalized.phone.trim()
+      normalized.birthDate.trim() &&
+      normalized.phone.trim() &&
+      normalized.address.trim()
   );
 }
 

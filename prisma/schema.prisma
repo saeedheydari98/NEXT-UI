@@ -61,7 +61,9 @@ model CustomerProfile {
   firstName       String
   lastName        String
   nationalId      String   @unique
+  birthDate       String   @default("")
   phone           String
+  address         String   @default("")
   avatarUrl       String?
   isAdminUnlocked Boolean  @default(false)
   createdAt       DateTime @default(now())

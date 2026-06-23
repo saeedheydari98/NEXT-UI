@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { apiFail, apiOk, apiServerError } from "@/lib/api/response";
 import { rateLimit } from "@/lib/api/rate-limit";
@@ -40,16 +41,47 @@ async function authTokens(user: { id: number; email: string; role: string }) {
   return { accessToken, refreshToken };
 }
 
+async function normalizeRole(user: { id: number; username: string | null; role: string }) {
+  if (user.username === SUPERADMIN_USERNAME && user.role !== "superadmin") {
+    user.role = "superadmin";
+    await prisma.user.update({ where: { id: user.id }, data: { role: "superadmin" } });
+  }
+  if (user.username !== SUPERADMIN_USERNAME && user.role === "superadmin") {
+    user.role = "user";
+    await prisma.user.update({ where: { id: user.id }, data: { role: "user" } });
+  }
+  return user;
+}
+
+async function getSessionUser(request: Request) {
+  const accessUser = await getAuthUser(request);
+  if (accessUser) return accessUser;
+
+  const refreshToken = await getRefreshTokenFromRequest(request);
+  const payload = verifyToken(refreshToken);
+  const userId = Number(payload?.sub);
+  if (!refreshToken || payload?.type !== "refresh" || !Number.isInteger(userId)) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, username: true, name: true, role: true, refreshTokenHash: true, avatarUrl: true },
+  });
+  if (!user || user.refreshTokenHash !== hashToken(refreshToken)) return null;
+
+  await normalizeRole(user);
+  await authTokens(user);
+  return user;
+}
+
 export async function GET(request: Request, context: Context) {
   const limited = rateLimit(request);
   if (limited) return limited;
 
   const action = (await context.params).path?.join("/") || "";
-  if (action !== "me") return apiFail("not found", 404);
+  if (action !== "me" && action !== "session") return apiFail("not found", 404);
 
-  const user = await getAuthUser(request);
-  if (!user) return apiFail("unauthorized", 401);
-  return apiOk({ user: publicUser(user) });
+  const user = await getSessionUser(request);
+  return apiOk({ user: user ? publicUser(user) : null });
 }
 
 export async function POST(request: Request, context: Context) {
@@ -65,20 +97,48 @@ export async function POST(request: Request, context: Context) {
 
       const username = parsed.data.username?.trim().toLowerCase() || null;
       const email = parsed.data.email || (username ? `${username}@local.user` : "");
+      const profile = parsed.data.profile;
       const existing = await prisma.user.findFirst({
         where: { OR: [{ email }, ...(username ? [{ username }] : [])] },
       });
       if (existing) return apiFail("account already exists", 400);
 
-      const user = await prisma.user.create({
-        data: {
-          email,
-          username,
-          name: parsed.data.name ?? null,
-          passwordHash: hashPassword(parsed.data.password),
-          role: username === SUPERADMIN_USERNAME ? "superadmin" : "user",
-        },
-        select: { id: true, email: true, username: true, name: true, role: true, avatarUrl: true },
+      const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        const createdUser = await tx.user.create({
+          data: {
+            email,
+            username,
+            name: parsed.data.name ?? (profile ? `${profile.firstName} ${profile.lastName}` : null),
+            passwordHash: hashPassword(parsed.data.password),
+            role: username === SUPERADMIN_USERNAME ? "superadmin" : "user",
+          },
+          select: { id: true, email: true, username: true, name: true, role: true, avatarUrl: true },
+        });
+
+        if (profile) {
+          await tx.customerProfile.upsert({
+            where: { nationalId: profile.nationalId },
+            update: {
+              userId: createdUser.id,
+              firstName: profile.firstName,
+              lastName: profile.lastName,
+              birthDate: profile.birthDate,
+              phone: profile.phone,
+              address: profile.address,
+            },
+            create: {
+              userId: createdUser.id,
+              firstName: profile.firstName,
+              lastName: profile.lastName,
+              nationalId: profile.nationalId,
+              birthDate: profile.birthDate,
+              phone: profile.phone,
+              address: profile.address,
+            },
+          });
+        }
+
+        return createdUser;
       });
       const tokens = await authTokens(user);
       return apiOk({ user: publicUser(user), ...tokens }, { status: 201 });
@@ -96,10 +156,7 @@ export async function POST(request: Request, context: Context) {
       if (!user || !verifyPassword(parsed.data.password, user.passwordHash)) {
         return apiFail("invalid credentials", 401);
       }
-      if (user.username === SUPERADMIN_USERNAME && user.role !== "superadmin") {
-        user.role = "superadmin";
-        await prisma.user.update({ where: { id: user.id }, data: { role: "superadmin" } });
-      }
+      await normalizeRole(user);
       const tokens = await authTokens(user);
       return apiOk({ user: publicUser(user), ...tokens });
     }
@@ -125,6 +182,7 @@ export async function POST(request: Request, context: Context) {
         select: { id: true, email: true, username: true, name: true, role: true, refreshTokenHash: true, avatarUrl: true },
       });
       if (!user || user.refreshTokenHash !== hashToken(refreshToken)) return apiFail("unauthorized", 401);
+      await normalizeRole(user);
       const tokens = await authTokens(user);
       return apiOk({ user: publicUser(user), ...tokens });
     }

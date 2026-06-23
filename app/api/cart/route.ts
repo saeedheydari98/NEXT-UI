@@ -12,7 +12,9 @@ type ProfilePayload = {
   firstName?: string;
   lastName?: string;
   nationalId?: string;
+  birthDate?: string;
   phone?: string;
+  address?: string;
   isAdminUnlocked?: boolean;
 };
 
@@ -35,13 +37,15 @@ function normalizeProfile(value: ProfilePayload) {
     firstName: String(value.firstName ?? "").trim(),
     lastName: String(value.lastName ?? "").trim(),
     nationalId: String(value.nationalId ?? "").trim(),
+    birthDate: String(value.birthDate ?? "").trim(),
     phone: String(value.phone ?? "").trim(),
+    address: String(value.address ?? "").trim(),
     isAdminUnlocked: value.isAdminUnlocked === true,
   };
 }
 
 function isProfileComplete(profile: ReturnType<typeof normalizeProfile>) {
-  return Boolean(profile.firstName && profile.lastName && profile.nationalId && profile.phone);
+  return Boolean(profile.firstName && profile.lastName && profile.nationalId && profile.birthDate && profile.phone && profile.address);
 }
 
 function normalizeCartItem(value: CartItemPayload) {
@@ -95,7 +99,9 @@ async function upsertLegacyProfile(request: Request, profile: ReturnType<typeof 
       ...(authUser ? { userId: authUser.id } : {}),
       firstName: profile.firstName,
       lastName: profile.lastName,
+      birthDate: profile.birthDate,
       phone: profile.phone,
+      address: profile.address,
       isAdminUnlocked: profile.isAdminUnlocked,
     },
     create: {
@@ -103,7 +109,9 @@ async function upsertLegacyProfile(request: Request, profile: ReturnType<typeof 
       firstName: profile.firstName,
       lastName: profile.lastName,
       nationalId: profile.nationalId,
+      birthDate: profile.birthDate,
       phone: profile.phone,
+      address: profile.address,
       isAdminUnlocked: profile.isAdminUnlocked,
     },
   });

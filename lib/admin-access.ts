@@ -1,7 +1,4 @@
 import {
-  fetchUserProfile,
-  isUserProfileComplete,
-  normalizeUserProfile,
   readUserProfile,
   writeUserProfile,
   USER_PROFILE_UPDATED_EVENT,
@@ -41,23 +38,22 @@ function invalidateAdminSecurityCache() {
   pendingAdminSecurity = null;
 }
 
-export function isAdminAccessUnlocked(profile = readUserProfile()) {
-  if (cachedAdminSecurity?.value.isPanelLocked === false) return true;
-  return profile?.isAdminUnlocked === true;
+export function isAdminAccessUnlocked() {
+  return false;
 }
 
 export async function fetchAdminAccess() {
-  const me = await fetch("/api/auth/me", { cache: "no-store" })
+  const profileUser = await fetch("/api/user/profile", { cache: "no-store" })
+    .then((res) => res.ok ? res.json() : null)
+    .catch(() => null);
+  const profileRole = profileUser?.data?.user?.role;
+  if (profileRole === "admin" || profileRole === "superadmin") return true;
+
+  const me = await fetch("/api/auth/session", { cache: "no-store" })
     .then((res) => res.ok ? res.json() : null)
     .catch(() => null);
   const role = me?.data?.user?.role;
-  if (role === "admin" || role === "superadmin") return true;
-
-  const security = await fetchAdminSecurity();
-  if (!security.isPanelLocked) return true;
-
-  const profile = await fetchUserProfile(undefined, { write: false });
-  return isAdminAccessUnlocked(profile);
+  return role === "admin" || role === "superadmin";
 }
 
 export async function unlockAdminAccessWithCode(code: string, username: string, profile = readUserProfile()) {
@@ -72,13 +68,8 @@ export async function unlockAdminAccessWithCode(code: string, username: string, 
     throw new Error(data?.message || data?.error || "Admin code was not accepted.");
   }
 
-  const savedProfile = normalizeUserProfile(data?.data?.user?.profile ?? data?.data?.profile ?? {
-    ...(profile ?? {}),
-    isAdminUnlocked: true,
-  });
-  if (isUserProfileComplete(savedProfile)) writeUserProfile(savedProfile);
   emitAdminAccessUpdated();
-  return data?.data?.access?.isAdminUnlocked === true || savedProfile.isAdminUnlocked;
+  return data?.data?.access?.isAdminUnlocked === true;
 }
 
 export async function fetchAdminSecurity(options?: { force?: boolean }) {

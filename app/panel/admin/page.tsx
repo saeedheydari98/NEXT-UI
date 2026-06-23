@@ -7,45 +7,71 @@ import { AdminProductsPanel, type AdminCatalogSection } from "@/app/panel/admin/
 import { AdminSecurityPanel } from "@/app/panel/admin/admin-security-panel";
 import {
   fetchAdminAccess,
-  isAdminAccessUnlocked,
   subscribeAdminAccess,
 } from "@/lib/admin-access";
 
+type AdminPanelUser = {
+  username?: string | null;
+  role?: string | null;
+};
+
 export default function AdminPanelPage() {
-  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+  const [hasAdminAccess, setHasAdminAccess] = useState<boolean | null>(null);
+  const [authUser, setAuthUser] = useState<AdminPanelUser | null>(null);
   const [activeTab, setActiveTab] = useState<"theme" | "security" | AdminCatalogSection>("products");
 
   useEffect(() => {
-    const syncAccess = () => setHasAdminAccess(isAdminAccessUnlocked());
     const syncAccessFromApi = async () => {
-      setHasAdminAccess(await fetchAdminAccess());
+      const [access, session] = await Promise.all([
+        fetchAdminAccess(),
+        fetch("/api/auth/session", { cache: "no-store" })
+          .then((res) => res.ok ? res.json() : null)
+          .catch(() => null),
+      ]);
+      const user = session?.data?.user ?? null;
+      setAuthUser(user);
+      setHasAdminAccess(access);
+      if (user?.role !== "superadmin" && activeTab === "security") {
+        setActiveTab("products");
+      }
     };
 
-    syncAccess();
     void syncAccessFromApi()
       .catch((error) => {
         console.error("Admin access profile load error:", error);
+        setHasAdminAccess(false);
       });
 
-    return subscribeAdminAccess(syncAccess);
-  }, []);
+    return subscribeAdminAccess(() => {
+      void syncAccessFromApi().catch(() => setHasAdminAccess(false));
+    });
+  }, [activeTab]);
+
+  const isSuperadmin = authUser?.role === "superadmin" && authUser?.username === "saeedheydari98";
+  const tabs = [
+    { id: "theme", label: "Theme" },
+    ...(isSuperadmin ? [{ id: "security", label: "Security" }] : []),
+    { id: "products", label: "Products" },
+    { id: "banners", label: "Banners" },
+    { id: "showcases", label: "Showcases" },
+    { id: "categories", label: "Categories" },
+    { id: "storefront", label: "Storefront" },
+  ];
 
   return (
     <main className="min-h-screen bg-bg-base p-6 text-primary-text">
-      {hasAdminAccess ? (
+      {hasAdminAccess === null ? (
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <div className="rounded-lg border border-primary-border bg-primary-card p-6 text-sm font-semibold text-primary-text">
+            Checking admin access...
+          </div>
+        </div>
+      ) : hasAdminAccess ? (
         <div className="flex w-full flex-col gap-6">
           <section className="flex flex-col gap-4">
             <div className="text-admin-admin-admin text-2xl font-bold">Admin Control</div>
             <div className="flex flex-wrap gap-2 rounded-lg border border-primary-border bg-primary-soft p-2">
-              {[
-                { id: "theme", label: "Theme" },
-                { id: "security", label: "Security" },
-                { id: "products", label: "Products" },
-                { id: "banners", label: "Banners" },
-                { id: "showcases", label: "Showcases" },
-                { id: "categories", label: "Categories" },
-                { id: "storefront", label: "Storefront" },
-              ].map((tab) => (
+              {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
@@ -63,7 +89,7 @@ export default function AdminPanelPage() {
           </section>
 
           {activeTab === "theme" ? <AdminThemePanel /> : null}
-          {activeTab === "security" ? <AdminSecurityPanel /> : null}
+          {activeTab === "security" && isSuperadmin ? <AdminSecurityPanel /> : null}
           {activeTab !== "theme" && activeTab !== "security" ? (
             <AdminProductsPanel section={activeTab} />
           ) : null}

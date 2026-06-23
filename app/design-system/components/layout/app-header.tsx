@@ -67,10 +67,9 @@ export function AppHeader() {
   const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [authUser, setAuthUser] = useState<HeaderUser | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authMode, setAuthMode] = useState<"choice" | "login">("choice");
   const [authUsername, setAuthUsername] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [authName, setAuthName] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const router = useRouter();
@@ -90,7 +89,7 @@ export function AppHeader() {
     void syncCartFromApi();
     syncAdminAccess();
     void syncAdminAccessFromApi();
-    void fetch("/api/auth/me", { cache: "no-store" })
+    void fetch("/api/auth/session", { cache: "no-store" })
       .then((res) => res.ok ? res.json() : null)
       .then((data) => setAuthUser(data?.data?.user ?? null))
       .catch(() => setAuthUser(null));
@@ -118,14 +117,10 @@ export function AppHeader() {
     setAuthLoading(true);
     setAuthStatus("");
     try {
-      const res = await fetch(`/api/auth/${authMode === "register" ? "register" : "login"}`, {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          authMode === "register"
-            ? { username: authUsername.trim().toLowerCase(), password: authPassword, name: authName.trim() || undefined }
-            : { username: authUsername.trim().toLowerCase(), password: authPassword }
-        ),
+        body: JSON.stringify({ username: authUsername.trim().toLowerCase(), password: authPassword }),
       });
       const data = await res.json();
       if (!res.ok || data?.ok === false) throw new Error(data?.error || data?.message || "Auth failed.");
@@ -199,11 +194,12 @@ export function AppHeader() {
               size="sm"
               border="base"
               onClick={() => {
-                setAuthMode("login");
+                setAuthMode("choice");
+                setAuthStatus("");
                 setAuthOpen(true);
               }}
             >
-              Sign in
+              acount
             </CustomButton>
           )}
           <CartLink count={cartCount} />
@@ -246,41 +242,72 @@ export function AppHeader() {
       <CustomModal
         open={authOpen}
         onClose={() => setAuthOpen(false)}
-        title={authMode === "register" ? "Create account" : "Sign in"}
+        title={authMode === "choice" ? "Account" : "Sign in"}
         closeText="Close"
         rounded="lg"
         border="base"
         shadow="lg"
       >
         <div className="flex flex-col gap-3">
-          <div className="flex gap-2">
-            <CustomButton size="sm" variant={authMode === "login" ? "primary" : "neutral"} border="base" onClick={() => setAuthMode("login")}>
-              Sign in
-            </CustomButton>
-            <CustomButton size="sm" variant={authMode === "register" ? "primary" : "neutral"} border="base" onClick={() => setAuthMode("register")}>
-              Sign up
-            </CustomButton>
-          </div>
-          {authMode === "register" ? (
-            <CustomInput value={authName} placeholder="Name" aria-label="Name" onChange={(event) => setAuthName(event.target.value)} />
-          ) : null}
-          <CustomInput value={authUsername} placeholder="Username" aria-label="Username" onChange={(event) => setAuthUsername(event.target.value)} />
-          <CustomInput
-            value={authPassword}
-            type="password"
-            placeholder="Password"
-            aria-label="Password"
-            onChange={(event) => setAuthPassword(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") void submitAuth();
-            }}
-          />
-          {authStatus ? (
-            <div className="rounded-md border border-primary-border bg-primary-bg px-3 py-2 text-sm font-semibold text-primary-text">{authStatus}</div>
-          ) : null}
-          <CustomButton border="base" fullWidth isLoading={authLoading} onClick={submitAuth}>
-            {authMode === "register" ? "Create account" : "Sign in"}
-          </CustomButton>
+          {authMode === "choice" ? (
+            <div className="flex flex-col gap-2">
+              <CustomButton
+                border="base"
+                fullWidth
+                onClick={() => {
+                  setAuthMode("login");
+                  setAuthStatus("");
+                }}
+              >
+                Sign in to account
+              </CustomButton>
+              <CustomButton
+                border="base"
+                variant="neutral"
+                fullWidth
+                onClick={() => {
+                  setAuthOpen(false);
+                  router.push("/panel/user?auth=register");
+                }}
+              >
+                Create account
+              </CustomButton>
+            </div>
+          ) : (
+            <>
+              <CustomInput
+                name="login-username"
+                value={authUsername}
+                placeholder="Username"
+                autoComplete="username"
+                aria-label="Username"
+                onChange={(event) => setAuthUsername(event.target.value)}
+              />
+              <CustomInput
+                name="login-password"
+                value={authPassword}
+                type="password"
+                placeholder="Password"
+                autoComplete="current-password"
+                aria-label="Password"
+                onChange={(event) => setAuthPassword(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void submitAuth();
+                }}
+              />
+              {authStatus ? (
+                <div className="rounded-md border border-primary-border bg-primary-bg px-3 py-2 text-sm font-semibold text-primary-text">{authStatus}</div>
+              ) : null}
+              <div className="flex gap-2">
+                <CustomButton border="base" variant="neutral" fullWidth onClick={() => setAuthMode("choice")}>
+                  Back
+                </CustomButton>
+                <CustomButton border="base" fullWidth isLoading={authLoading} onClick={submitAuth}>
+                  Sign in
+                </CustomButton>
+              </div>
+            </>
+          )}
         </div>
       </CustomModal>
     </header>

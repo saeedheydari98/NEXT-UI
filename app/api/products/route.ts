@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { matchesSearchQuery } from "@/lib/product-search";
 import { rateLimit } from "@/lib/api/rate-limit";
 import { normalizeProductData } from "@/lib/api/catalog-service";
-import { slugifyCatalogValue } from "@/lib/products-client";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -128,6 +127,16 @@ const hasProductModel =
 
 const hasShowcaseModel =
   prisma.showcase && typeof prisma.showcase.findMany === "function";
+
+function slugifyCatalogValue(value: string | number | null | undefined) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^\p{L}\p{N}-]+/gu, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 function normalizeProduct(value: Partial<ProductPayload>, index: number): ProductPayload {
   const placement = Number.isFinite(Number(value.placement))
@@ -298,9 +307,11 @@ function toClientBanner(banner: BannerRecord) {
     title: banner.title ?? "",
     showcaseId: banner.showcaseId,
     images: imageUrls.map((url, index) => ({ url, placement: index + 1 })),
+    imageUrls,
     active: banner.active,
     intervalSeconds: banner.intervalSeconds ?? 5,
     heightPercent: banner.heightPercent ?? 28,
+    sortOrder: banner.sortOrder,
     placement: banner.sortOrder,
   };
 }
@@ -459,6 +470,20 @@ function buildCatalogTree(
     : banners.filter((banner) => banner.active !== false);
 
   const bannerSections = visibleBanners.map(toClientBanner);
+  const visibleCategories = categories.filter((category) => includeInactive || category.active !== false);
+  const fallbackCategories = visibleCategories.length > 0
+    ? visibleCategories
+    : Array.from(
+        new Set(
+          visibleProducts.flatMap((product) =>
+            (Array.isArray(product.categoryIds) ? product.categoryIds : [product.categoryId])
+              .map((item) => String(item ?? "").trim())
+              .filter(Boolean)
+          )
+        )
+      ).map((categoryId, index) =>
+        normalizeCategory({ id: categoryId, title: categoryId, slug: categoryId, active: true }, index)
+      );
 
   const showcaseSections = visibleShowcases
     .map((showcase) => {
@@ -497,8 +522,7 @@ function buildCatalogTree(
     placement: 0,
     products: visibleProducts.map(toClientProduct),
     showcases: visibleShowcases.map(toClientShowcase),
-    categories: categories
-      .filter((category) => includeInactive || category.active !== false)
+    categories: fallbackCategories
       .map(toClientCategory)
       .sort((a, b) => a.sortOrder - b.sortOrder),
     children: [...bannerSections, ...showcaseSections].sort(

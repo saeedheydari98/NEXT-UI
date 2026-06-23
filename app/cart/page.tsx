@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { IoBagHandleOutline, IoCardOutline, IoTrashOutline } from "react-icons/io5";
 import { CustomButton } from "../design-system/components/ui/button";
 import { CustomInput } from "../design-system/components/ui/input";
@@ -52,6 +53,10 @@ function getDiscountPercent(item: CartItemRecord) {
   return Number.isFinite(percent) && percent > 0 ? Math.round(percent) : 0;
 }
 
+const NAME_PATTERN = /^[\p{L}][\p{L}\s'-]{1,49}$/u;
+const NATIONAL_ID_PATTERN = /^\d{10}$/;
+const PHONE_PATTERN = /^09\d{9}$/;
+
 export default function CartPage() {
   const [items, setItems] = useState<CartItemRecord[]>([]);
   const [previewImage, setPreviewImage] = useState("");
@@ -62,14 +67,8 @@ export default function CartPage() {
   const [showProfileRequiredErrors, setShowProfileRequiredErrors] = useState(false);
   const [checkoutMessage, setCheckoutMessage] = useState("");
   const [authUser, setAuthUser] = useState<any>(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "register">("register");
-  const [authUsername, setAuthUsername] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authName, setAuthName] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authStatus, setAuthStatus] = useState("");
   const profileFormRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +76,7 @@ export default function CartPage() {
     void (async () => {
       const snapshot = await getCart();
       const savedProfile = await fetchUserProfile().catch(() => snapshot.profile);
-      const me = await fetch("/api/auth/me", { cache: "no-store" })
+      const me = await fetch("/api/auth/session", { cache: "no-store" })
         .then((res) => res.ok ? res.json() : null)
         .catch(() => null);
       if (cancelled) return;
@@ -126,10 +125,22 @@ export default function CartPage() {
     setProfileError("");
   };
 
+  const isProfileDraftValid = () => (
+    isUserProfileComplete(profileDraft) &&
+    NAME_PATTERN.test(profileDraft.firstName.trim()) &&
+    NAME_PATTERN.test(profileDraft.lastName.trim()) &&
+    NATIONAL_ID_PATTERN.test(profileDraft.nationalId.trim()) &&
+    PHONE_PATTERN.test(profileDraft.phone.trim()) &&
+    profileDraft.address.trim().length >= 5 &&
+    profileDraft.address.trim().length <= 200 &&
+    Boolean(profileDraft.birthDate.trim()) &&
+    new Date(profileDraft.birthDate).getTime() <= Date.now()
+  );
+
   const saveProfileDraft = () => {
-    if (!isUserProfileComplete(profileDraft)) {
+    if (!isProfileDraftValid()) {
       setShowProfileRequiredErrors(true);
-      setProfileError("All profile fields are required.");
+      setProfileError("Please enter valid profile information.");
       window.setTimeout(() => scrollToFirstInvalidField(profileFormRef.current), 0);
       return;
     }
@@ -138,7 +149,9 @@ export default function CartPage() {
       firstName: profileDraft.firstName.trim(),
       lastName: profileDraft.lastName.trim(),
       nationalId: profileDraft.nationalId.trim(),
+      birthDate: profileDraft.birthDate.trim(),
       phone: profileDraft.phone.trim(),
+      address: profileDraft.address.trim(),
       isAdminUnlocked: profileDraft.isAdminUnlocked,
     };
 
@@ -157,7 +170,7 @@ export default function CartPage() {
 
   const continueCheckout = () => {
     if (!authUser) {
-      setAuthModalOpen(true);
+      router.push("/panel/user?auth=register");
       return;
     }
 
@@ -182,39 +195,6 @@ export default function CartPage() {
       });
   };
 
-  const submitAuth = async () => {
-    if (!authUsername.trim() || !authPassword.trim()) {
-      setAuthStatus("Username and password are required.");
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthStatus("");
-    try {
-      const res = await fetch(`/api/auth/${authMode === "register" ? "register" : "login"}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          authMode === "register"
-            ? { username: authUsername.trim().toLowerCase(), password: authPassword, name: authName.trim() || undefined }
-            : { username: authUsername.trim().toLowerCase(), password: authPassword }
-        ),
-      });
-      const data = await res.json();
-      if (!res.ok || data?.ok === false) throw new Error(data?.error || data?.message || "Account request failed.");
-      setAuthUser(data?.data?.user ?? null);
-      setAuthModalOpen(false);
-      setAuthPassword("");
-      const snapshot = await getCart();
-      setItems(snapshot.items.length > 0 ? snapshot.items : await persistCart(items, profile ?? undefined));
-      setCheckoutMessage("Account ready. Continue to payment.");
-    } catch (error) {
-      setAuthStatus(error instanceof Error ? error.message : "Account request failed.");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
   return (
     <main className="min-h-screen bg-bg-base text-primary-text">
       <section className="mx-auto flex w-full flex-col gap-6 px-4 py-8">
@@ -236,7 +216,7 @@ export default function CartPage() {
                 icon={<IoCardOutline />}
                 onClick={continueCheckout}
               >
-                {authUser ? "Pay" : "Continue checkout"}
+                Pay
               </CustomButton>
               <CustomButton variant="danger" border="base" size="sm" onClick={clearCart}>
                 Clear cart
@@ -365,9 +345,11 @@ export default function CartPage() {
               <RequiredLabel required className="text-primary-text">First name</RequiredLabel>
               <CustomInput
                 value={profileDraft.firstName}
+                pattern="[\p{L}][\p{L}\s'-]{1,49}"
                 placeholder="نام"
                 required
-                invalid={showProfileRequiredErrors && !profileDraft.firstName.trim()}
+                invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.firstName.trim())}
+                showLabel={false}
                 aria-label="First name"
                 onChange={(event) => updateProfileDraft({ firstName: event.target.value })}
               />
@@ -376,9 +358,11 @@ export default function CartPage() {
               <RequiredLabel required className="text-primary-text">Last name</RequiredLabel>
               <CustomInput
                 value={profileDraft.lastName}
+                pattern="[\p{L}][\p{L}\s'-]{1,49}"
                 placeholder="نام خانوادگی"
                 required
-                invalid={showProfileRequiredErrors && !profileDraft.lastName.trim()}
+                invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.lastName.trim())}
+                showLabel={false}
                 aria-label="Last name"
                 onChange={(event) => updateProfileDraft({ lastName: event.target.value })}
               />
@@ -387,24 +371,57 @@ export default function CartPage() {
               <RequiredLabel required className="text-primary-text">National ID</RequiredLabel>
               <CustomInput
                 value={profileDraft.nationalId}
+                pattern="\d{10}"
+                maxLength={10}
                 placeholder="کد ملی"
                 required
-                invalid={showProfileRequiredErrors && !profileDraft.nationalId.trim()}
+                invalid={showProfileRequiredErrors && !NATIONAL_ID_PATTERN.test(profileDraft.nationalId.trim())}
+                showLabel={false}
                 inputMode="numeric"
                 aria-label="National ID"
                 onChange={(event) => updateProfileDraft({ nationalId: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
+              <RequiredLabel required className="text-primary-text">Birth date</RequiredLabel>
+              <CustomInput
+                value={profileDraft.birthDate}
+                type="date"
+                max={new Date().toISOString().slice(0, 10)}
+                required
+                invalid={showProfileRequiredErrors && (!profileDraft.birthDate.trim() || new Date(profileDraft.birthDate).getTime() > Date.now())}
+                showLabel={false}
+                aria-label="Birth date"
+                onChange={(event) => updateProfileDraft({ birthDate: event.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
               <RequiredLabel required className="text-primary-text">Phone</RequiredLabel>
               <CustomInput
                 value={profileDraft.phone}
+                pattern="09\d{9}"
+                maxLength={11}
                 placeholder="شماره تماس"
                 required
-                invalid={showProfileRequiredErrors && !profileDraft.phone.trim()}
+                invalid={showProfileRequiredErrors && !PHONE_PATTERN.test(profileDraft.phone.trim())}
+                showLabel={false}
                 inputMode="tel"
                 aria-label="Phone"
                 onChange={(event) => updateProfileDraft({ phone: event.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <RequiredLabel required className="text-primary-text">Address</RequiredLabel>
+              <CustomInput
+                value={profileDraft.address}
+                placeholder="address"
+                minLength={5}
+                maxLength={200}
+                required
+                invalid={showProfileRequiredErrors && (profileDraft.address.trim().length < 5 || profileDraft.address.trim().length > 200)}
+                showLabel={false}
+                aria-label="Address"
+                onChange={(event) => updateProfileDraft({ address: event.target.value })}
               />
             </div>
             </div>
@@ -419,48 +436,6 @@ export default function CartPage() {
           </div>
         </CustomModal>
 
-        <CustomModal
-          open={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          title={authMode === "register" ? "Create account" : "Sign in"}
-          closeText="Close"
-          rounded="lg"
-          border="base"
-          shadow="lg"
-        >
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
-              <CustomButton size="sm" variant={authMode === "login" ? "primary" : "neutral"} border="base" onClick={() => setAuthMode("login")}>
-                Sign in
-              </CustomButton>
-              <CustomButton size="sm" variant={authMode === "register" ? "primary" : "neutral"} border="base" onClick={() => setAuthMode("register")}>
-                Sign up
-              </CustomButton>
-            </div>
-            {authMode === "register" ? (
-              <CustomInput value={authName} placeholder="Name" aria-label="Name" onChange={(event) => setAuthName(event.target.value)} />
-            ) : null}
-            <CustomInput value={authUsername} placeholder="Username" aria-label="Username" onChange={(event) => setAuthUsername(event.target.value)} />
-            <CustomInput
-              value={authPassword}
-              type="password"
-              placeholder="Password"
-              aria-label="Password"
-              onChange={(event) => setAuthPassword(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") void submitAuth();
-              }}
-            />
-            {authStatus ? (
-              <div className="rounded-md border border-primary-border bg-bg-base px-3 py-2 text-sm font-semibold text-primary-text">
-                {authStatus}
-              </div>
-            ) : null}
-            <CustomButton border="base" fullWidth isLoading={authLoading} icon={<IoCardOutline />} onClick={submitAuth}>
-              {authMode === "register" ? "Create account" : "Sign in"}
-            </CustomButton>
-          </div>
-        </CustomModal>
       </section>
     </main>
   );

@@ -374,6 +374,10 @@ function parseApiPayload(payload: unknown): ProductsCache {
     showcases?: ShowcaseRecord[];
     categories?: CategoryRecord[];
     banners?: BannerRecord[];
+    children?: Array<
+      | (BannerRecord & { type: "banner" })
+      | (ShowcaseRecord & { type: "showcase"; products?: ProductRecord[] })
+    >;
     tree?: CatalogTree;
     catalog?: Partial<CatalogObject>;
   };
@@ -423,13 +427,18 @@ function parseApiPayload(payload: unknown): ProductsCache {
     : Array.isArray(record.categories)
       ? record.categories.map(normalizeCategoryRecord)
       : Array.isArray(record.catalog?.categories)
-      ? record.catalog.categories.map(normalizeCategoryRecord)
-      : [];
+        ? record.catalog.categories.map(normalizeCategoryRecord)
+        : [];
+  const fallbackCategories = categories.length > 0
+    ? categories
+    : Array.from(new Set(products.flatMap((product) => normalizeStringList(product.categoryIds, [String(product.categoryId ?? "")]))))
+        .filter(Boolean)
+        .map((categoryId, index) => normalizeCategoryRecord({ id: categoryId, title: categoryId, slug: categoryId }, index + 1));
 
   return {
     products: dedupeProducts(products),
     showcases,
-    categories,
+    categories: fallbackCategories,
     banners,
     tree:
       record.tree && Array.isArray(record.tree.sections)
@@ -438,7 +447,7 @@ function parseApiPayload(payload: unknown): ProductsCache {
     catalog: {
       placement: Number(treeCatalog?.placement ?? record.catalog?.placement ?? 0),
       showcases: catalogShowcases,
-      categories,
+      categories: fallbackCategories,
       banners: catalogBanners,
     },
   };

@@ -14,6 +14,8 @@ type BannerPayload = {
   images?: unknown;
   active?: boolean;
   sortOrder?: number | string;
+  intervalSeconds?: number | string;
+  heightPercent?: number | string;
 };
 
 function normalizeImages(value: BannerPayload) {
@@ -36,6 +38,8 @@ function normalizeBanner(value: BannerPayload, index: number) {
     imageUrls: normalizeImages(value),
     active: value.active !== false,
     sortOrder: Number.isFinite(Number(value.sortOrder)) ? Number(value.sortOrder) : index + 1,
+    intervalSeconds: Number.isFinite(Number(value.intervalSeconds)) ? Math.max(1, Math.round(Number(value.intervalSeconds))) : 5,
+    heightPercent: Number.isFinite(Number(value.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(value.heightPercent)))) : 28,
   };
 }
 
@@ -46,6 +50,8 @@ function toClientBanner(banner: {
   images: Prisma.JsonValue | null;
   active: boolean;
   sortOrder: number;
+  intervalSeconds: number;
+  heightPercent: number;
 }) {
   const imageUrls = Array.isArray(banner.images)
     ? banner.images.map((item) => String(item)).filter(Boolean)
@@ -58,6 +64,8 @@ function toClientBanner(banner: {
     imageUrls,
     active: banner.active,
     sortOrder: banner.sortOrder,
+    intervalSeconds: banner.intervalSeconds,
+    heightPercent: banner.heightPercent,
   };
 }
 
@@ -110,6 +118,8 @@ export async function POST(request: Request) {
             images: banner.imageUrls.length > 0 ? banner.imageUrls : Prisma.JsonNull,
             active: banner.active,
             sortOrder: banner.sortOrder,
+            intervalSeconds: banner.intervalSeconds,
+            heightPercent: banner.heightPercent,
           },
         });
       }

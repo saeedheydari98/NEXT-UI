@@ -1,6 +1,6 @@
 import { apiOk, apiServerError } from "@/lib/api/response";
 import { rateLimit } from "@/lib/api/rate-limit";
-import { requireUser } from "@/lib/api/auth";
+import { getAuthUser } from "@/lib/api/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -9,12 +9,12 @@ export const runtime = "nodejs";
 export async function GET(request: Request) {
   const limited = rateLimit(request);
   if (limited) return limited;
-  const auth = await requireUser(request);
-  if (!auth.ok) return auth.response;
+  const authUser = await getAuthUser(request);
+  if (!authUser) return apiOk({ orders: [] });
 
   try {
     const orders = await prisma.order.findMany({
-      where: { userId: auth.user.id },
+      where: { userId: authUser.id },
       orderBy: { createdAt: "desc" },
       include: { items: { orderBy: { createdAt: "desc" } } },
     });

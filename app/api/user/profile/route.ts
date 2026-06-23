@@ -23,7 +23,18 @@ export async function GET(request: Request) {
         ? await prisma.customerProfile.findUnique({ where: { nationalId } })
         : null;
 
-    return apiOk({ user: { profile } });
+    return apiOk({
+      user: authUser
+        ? {
+            id: authUser.id,
+            email: authUser.email,
+            username: authUser.username,
+            name: authUser.name,
+            role: authUser.role,
+            profile,
+          }
+        : { profile },
+    });
   } catch (error) {
     console.error("User profile GET error:", error);
     return apiServerError();
@@ -58,6 +69,8 @@ async function saveProfile(request: Request) {
         firstName: profile.firstName,
         lastName: profile.lastName,
         phone: profile.phone,
+        birthDate: profile.birthDate,
+        address: profile.address,
         avatarUrl: profile.avatarUrl ?? null,
         ...(profile.isAdminUnlocked !== undefined
           ? { isAdminUnlocked: profile.isAdminUnlocked }
@@ -68,12 +81,25 @@ async function saveProfile(request: Request) {
         firstName: profile.firstName,
         lastName: profile.lastName,
         nationalId: profile.nationalId,
+        birthDate: profile.birthDate,
         phone: profile.phone,
+        address: profile.address,
         avatarUrl: profile.avatarUrl ?? null,
         isAdminUnlocked: profile.isAdminUnlocked ?? false,
       },
     });
-    return apiOk({ user: { profile: saved } });
+    return apiOk({
+      user: authUser
+        ? {
+            id: authUser.id,
+            email: authUser.email,
+            username: authUser.username,
+            name: authUser.name,
+            role: authUser.role,
+            profile: saved,
+          }
+        : { profile: saved },
+    });
   } catch (error) {
     console.error("User profile save error:", error);
     return apiServerError();
