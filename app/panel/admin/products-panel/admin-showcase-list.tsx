@@ -55,7 +55,7 @@ function getShowcaseProducts(products: ProductForm[], showcase: ShowcaseForm) {
       .filter(Boolean) as ProductForm[];
   }
 
-  return activeProducts.filter((product) => product.showcaseId === showcase.id);
+  return activeProducts.filter((product) => product.showcaseIds.includes(showcase.id) || product.showcaseId === showcase.id);
 }
 
 export function AdminShowcaseList({
@@ -83,12 +83,12 @@ export function AdminShowcaseList({
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Loading loading="skeleton-item" isLoading={isLoading}>
-                  <div className="text-xl font-bold text-primary-text">{showcase.title || "Untitled showcase"}</div>
+                  <div className="text-xl font-bold text-primary-text">{showcase.title || "ویترین بدون عنوان"}</div>
                 </Loading>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <Loading loading="skeleton-item" isLoading={isLoading}>
-                  <span className="text-xs font-semibold text-primary-text">{showcaseProducts.length} items</span>
+                  <span className="text-xs font-semibold text-primary-text">{showcaseProducts.length} محصول</span>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading={isLoading}>
                   <CustomButton
@@ -99,7 +99,7 @@ export function AdminShowcaseList({
                     icon={<IoCreateOutline />}
                     onClick={() => onEditShowcase(showcase)}
                   >
-                    Edit
+                    ویرایش
                   </CustomButton>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading={isLoading}>
@@ -111,26 +111,24 @@ export function AdminShowcaseList({
                     icon={<IoTrashOutline />}
                     onClick={() => onDeleteShowcase(showcase)}
                   >
-                    Delete
+                    حذف
                   </CustomButton>
                 </Loading>
               </div>
             </div>
 
-            <div
-              className="flex cursor-grab gap-3 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing"
-            >
+            <div className="flex cursor-grab gap-3 overflow-x-auto overscroll-x-contain pb-2 active:cursor-grabbing">
               {showcaseProducts.length === 0 && (
                 <div
-                  className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col justify-center gap-2 rounded-lg border border-dashed bg-primary-card p-5 ${
+                  className={`flex min-h-36 min-w-56 max-w-56 shrink-0 flex-col justify-center gap-2 rounded-lg border border-dashed bg-primary-card p-4 ${
                     isLoading ? "border-border-default" : "border-primary-border"
                   }`}
                 >
                   <Loading loading="skeleton-item" isLoading={isLoading}>
-                    <div className="text-xs font-bold text-primary-text">Empty showcase</div>
+                    <div className="text-xs font-bold text-primary-text">ویترین خالی است</div>
                   </Loading>
                   <Loading loading="skeleton-item" isLoading={isLoading}>
-                    <span className="text-[11px] text-secondary-text">Add a product to this showcase.</span>
+                    <span className="text-[11px] text-secondary-text">یک محصول به این ویترین اضافه کنید.</span>
                   </Loading>
                 </div>
               )}
@@ -162,14 +160,14 @@ export function AdminShowcaseList({
                       className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media"
                       onClick={() => onPreview(product.imageUrl)}
                       disabled={isLoading || !product.imageUrl}
-                      aria-label="Open product image"
+                      aria-label="باز کردن تصویر محصول"
                     >
                       <Loading loading="skeleton-item" isLoading={isLoading} className="h-full w-full">
                         <div className="flex h-full w-full items-center justify-center">
                           {product.imageUrl ? (
                             <img
                               src={product.imageUrl}
-                              alt={product.title || `Product ${index + 1}`}
+                              alt={product.title || `محصول ${index + 1}`}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -181,17 +179,12 @@ export function AdminShowcaseList({
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <Loading loading="skeleton-item" isLoading={isLoading}>
                         <div className="line-clamp-1 text-xs font-bold text-primary-text">
-                          {product.title || `Product ${index + 1}`}
+                          {product.title || `محصول ${index + 1}`}
                         </div>
                       </Loading>
                       <Loading loading="skeleton-item" isLoading={isLoading}>
-                        <span className="line-clamp-1 text-[11px] leading-4 text-secondary-text">
-                          {product.description || "No description"}
-                        </span>
-                      </Loading>
-                      <Loading loading="skeleton-item" isLoading={isLoading}>
                         <div className="text-xs font-semibold text-primary">
-                          {formatPrice(product.discountPrice || product.price) || "No price"}
+                          {formatPrice(product.discountPrice || product.price) || "بدون قیمت"}
                         </div>
                       </Loading>
                     </div>

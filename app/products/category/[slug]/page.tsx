@@ -13,12 +13,12 @@ import ProductLink from "@/app/design-system/components/ui/ProductLink";
 import ProductRatingSummary from "@/app/design-system/components/ui/product-rating-summary";
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "cheapest", label: "Cheapest" },
-  { value: "expensive", label: "Most expensive" },
-  { value: "bestseller", label: "Bestseller" },
-  { value: "mostDiscounted", label: "Most discounted" },
+  { value: "newest", label: "جدیدترین" },
+  { value: "oldest", label: "قدیمی‌ترین" },
+  { value: "cheapest", label: "ارزان‌ترین" },
+  { value: "expensive", label: "گران‌ترین" },
+  { value: "bestseller", label: "پرفروش‌ترین" },
+  { value: "mostDiscounted", label: "بیشترین تخفیف" },
 ];
 
 export default function CategoryProductsPage() {
@@ -50,14 +50,14 @@ export default function CategoryProductsPage() {
 
   const addToCart = async (product: ProductRecord) => {
     if (Number(product.stockQuantity ?? 0) <= 0) {
-      setCartMessage(`${product.title} is out of stock.`);
+      setCartMessage(`${product.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 1800);
       return;
     }
     const colorStock = normalizeColorStock(product.colorStock);
     const selectedColor = Object.entries(colorStock).find(([, count]) => count > 0)?.[0] ?? "";
     await addProductToCart(product, 1, selectedColor);
-    setCartMessage(`${product.title} added to cart.`);
+    setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
     window.setTimeout(() => setCartMessage(""), 1800);
   };
 
@@ -66,10 +66,10 @@ export default function CategoryProductsPage() {
       <div className="mx-auto flex w-full flex-col gap-5 px-4 py-6">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary-border pb-4">
           <div className="flex flex-col gap-1">
-            <div className="text-2xl font-bold">{category?.title || "Category products"}</div>
-            <span className="text-xs font-semibold text-secondary-text">{categoryProducts.length} products</span>
+            <div className="text-2xl font-bold">{category?.title || "محصولات دسته‌بندی"}</div>
+            <span className="text-xs font-semibold text-secondary-text">{categoryProducts.length} محصول</span>
           </div>
-          <CustomSelect value={sort} aria-label="Sort products" onChange={(event) => setSort(event.target.value)}>
+          <CustomSelect value={sort} aria-label="مرتب‌سازی محصولات" onChange={(event) => setSort(event.target.value)}>
             {SORT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -78,11 +78,11 @@ export default function CategoryProductsPage() {
           </CustomSelect>
         </div>
 
-        {loading ? <div className="text-sm text-secondary-text">Loading products...</div> : null}
+        {loading ? <div className="text-sm text-secondary-text">در حال بارگذاری محصولات...</div> : null}
 
         {!loading && categoryProducts.length === 0 ? (
           <div className="rounded-lg border border-primary-border bg-primary-card p-4 text-sm text-secondary-text">
-            No products found for this category.
+            محصولی برای این دسته‌بندی پیدا نشد.
           </div>
         ) : null}
 
@@ -101,7 +101,7 @@ export default function CategoryProductsPage() {
                     {product.imageUrl ? (
                       <img src={product.imageUrl} alt={product.title} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm text-secondary-text">No image</div>
+                      <div className="flex h-full w-full items-center justify-center text-sm text-secondary-text">بدون تصویر</div>
                     )}
                   </div>
                   <div className="flex flex-1 flex-col gap-1">
@@ -125,10 +125,10 @@ export default function CategoryProductsPage() {
                     icon={<IoBagAddOutline />}
                     onClick={() => void addToCart(product)}
                   >
-                    Add
+                    افزودن
                   </CustomButton>
                   <ProductLink productId={product.id ?? ""} productTitle={product.slug || product.title} className="flex-1" iconAfter={<FiExternalLink />}>
-                    View
+                    مشاهده
                   </ProductLink>
                 </div>
               </div>

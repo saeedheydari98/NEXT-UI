@@ -33,10 +33,10 @@ export function ProductRatingSummary({
       <StarRating
         value={ratingAverage}
         size={size}
-        ariaLabel={`Average rating ${ratingAverage} out of 5`}
+        ariaLabel={`میانگین امتیاز ${ratingAverage} از ۵`}
       />
       <span className="text-xs font-semibold text-primary-text">
-        {ratingAverage > 0 ? ratingAverage.toFixed(1) : "No ratings"}
+        {ratingAverage > 0 ? ratingAverage.toFixed(1) : "بدون امتیاز"}
       </span>
       <span className="text-xs text-secondary-text">
         ({ratingCount})

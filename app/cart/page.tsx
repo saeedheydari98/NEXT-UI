@@ -154,7 +154,7 @@ export default function CartPage() {
   const saveProfileDraft = () => {
     if (!isProfileDraftValid()) {
       setShowProfileRequiredErrors(true);
-      setProfileError("Please enter valid profile information.");
+      setProfileError("لطفا اطلاعات پروفایل را به‌درستی وارد کنید.");
       window.setTimeout(() => scrollToFirstInvalidField(profileFormRef.current), 0);
       return;
     }
@@ -177,9 +177,9 @@ export default function CartPage() {
         setProfileDraft(savedProfile);
         setShowProfileRequiredErrors(false);
         setIsProfileModalOpen(false);
-        setCheckoutMessage("Profile saved. Your cart is synced.");
+        setCheckoutMessage("اطلاعات شما ذخیره شد و سبد خرید همگام‌سازی شد.");
       })
-      .catch(() => setProfileError("Profile database save failed."));
+      .catch(() => setProfileError("ذخیره اطلاعات پروفایل ناموفق بود."));
   };
 
   const continueCheckout = () => {
@@ -211,11 +211,11 @@ export default function CartPage() {
           }
         });
         setItems(nextItems);
-        setCheckoutMessage("Checkout completed. Inventory was updated.");
+        setCheckoutMessage("پرداخت با موفقیت انجام شد و موجودی به‌روزرسانی شد.");
         setIsCheckoutSuccessOpen(true);
       })
       .catch((error) => {
-        setCheckoutMessage(error instanceof Error ? error.message : "Checkout failed.");
+        setCheckoutMessage(error instanceof Error ? error.message : "پرداخت ناموفق بود.");
       })
       .finally(() => {
         setIsCheckoutLoading(false);
@@ -227,11 +227,11 @@ export default function CartPage() {
       <section className="mx-auto flex w-full flex-col gap-6 px-4 py-8">
         <div className="flex items-center justify-between gap-3 border-b border-primary-border pb-4">
           <div>
-            <div className="text-3xl font-bold">Cart</div>
-            <div className="text-sm text-secondary-text">{totalItems} item(s) in cart</div>
+            <div className="text-3xl font-bold">سبد خرید</div>
+            <div className="text-sm text-secondary-text">{totalItems} کالا در سبد خرید</div>
             {items.length > 0 && (
               <div className="mt-1 text-base font-bold text-primary">
-                Total: {formatPrice(cartTotal)}
+                مجموع: {formatPrice(cartTotal)}
               </div>
             )}
           </div>
@@ -242,13 +242,13 @@ export default function CartPage() {
                 size="sm"
                 icon={<IoCardOutline />}
                 isLoading={isCheckoutLoading}
-                loadingText="Paying"
+                loadingText="در حال پرداخت"
                 onClick={continueCheckout}
               >
-                Pay
+                پرداخت
               </CustomButton>
               <CustomButton variant="danger" border="base" size="sm" disabled={isCheckoutLoading} onClick={clearCart}>
-                Clear cart
+                خالی کردن سبد
               </CustomButton>
             </div>
           )}
@@ -262,7 +262,7 @@ export default function CartPage() {
 
         {items.length === 0 ? (
           <div className="rounded-lg border border-primary-border bg-primary-card p-6 text-sm text-secondary-text">
-            Your cart is empty.
+            سبد خرید شما خالی است.
           </div>
         ) : (
           <div className="grid gap-4">
@@ -278,7 +278,7 @@ export default function CartPage() {
                   className="flex h-28 items-center justify-center overflow-hidden rounded-md bg-primary-media"
                   onClick={() => openImagePreview(item.imageUrl || undefined)}
                   disabled={!item.imageUrl}
-                  aria-label="Open product image"
+                  aria-label="باز کردن تصویر محصول"
                 >
                   {item.imageUrl ? (
                     <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
@@ -291,12 +291,12 @@ export default function CartPage() {
                   <div className="text-sm text-secondary-text">{item.description}</div>
                   {item.selectedColor ? (
                     <span className="text-xs font-semibold text-secondary-text">
-                      Color: {item.selectedColor}
+                      رنگ: {item.selectedColor}
                     </span>
                   ) : null}
                   {product?.colorStock ? (
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-secondary-text">Select color</span>
+                      <span className="text-xs font-semibold text-secondary-text">انتخاب رنگ</span>
                       <ColorStockDots
                         value={product.colorStock}
                         selectedColor={item.selectedColor ?? ""}
@@ -312,7 +312,7 @@ export default function CartPage() {
                         {formatPrice(item.originalPrice)}
                       </span>
                     )}
-                    {formatPrice(getFinalPrice(item))} x {item.quantity}
+                    {formatPrice(getFinalPrice(item))} × {item.quantity}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -345,7 +345,7 @@ export default function CartPage() {
                     disabled={isCheckoutLoading}
                     onClick={() => removeItem(item)}
                   >
-                    Remove
+                    حذف
                   </CustomButton>
                 </div>
               </article>
@@ -357,8 +357,8 @@ export default function CartPage() {
         <CustomModal
           open={Boolean(previewImage)}
           onClose={() => setPreviewImage("")}
-          title="Product image"
-          closeText="Close"
+          title="تصویر محصول"
+          closeText="بستن"
           rounded="lg"
           border="base"
           shadow="lg"
@@ -367,7 +367,7 @@ export default function CartPage() {
             {previewImage && (
               <img
                 src={previewImage}
-                alt="Product image preview"
+                alt="پیش‌نمایش تصویر محصول"
                 className="max-h-[75vh] w-full object-contain"
               />
             )}
@@ -377,19 +377,19 @@ export default function CartPage() {
         <CustomModal
           open={isProfileModalOpen}
           onClose={() => setIsProfileModalOpen(false)}
-          title="Checkout profile"
-          closeText="Close"
+          title="اطلاعات تحویل سفارش"
+          closeText="بستن"
           rounded="lg"
           border="base"
           shadow="lg"
         >
           <div className="flex flex-col gap-3">
             <div className="text-sm text-secondary-text">
-              Please register your required profile information before checkout.
+              برای تکمیل خرید، اطلاعات ضروری حساب و ارسال سفارش را وارد کنید.
             </div>
             <div ref={profileFormRef} className="flex flex-col gap-3">
             <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">First name</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">نام</RequiredLabel>
               <CustomInput
                 value={profileDraft.firstName}
                 pattern="[\p{L}][\p{L}\s'-]{1,49}"
@@ -397,12 +397,12 @@ export default function CartPage() {
                 required
                 invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.firstName.trim())}
                 showLabel={false}
-                aria-label="First name"
+                aria-label="نام"
                 onChange={(event) => updateProfileDraft({ firstName: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">Last name</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">نام خانوادگی</RequiredLabel>
               <CustomInput
                 value={profileDraft.lastName}
                 pattern="[\p{L}][\p{L}\s'-]{1,49}"
@@ -410,12 +410,12 @@ export default function CartPage() {
                 required
                 invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.lastName.trim())}
                 showLabel={false}
-                aria-label="Last name"
+                aria-label="نام خانوادگی"
                 onChange={(event) => updateProfileDraft({ lastName: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">National ID</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">کد ملی</RequiredLabel>
               <CustomInput
                 value={profileDraft.nationalId}
                 pattern="\d{10}"
@@ -425,12 +425,12 @@ export default function CartPage() {
                 invalid={showProfileRequiredErrors && !NATIONAL_ID_PATTERN.test(profileDraft.nationalId.trim())}
                 showLabel={false}
                 inputMode="numeric"
-                aria-label="National ID"
+                aria-label="کد ملی"
                 onChange={(event) => updateProfileDraft({ nationalId: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">Birth date</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">تاریخ تولد</RequiredLabel>
               <CustomInput
                 value={profileDraft.birthDate}
                 type="date"
@@ -438,12 +438,12 @@ export default function CartPage() {
                 required
                 invalid={showProfileRequiredErrors && (!profileDraft.birthDate.trim() || new Date(profileDraft.birthDate).getTime() > Date.now())}
                 showLabel={false}
-                aria-label="Birth date"
+                aria-label="تاریخ تولد"
                 onChange={(event) => updateProfileDraft({ birthDate: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">Phone</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">شماره تماس</RequiredLabel>
               <CustomInput
                 value={profileDraft.phone}
                 pattern="09\d{9}"
@@ -453,21 +453,21 @@ export default function CartPage() {
                 invalid={showProfileRequiredErrors && !PHONE_PATTERN.test(profileDraft.phone.trim())}
                 showLabel={false}
                 inputMode="tel"
-                aria-label="Phone"
+                aria-label="شماره تماس"
                 onChange={(event) => updateProfileDraft({ phone: event.target.value })}
               />
             </div>
             <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">Address</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">آدرس</RequiredLabel>
               <CustomInput
                 value={profileDraft.address}
-                placeholder="address"
+                placeholder="آدرس کامل"
                 minLength={5}
                 maxLength={200}
                 required
                 invalid={showProfileRequiredErrors && (profileDraft.address.trim().length < 5 || profileDraft.address.trim().length > 200)}
                 showLabel={false}
-                aria-label="Address"
+                aria-label="آدرس"
                 onChange={(event) => updateProfileDraft({ address: event.target.value })}
               />
             </div>
@@ -478,7 +478,7 @@ export default function CartPage() {
               </div>
             ) : null}
             <CustomButton border="base" fullWidth icon={<IoCardOutline />} onClick={saveProfileDraft}>
-              Save and continue
+              ذخیره و ادامه
             </CustomButton>
           </div>
         </CustomModal>
@@ -486,18 +486,18 @@ export default function CartPage() {
         <CustomModal
           open={isCheckoutSuccessOpen}
           onClose={() => setIsCheckoutSuccessOpen(false)}
-          title="Purchase completed"
-          closeText="Close"
+          title="خرید تکمیل شد"
+          closeText="بستن"
           rounded="lg"
           border="base"
           shadow="lg"
         >
           <div className="flex flex-col gap-3">
             <div className="text-sm font-semibold text-primary-text">
-              Purchase completed successfully.
+              خرید شما با موفقیت ثبت شد.
             </div>
             <div className="text-sm text-secondary-text">
-              Your products were added to your purchases and inventory was updated.
+              محصولات به سوابق خرید شما اضافه شدند و موجودی فروشگاه به‌روزرسانی شد.
             </div>
           </div>
         </CustomModal>

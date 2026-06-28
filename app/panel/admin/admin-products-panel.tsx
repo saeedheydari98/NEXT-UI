@@ -9,6 +9,7 @@ import { RequiredLabel } from "../../design-system/components/ui/required-label"
 import { CustomSelect } from "../../design-system/components/ui/select";
 import { CustomSwitch } from "../../design-system/components/ui/switch";
 import { getStockColorValue } from "../../design-system/components/ui/color-stock-dots";
+import CategoryOption from "../../design-system/components/ui/category-option";
 import { FloatButton } from "@/app/design-system/components/ui/float-button";
 import { clearProductsCache, getProducts } from "@/lib/products-client";
 import { scrollToFirstInvalidField } from "@/lib/form-validation";
@@ -37,6 +38,7 @@ const createCategory = (): CategoryForm => ({
   id: `category-${Date.now()}`,
   title: "",
   slug: "",
+  imageUrl: "",
   active: true,
   sortOrder: 1,
 });
@@ -44,10 +46,15 @@ const createCategory = (): CategoryForm => ({
 const createBanner = (): BannerForm => ({
   id: `banner-${Date.now()}`,
   title: "",
+  showcaseId: "",
   imageUrls: [],
   active: true,
+  showOnHome: true,
+  showOnShowcase: false,
   intervalSeconds: 5,
   heightPercent: 28,
+  homeSortOrder: 1,
+  showcaseSortOrder: 1,
   sortOrder: 1,
 });
 
@@ -66,7 +73,7 @@ const createProduct = (): ProductForm => ({
   images: [],
   videoUrl: "",
   badge: "",
-  ctaLabel: "View product",
+  ctaLabel: "مشاهده محصول",
   ctaHref: "#",
   active: true,
   isActive: true,
@@ -131,12 +138,12 @@ const PRODUCT_COLOR_OPTIONS = [
 ];
 
 const SHOWCASE_SORT_OPTIONS = [
-  { value: "cheapest", label: "Cheapest" },
-  { value: "expensive", label: "Most expensive" },
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "bestseller", label: "Bestseller" },
-  { value: "mostDiscounted", label: "Most discounted" },
+  { value: "cheapest", label: "ارزان‌ترین" },
+  { value: "expensive", label: "گران‌ترین" },
+  { value: "newest", label: "جدیدترین" },
+  { value: "oldest", label: "قدیمی‌ترین" },
+  { value: "bestseller", label: "پرفروش‌ترین" },
+  { value: "mostDiscounted", label: "بیشترین تخفیف" },
 ];
 
 type InventoryControlsProps = {
@@ -170,17 +177,17 @@ function InventoryControls({ product, onChange }: InventoryControlsProps) {
       }`}
     >
       <div className="flex flex-col gap-1">
-        <div className="text-sm font-bold text-primary-text">Inventory</div>
+        <div className="text-sm font-bold text-primary-text">موجودی</div>
         <span className="text-xs text-secondary-text">
-          Set total stock first, then assign the same total across colors.
+          ابتدا موجودی کل را تعیین کنید، سپس همان مقدار را بین رنگ‌ها تقسیم کنید.
         </span>
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="text-xs font-bold text-secondary-text">Total stock quantity</div>
+        <div className="text-xs font-bold text-secondary-text">موجودی کل</div>
         <CustomSelect
           value={String(product.stockQuantity)}
-          aria-label="Total stock quantity"
+          aria-label="موجودی کل"
           onChange={(event) => onChange({ stockQuantity: Number(event.target.value) })}
         >
           {STOCK_OPTIONS.map((count) => (
@@ -192,7 +199,7 @@ function InventoryControls({ product, onChange }: InventoryControlsProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="text-xs font-bold text-secondary-text">Color stock</div>
+        <div className="text-xs font-bold text-secondary-text">موجودی رنگ‌ها</div>
         <div className="flex flex-wrap gap-2">
           {PRODUCT_COLOR_OPTIONS.map((color) => {
             const count = Number(colorStock[color] ?? 0);
@@ -235,7 +242,7 @@ function InventoryControls({ product, onChange }: InventoryControlsProps) {
         </CustomSelect>
         {!stockMatchesTotal ? (
           <span className="text-xs font-semibold text-danger-text-nomode">
-            Color quantities must equal total stock before saving.
+            مجموع موجودی رنگ‌ها باید قبل از ذخیره با موجودی کل برابر باشد.
           </span>
         ) : null}
       </div>
@@ -262,20 +269,27 @@ function textToImageList(value: string) {
 function ProductAdvancedFields({ product, categories, onChange, hasRequiredError, categoryErrorKey }: ProductAdvancedFieldsProps) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
-      <div className="text-sm font-bold text-primary-text">Product details</div>
-      <RequiredLabel required className="text-primary-text">Category</RequiredLabel>
-      <CustomSelect
-        value={product.categoryId}
-        onChange={(event) => onChange({ categoryId: event.target.value })}
-        aria-invalid={hasRequiredError(categoryErrorKey) && !product.categoryId.trim()}
+      <div className="text-sm font-bold text-primary-text">جزئیات محصول</div>
+      <RequiredLabel required className="text-primary-text">دسته‌بندی</RequiredLabel>
+      <div
+        data-invalid={hasRequiredError(categoryErrorKey) && !product.categoryId.trim() ? "true" : undefined}
+        className={`flex flex-wrap gap-3 rounded-md border p-2 ${
+          hasRequiredError(categoryErrorKey) && !product.categoryId.trim()
+            ? "border-danger-border-nomode"
+            : "border-primary-border"
+        }`}
       >
-        <option value="">Select category</option>
         {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.title}
-          </option>
+          <CategoryOption
+            key={category.id}
+            label={category.title}
+            imageUrl={category.imageUrl}
+            selected={product.categoryId === category.id}
+            size="sm"
+            onClick={() => onChange({ categoryId: category.id, categoryIds: [category.id] })}
+          />
         ))}
-      </CustomSelect>
+      </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <CustomInput value={product.slug} placeholder="Slug" onChange={(event) => onChange({ slug: event.target.value })} />
         <CustomInput value={product.manufactureYear} placeholder="Manufacture year" onChange={(event) => onChange({ manufactureYear: event.target.value })} />
@@ -287,9 +301,9 @@ function ProductAdvancedFields({ product, categories, onChange, hasRequiredError
         <CustomInput value={product.sku} placeholder="SKU" onChange={(event) => onChange({ sku: event.target.value })} />
       </div>
       <div className="flex flex-wrap gap-2">
-        <CustomSwitch checked={product.isActive} onChange={(isActive) => onChange({ isActive, active: isActive })} label={product.isActive ? "Active" : "Hidden"} size="sm" />
-        <CustomSwitch checked={product.isFeatured} onChange={(isFeatured) => onChange({ isFeatured })} label={product.isFeatured ? "Featured" : "Normal"} size="sm" />
-        <CustomSwitch checked={product.isAvailable} onChange={(isAvailable) => onChange({ isAvailable })} label={product.isAvailable ? "Available" : "Unavailable"} size="sm" />
+        <CustomSwitch checked={product.isActive} onChange={(isActive) => onChange({ isActive, active: isActive })} label={product.isActive ? "فعال" : "مخفی"} size="sm" />
+        <CustomSwitch checked={product.isFeatured} onChange={(isFeatured) => onChange({ isFeatured })} label={product.isFeatured ? "ویژه" : "عادی"} size="sm" />
+        <CustomSwitch checked={product.isAvailable} onChange={(isAvailable) => onChange({ isAvailable })} label={product.isAvailable ? "موجود" : "ناموجود"} size="sm" />
       </div>
     </div>
   );
@@ -347,7 +361,7 @@ function normalizeProduct(item: Partial<ProductForm>, index: number): ProductFor
     images: Array.isArray(item.images) ? item.images.map((value) => String(value)).filter(Boolean) : [],
     videoUrl: String(item.videoUrl ?? ""),
     badge: String(item.badge ?? ""),
-    ctaLabel: String(item.ctaLabel ?? "View product"),
+    ctaLabel: String(item.ctaLabel ?? "مشاهده محصول"),
     ctaHref: String(item.ctaHref ?? "#"),
     active: item.active !== false && item.isActive !== false,
     isActive: item.isActive !== false && item.active !== false,
@@ -436,7 +450,7 @@ function parseColorStockText(value: string) {
 function normalizeShowcase(item: Partial<ShowcaseForm>, index: number): ShowcaseForm {
   return {
     id: String(item.id ?? `showcase-${Date.now()}-${index}`),
-    title: String(item.title ?? `Showcase ${index + 1}`),
+    title: String(item.title ?? `ویترین ${index + 1}`),
     active: item.active !== false,
     mode: item.mode === "auto" ? "auto" : "manual",
     autoSort: String(item.autoSort ?? "newest"),
@@ -458,13 +472,14 @@ function slugifyValue(value: string) {
 }
 
 function normalizeCategory(item: Partial<CategoryForm>, index: number): CategoryForm {
-  const title = String(item.title ?? `Category ${index + 1}`).trim();
+  const title = String(item.title ?? `دسته‌بندی ${index + 1}`).trim();
   const slug = String(item.slug ?? slugifyValue(title)).trim() || slugifyValue(title);
 
   return {
     id: String(item.id ?? (slug || `category-${Date.now()}-${index}`)),
     title,
     slug,
+    imageUrl: String(item.imageUrl ?? "").trim(),
     active: item.active !== false,
     sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
   };
@@ -472,21 +487,47 @@ function normalizeCategory(item: Partial<CategoryForm>, index: number): Category
 
 function normalizeBanner(item: Partial<BannerForm> & { bannerUrl?: string; images?: unknown }, index: number): BannerForm {
   const legacyImage = typeof item.bannerUrl === "string" && item.bannerUrl ? [item.bannerUrl] : [];
-  const dbImages = Array.isArray(item.images) ? item.images.map((value) => String(value)).filter(Boolean) : [];
+  const imageMeta = item.images && typeof item.images === "object" && !Array.isArray(item.images)
+    ? item.images as Partial<BannerForm> & { urls?: unknown; imageUrls?: unknown }
+    : {};
+  const objectImages = Array.isArray(imageMeta.urls)
+    ? imageMeta.urls.map((value) => String(value)).filter(Boolean)
+    : Array.isArray(imageMeta.imageUrls)
+      ? imageMeta.imageUrls.map((value) => String(value)).filter(Boolean)
+      : [];
+  const dbImages = Array.isArray(item.images) ? item.images.map((value) => String(value)).filter(Boolean) : objectImages;
   const imageUrls = Array.isArray(item.imageUrls)
     ? item.imageUrls.map((value) => String(value)).filter(Boolean)
     : dbImages.length > 0
       ? dbImages
       : legacyImage;
+  const showcaseId = String(item.showcaseId ?? imageMeta.showcaseId ?? "").trim();
+  const hasExplicitTargets = typeof item.showOnHome === "boolean"
+    || typeof item.showOnShowcase === "boolean"
+    || typeof imageMeta.showOnHome === "boolean"
+    || typeof imageMeta.showOnShowcase === "boolean";
+  const showOnHome = hasExplicitTargets ? (item.showOnHome ?? imageMeta.showOnHome) !== false : !showcaseId;
+  const showOnShowcase = hasExplicitTargets ? (item.showOnShowcase ?? imageMeta.showOnShowcase) === true : Boolean(showcaseId);
+  const homeSortOrder = Number.isFinite(Number(item.homeSortOrder ?? imageMeta.homeSortOrder))
+    ? Number(item.homeSortOrder ?? imageMeta.homeSortOrder)
+    : Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1;
+  const showcaseSortOrder = Number.isFinite(Number(item.showcaseSortOrder ?? imageMeta.showcaseSortOrder))
+    ? Number(item.showcaseSortOrder ?? imageMeta.showcaseSortOrder)
+    : Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1;
 
   return {
     id: String(item.id ?? `banner-${Date.now()}-${index}`),
     title: String(item.title ?? `Banner ${index + 1}`),
+    showcaseId,
     imageUrls,
     active: item.active !== false,
+    showOnHome,
+    showOnShowcase,
     intervalSeconds: Number.isFinite(Number(item.intervalSeconds)) ? Math.max(1, Math.round(Number(item.intervalSeconds))) : 5,
     heightPercent: Number.isFinite(Number(item.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(item.heightPercent)))) : 28,
-    sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
+    homeSortOrder,
+    showcaseSortOrder,
+    sortOrder: homeSortOrder,
   };
 }
 
@@ -500,7 +541,7 @@ function ensureShowcases(products: ProductForm[], savedShowcases: ShowcaseForm[]
     if (!byId.has(showcaseId)) {
       byId.set(showcaseId, {
         id: showcaseId,
-        title: "Untitled showcase",
+        title: "ویترین بدون عنوان",
         active: true,
         mode: "manual",
         autoSort: "newest",
@@ -591,8 +632,14 @@ function clampWholeNumber(value: unknown, min: number, max: number, fallback: nu
 }
 
 function normalizeBannerTiming(banner: BannerForm): BannerForm {
+  const homeSortOrder = clampWholeNumber(banner.homeSortOrder || banner.sortOrder, 1, 999, 1);
+  const showcaseSortOrder = clampWholeNumber(banner.showcaseSortOrder || banner.sortOrder, 1, 999, 1);
   return {
     ...banner,
+    showOnShowcase: banner.showOnShowcase && Boolean(banner.showcaseId),
+    homeSortOrder,
+    showcaseSortOrder,
+    sortOrder: homeSortOrder,
     intervalSeconds: clampWholeNumber(banner.intervalSeconds, 1, 60, 5),
     heightPercent: clampWholeNumber(banner.heightPercent, 10, 100, 28),
   };
@@ -606,7 +653,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
   const [products, setProducts] = useState<ProductForm[]>([]);
   const [showcases, setShowcases] = useState<ShowcaseForm[]>([]);
   const [categories, setCategories] = useState<CategoryForm[]>([
-    normalizeCategory({ id: "general", title: "General", slug: "general", active: true, sortOrder: 1 }, 0),
+    normalizeCategory({ id: "general", title: "عمومی", slug: "general", imageUrl: "", active: true, sortOrder: 1 }, 0),
   ]);
   const [banners, setBanners] = useState<BannerForm[]>([]);
   const [draftProduct, setDraftProduct] = useState<ProductForm>(createProduct);
@@ -632,7 +679,10 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
   const [previewImage, setPreviewImage] = useState("");
   const [relationProduct, setRelationProduct] = useState<ProductForm | null>(null);
   const [relationMode, setRelationMode] = useState<ProductRelationMode>("category");
+  const [relationCategoryIds, setRelationCategoryIds] = useState<string[]>([]);
+  const [relationShowcaseIds, setRelationShowcaseIds] = useState<string[]>([]);
   const [draggingProductId, setDraggingProductId] = useState<number | string | null>(null);
+  const [draggingCategoryId, setDraggingCategoryId] = useState<string | null>(null);
   const [draggingStorefrontKey, setDraggingStorefrontKey] = useState<string | null>(null);
   const [draftBannerImageUrl, setDraftBannerImageUrl] = useState("");
   const [editingBannerImageUrl, setEditingBannerImageUrl] = useState("");
@@ -663,7 +713,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           apiProducts,
           catalog.showcases.map((item, index) => ({
             id: String(item.id),
-            title: String(item.title ?? `Showcase ${index + 1}`),
+            title: String(item.title ?? `ویترین ${index + 1}`),
             active: item.active !== false,
             mode: item.mode === "auto" ? "auto" : "manual",
             autoSort: String(item.autoSort ?? "newest"),
@@ -677,6 +727,9 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           normalizeBanner(
             {
               ...item,
+              showcaseId: String(item.showcaseId ?? ""),
+              homeSortOrder: Number(item.homeSortOrder ?? item.sortOrder),
+              showcaseSortOrder: Number(item.showcaseSortOrder ?? item.sortOrder),
               intervalSeconds: Number(item.intervalSeconds),
               heightPercent: Number(item.heightPercent),
             },
@@ -690,6 +743,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   id: item.id,
                   title: item.title,
                   slug: item.slug,
+                  imageUrl: item.imageUrl ?? "",
                   active: item.active,
                   sortOrder: Number(item.sortOrder),
                 },
@@ -699,8 +753,9 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           : [
               normalizeCategory({
                 id: "general",
-                title: "General",
+                title: "عمومی",
                 slug: "general",
+                imageUrl: "",
                 active: true,
                 sortOrder: 1,
               }, 0),
@@ -716,7 +771,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         setShowcases([]);
         setCategories([]);
         setBanners([]);
-        setStatus("Catalog API was not available.");
+        setStatus("دریافت اطلاعات فروشگاه ممکن نشد.");
         await waitForMinimumLoading(startedAt);
       } finally {
         if (!cancelled) {
@@ -813,6 +868,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             id: category.id,
             title: category.title,
             slug: category.slug,
+            imageUrl: category.imageUrl,
             active: category.active,
             sortOrder: category.sortOrder,
           })),
@@ -821,10 +877,15 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             return {
               id: normalizedBanner.id,
               title: normalizedBanner.title,
+              showcaseId: normalizedBanner.showOnShowcase ? normalizedBanner.showcaseId : "",
               imageUrls: normalizedBanner.imageUrls,
               active: normalizedBanner.active,
+              showOnHome: normalizedBanner.showOnHome,
+              showOnShowcase: normalizedBanner.showOnShowcase,
               intervalSeconds: normalizedBanner.intervalSeconds,
               heightPercent: normalizedBanner.heightPercent,
+              homeSortOrder: normalizedBanner.homeSortOrder,
+              showcaseSortOrder: normalizedBanner.showcaseSortOrder,
               sortOrder: normalizedBanner.sortOrder,
             };
           }),
@@ -875,7 +936,23 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     const reordered = ordered.map((product, index) => ({ ...product, sortOrder: index + 1 }));
     setProducts(reordered);
     await persistProducts(reordered, sortedShowcases, sortedBanners, sortedCategories, false);
-    setStatus("Product order saved.");
+    setStatus("ترتیب محصولات ذخیره شد.");
+  };
+
+  const reorderCategories = async (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+
+    const ordered = [...sortedCategories];
+    const sourceIndex = ordered.findIndex((category) => category.id === sourceId);
+    const targetIndex = ordered.findIndex((category) => category.id === targetId);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const [moved] = ordered.splice(sourceIndex, 1);
+    ordered.splice(targetIndex, 0, moved);
+    const reordered = ordered.map((category, index) => ({ ...category, sortOrder: index + 1 }));
+    setCategories(reordered);
+    await persistProducts(products, sortedShowcases, sortedBanners, reordered, false);
+    setStatus("ترتیب دسته‌بندی‌ها ذخیره شد.");
   };
 
   const reorderShowcaseProducts = async (
@@ -903,12 +980,22 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     );
     setShowcases(nextShowcases);
     await persistProducts(products, nextShowcases, sortedBanners, sortedCategories, false);
-    setStatus("Showcase product order saved.");
+    setStatus("ترتیب محصولات ویترین ذخیره شد.");
   };
 
   const openProductRelations = (product: ProductForm, mode: ProductRelationMode) => {
+    const categoryIds = product.categoryIds.length > 0
+      ? product.categoryIds
+      : [product.categoryId || sortedCategories[0]?.id || "general"];
+    const showcaseIds = product.showcaseIds.length > 0
+      ? product.showcaseIds
+      : product.showcaseId
+        ? [product.showcaseId]
+        : [];
     setRelationProduct(product);
     setRelationMode(mode);
+    setRelationCategoryIds(categoryIds.filter(Boolean));
+    setRelationShowcaseIds(showcaseIds.filter(Boolean));
   };
 
   const openImagePreview = (imageUrl?: string) => {
@@ -945,7 +1032,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
   const openBannerModal = () => {
     setRequiredErrors([]);
-    setDraftBanner({ ...createBanner(), sortOrder: nextDisplayOrder });
+    setDraftBanner({ ...createBanner(), homeSortOrder: nextDisplayOrder, showcaseSortOrder: nextDisplayOrder, sortOrder: nextDisplayOrder });
     setDraftBannerImageUrl("");
     setIsBannerOpen(true);
   };
@@ -1076,6 +1163,21 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     reader.readAsDataURL(file);
   };
 
+  const handleCategoryImageUpload = (file: File | null, mode: "draft" | "edit") => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageUrl = String(reader.result ?? "");
+      if (mode === "draft") {
+        updateDraftCategory({ imageUrl });
+        return;
+      }
+      updateEditingCategory({ imageUrl });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const appendBannerImages = (imageUrls: string[], mode: "draft" | "edit") => {
     if (imageUrls.length === 0) return;
 
@@ -1146,7 +1248,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     ].filter(Boolean) as string[];
 
     if (errors.length > 0) {
-      showRequiredErrors(errors, "Title, description, new price, category, and matching color stock are required.");
+      showRequiredErrors(errors, "عنوان، توضیحات، قیمت جدید، دسته‌بندی و موجودی رنگ‌ها الزامی است.");
       return;
     }
 
@@ -1159,7 +1261,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
   const submitDraftShowcase = async () => {
     if (!draftShowcase.title.trim()) {
-      showRequiredErrors(["draftShowcase.title"], "Showcase title is required.");
+      showRequiredErrors(["draftShowcase.title"], "عنوان ویترین الزامی است.");
       return;
     }
 
@@ -1172,7 +1274,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
   const submitDraftCategory = async () => {
     if (!draftCategory.title.trim()) {
-      showRequiredErrors(["draftCategory.title"], "Category title is required.");
+      showRequiredErrors(["draftCategory.title"], "عنوان دسته‌بندی الزامی است.");
       return;
     }
 
@@ -1202,7 +1304,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     if (!editingShowcase) return;
 
     if (!editingShowcase.title.trim()) {
-      showRequiredErrors(["editingShowcase.title"], "Showcase title is required.");
+      showRequiredErrors(["editingShowcase.title"], "عنوان ویترین الزامی است.");
       return;
     }
 
@@ -1220,7 +1322,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     if (!editingCategory) return;
 
     if (!editingCategory.title.trim()) {
-      showRequiredErrors(["editingCategory.title"], "Category title is required.");
+      showRequiredErrors(["editingCategory.title"], "عنوان دسته‌بندی الزامی است.");
       return;
     }
 
@@ -1299,7 +1401,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     setIsEditShowcaseOpen(false);
     setEditingShowcase(null);
     await persistProducts(nextProducts, nextShowcases, sortedBanners);
-    setStatus("Showcase deleted.");
+    setStatus("ویترین حذف شد.");
   };
 
   const submitEditingProduct = async () => {
@@ -1315,7 +1417,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     ].filter(Boolean) as string[];
 
     if (errors.length > 0) {
-      showRequiredErrors(errors, "Title, description, new price, category, and matching color stock are required.");
+      showRequiredErrors(errors, "عنوان، توضیحات، قیمت جدید، دسته‌بندی و موجودی رنگ‌ها الزامی است.");
       return;
     }
 
@@ -1373,9 +1475,48 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     await updateProductAssignment(product, { showcaseId: next[0] ?? "", showcaseIds: next });
   };
 
+  const toggleRelationCategory = (categoryId: string) => {
+    setRelationCategoryIds((current) => {
+      if (current.includes(categoryId)) {
+        return current.length <= 1 ? current : current.filter((id) => id !== categoryId);
+      }
+
+      return [...current, categoryId];
+    });
+  };
+
+  const toggleRelationShowcase = (showcaseId: string) => {
+    setRelationShowcaseIds((current) =>
+      current.includes(showcaseId)
+        ? current.filter((id) => id !== showcaseId)
+        : [...current, showcaseId]
+    );
+  };
+
+  const submitRelationSelection = async () => {
+    if (!relationProduct) return;
+
+    if (relationMode === "category") {
+      const normalized = relationCategoryIds.length > 0
+        ? relationCategoryIds
+        : [sortedCategories[0]?.id ?? "general"];
+      await updateProductAssignment(relationProduct, {
+        categoryId: normalized[0],
+        categoryIds: normalized,
+      });
+    } else {
+      await updateProductAssignment(relationProduct, {
+        showcaseId: relationShowcaseIds[0] ?? "",
+        showcaseIds: relationShowcaseIds,
+      });
+    }
+
+    setRelationProduct(null);
+  };
+
   const updateBannerPlacement = (banner: BannerForm, sortOrder: number) => {
     setBanners((current) =>
-      current.map((item) => (item.id === banner.id ? { ...item, sortOrder } : item))
+      current.map((item) => (item.id === banner.id ? { ...item, homeSortOrder: sortOrder, sortOrder } : item))
     );
   };
 
@@ -1405,6 +1546,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     const nextOrder = new Map(ordered.map((entry, index) => [entry.key, index + 1]));
     const nextBanners = banners.map((banner) => ({
       ...banner,
+      homeSortOrder: nextOrder.get(`banner:${banner.id}`) ?? banner.homeSortOrder,
       sortOrder: nextOrder.get(`banner:${banner.id}`) ?? banner.sortOrder,
     }));
     const nextShowcases = showcases.map((showcase) => ({
@@ -1415,25 +1557,32 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     setBanners(nextBanners);
     setShowcases(nextShowcases);
     await persistProducts(products, nextShowcases, nextBanners, sortedCategories, false);
-    setStatus("Storefront order saved.");
+    setStatus("چیدمان فروشگاه ذخیره شد.");
   };
 
   return (
     <section className="flex w-full max-w-none flex-col gap-4 rounded-lg border border-primary-border bg-primary-soft p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-base font-bold text-primary-text">
-          {section === "products" && "Products"}
-          {section === "banners" && "Banners"}
-          {section === "showcases" && "Showcases"}
-          {section === "categories" && "Categories"}
-          {section === "storefront" && "Storefront management"}
+          {section === "products" && "محصولات"}
+          {section === "banners" && "بنرها"}
+          {section === "showcases" && "ویترین‌ها"}
+          {section === "categories" && "دسته‌بندی‌ها"}
+          {section === "storefront" && "مدیریت چیدمان فروشگاه"}
+        </div>
+        <div className="hidden text-base font-bold text-primary-text">
+          {section === "products" && "محصولات"}
+          {section === "banners" && "بنرها"}
+          {section === "showcases" && "ویترین‌ها"}
+          {section === "categories" && "دسته‌بندی‌ها"}
+          {section === "storefront" && "مدیریت چیدمان فروشگاه"}
         </div>
         <span className="text-xs font-semibold text-primary-text">
-          {section === "products" && `${sortedProducts.length} products`}
-          {section === "banners" && `${sortedBanners.length} banners`}
-          {section === "showcases" && `${sortedShowcases.length} showcases`}
-          {section === "categories" && `${sortedCategories.length} categories`}
-          {section === "storefront" && `${displaySections.length} sections`}
+          {section === "products" && `${sortedProducts.length} محصول`}
+          {section === "banners" && `${sortedBanners.length} بنر`}
+          {section === "showcases" && `${sortedShowcases.length} ویترین`}
+          {section === "categories" && `${sortedCategories.length} دسته‌بندی`}
+          {section === "storefront" && `${displaySections.length} بخش`}
         </span>
       </div>
 
@@ -1463,18 +1612,18 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 draggingProductId === product.id ? "border-primary opacity-70" : "border-primary-border"
               }`}
             >
-              <button type="button" className="flex gap-3 text-left" onClick={() => openEditModal(product)}>
+              <button type="button" className="flex gap-3 text-right" onClick={() => openEditModal(product)}>
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media">
                   {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.title} className="h-full w-full object-cover" />
                   ) : (
-                    <span className="text-xs text-secondary-text">No image</span>
+                    <span className="text-xs text-secondary-text">بدون تصویر</span>
                   )}
                 </div>
                 <div className="flex min-w-0 flex-col gap-1">
-                  <div className="line-clamp-1 text-sm font-bold text-primary-text">{product.title || "Untitled product"}</div>
-                  <span className="text-xs text-secondary-text">{formatPrice(product.discountPrice || product.price) || "No price"}</span>
-                  <span className="text-xs text-secondary-text">{product.categoryIds.length} categories / {product.showcaseIds.length} showcases</span>
+                  <div className="line-clamp-1 text-sm font-bold text-primary-text">{product.title || "محصول بدون عنوان"}</div>
+                  <span className="text-xs text-secondary-text">{formatPrice(product.discountPrice || product.price) || "بدون قیمت"}</span>
+                  <span className="text-xs text-secondary-text">{product.categoryIds.length} دسته‌بندی / {product.showcaseIds.length} ویترین</span>
                 </div>
               </button>
               <div className="flex flex-wrap gap-2">
@@ -1486,7 +1635,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   icon={<IoCreateOutline />}
                   onClick={() => openEditModal(product)}
                 >
-                  Edit
+                  ویرایش
                 </CustomButton>
                 <CustomButton
                   size="sm"
@@ -1495,7 +1644,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   border="base"
                   onClick={() => openProductRelations(product, "category")}
                 >
-                  Category
+                  دسته‌بندی
                 </CustomButton>
                 <CustomButton
                   size="sm"
@@ -1504,7 +1653,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   border="base"
                   onClick={() => openProductRelations(product, "showcase")}
                 >
-                  Showcase
+                  ویترین
                 </CustomButton>
               </div>
             </div>
@@ -1548,15 +1697,103 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
       {section === "categories" ? (
         <div className="flex flex-col gap-4">
+          {sortedCategories.map((category) => {
+            const categoryProducts = sortedProducts.filter((product) => {
+              const ids = product.categoryIds.length > 0 ? product.categoryIds : [product.categoryId];
+              return ids.includes(category.id);
+            });
+
+            return (
+              <div
+                key={category.id}
+                draggable
+                onDragStart={(event) => {
+                  setDraggingCategoryId(category.id);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", category.id);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const sourceId = event.dataTransfer.getData("text/plain") || draggingCategoryId;
+                  if (sourceId) void reorderCategories(sourceId, category.id);
+                  setDraggingCategoryId(null);
+                }}
+                onDragEnd={() => setDraggingCategoryId(null)}
+                className={`flex cursor-grab flex-col gap-3 rounded-lg border bg-primary-card p-3 active:cursor-grabbing ${
+                  draggingCategoryId === category.id ? "border-primary opacity-70" : "border-primary-border"
+                }`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <CategoryOption label={category.title} imageUrl={category.imageUrl} size="sm" />
+                    <div className="flex flex-col gap-1">
+                      <div className="text-sm font-bold text-primary-text">{category.title || "دسته‌بندی بدون عنوان"}</div>
+                      <span className="text-xs text-secondary-text">{categoryProducts.length} محصول</span>
+                    </div>
+                  </div>
+                  <CustomButton size="sm" variant="neutral" border="base" onClick={() => openEditCategoryModal(category)}>
+                    ویرایش
+                  </CustomButton>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {categoryProducts.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-primary-border bg-primary-soft p-3 text-xs text-secondary-text">
+                      محصولی در این دسته‌بندی نیست.
+                    </div>
+                  ) : null}
+                  {categoryProducts.map((product, index) => (
+                    <button
+                      key={product.id}
+                      type="button"
+                      className="flex min-w-56 max-w-56 shrink-0 gap-2 rounded-lg border border-primary-border bg-primary-soft p-2 text-right"
+                      onClick={() => openProductRelations(product, "category")}
+                    >
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media">
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={product.title || `محصول ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[11px] text-secondary-text">بدون تصویر</span>
+                        )}
+                      </span>
+                      <span className="flex min-w-0 flex-col gap-1">
+                        <span className="line-clamp-1 text-xs font-bold text-primary-text">
+                          {product.title || `محصول ${index + 1}`}
+                        </span>
+                        <span className="line-clamp-1 text-xs font-semibold text-primary">
+                          {formatPrice(product.discountPrice || product.price) || "بدون قیمت"}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {false && section === "categories" ? (
+        <div className="flex flex-col gap-4">
           {sortedCategories.map((category) => (
             <div key={category.id} className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                  <div className="text-sm font-bold text-primary-text">{category.title}</div>
-                  <span className="text-xs text-secondary-text">{sortedProducts.filter((product) => product.categoryId === category.id).length} products</span>
+                <div className="flex items-center gap-3">
+                  <CategoryOption label={category.title} imageUrl={category.imageUrl} size="sm" />
+                  <div className="flex flex-col gap-1">
+                    <div className="text-sm font-bold text-primary-text">{category.title}</div>
+                    <span className="text-xs text-secondary-text">{sortedProducts.filter((product) => product.categoryId === category.id).length} محصول</span>
+                  </div>
                 </div>
                 <CustomButton size="sm" variant="neutral" border="base" onClick={() => openEditCategoryModal(category)}>
-                  Edit
+                  ویرایش
                 </CustomButton>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1569,7 +1806,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     variant={product.categoryId === category.id ? "primary" : "neutral"}
                     onClick={() => void toggleCategoryProduct(category, product)}
                   >
-                    {product.title || "Untitled"}
+                    {product.title || "بدون عنوان"}
                   </CustomButton>
                 ))}
               </div>
@@ -1607,8 +1844,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               }`}
             >
               <div className="flex flex-col gap-1">
-                <div className="text-sm font-bold text-primary-text">{entry.item.title || `Untitled ${entry.type}`}</div>
-                <span className="text-xs text-secondary-text">{entry.type === "banner" ? "Banner" : "Showcase"}</span>
+                <div className="text-sm font-bold text-primary-text">{entry.item.title || `${entry.type === "banner" ? "بنر" : "ویترین"} بدون عنوان`}</div>
+                <span className="text-xs text-secondary-text">{entry.type === "banner" ? "بنر" : "ویترین"}</span>
               </div>
               <CustomInput
                 type="number"
@@ -1624,30 +1861,30 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             );
           })}
           <CustomButton border="base" icon={<IoSaveOutline />} onClick={() => void saveStorefrontPlacement()}>
-            Save placement
+            ذخیره چیدمان
           </CustomButton>
         </div>
       ) : null}
 
       {section === "products" ? <FloatButton label="New product" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openCreateModal} /> : null}
       {section === "showcases" ? <FloatButton label="New showcase" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openShowcaseModal} /> : null}
-      {section === "categories" ? <FloatButton label="New category" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openCategoryModal} /> : null}
+      {section === "categories" ? <FloatButton label="دسته‌بندی جدید" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openCategoryModal} /> : null}
       {section === "banners" ? <FloatButton label="New banner" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openBannerModal} /> : null}
 
       <CustomModal
         open={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
-        title="Register category"
-        closeText="Close"
+        title="ثبت دسته‌بندی"
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
       >
         <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
-          <RequiredLabel required className="text-primary-text">Category title</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">عنوان دسته‌بندی</RequiredLabel>
           <CustomInput
             value={draftCategory.title}
-            placeholder="Category title"
+            placeholder="عنوان دسته‌بندی"
             invalid={hasRequiredError("draftCategory.title") && !draftCategory.title.trim()}
             onChange={(event) => updateDraftCategory({ title: event.target.value })}
           />
@@ -1657,19 +1894,35 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             onChange={(event) => updateDraftCategory({ slug: event.target.value })}
           />
           <CustomInput
+            value={draftCategory.imageUrl}
+            placeholder="آدرس تصویر دسته‌بندی"
+            onChange={(event) => updateDraftCategory({ imageUrl: event.target.value })}
+          />
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-3 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
+            <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
+            <span className="text-sm font-semibold">بارگذاری تصویر دسته‌بندی</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => handleCategoryImageUpload(event.target.files?.[0] ?? null, "draft")}
+            />
+          </label>
+          <CategoryOption label={draftCategory.title || "دسته‌بندی"} imageUrl={draftCategory.imageUrl} />
+          <CustomInput
             type="number"
             value={draftCategory.sortOrder}
-            placeholder="Sort order"
+            placeholder="ترتیب نمایش"
             onChange={(event) => updateDraftCategory({ sortOrder: Number(event.target.value) })}
           />
           <CustomSwitch
             checked={draftCategory.active}
             onChange={(active) => updateDraftCategory({ active })}
-            label={draftCategory.active ? "Active" : "Hidden"}
+            label={draftCategory.active ? "فعال" : "مخفی"}
             size="sm"
           />
           <CustomButton border="base" fullWidth icon={<IoSaveOutline />} onClick={submitDraftCategory}>
-            Register category
+            ثبت دسته‌بندی
           </CustomButton>
         </div>
       </CustomModal>
@@ -1680,18 +1933,18 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setIsEditCategoryOpen(false);
           setEditingCategory(null);
         }}
-        title={editingCategory?.title || "Edit category"}
-        closeText="Close"
+        title={editingCategory?.title || "ویرایش دسته‌بندی"}
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
       >
         {editingCategory && (
           <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
-            <RequiredLabel required className="text-primary-text">Category title</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">عنوان دسته‌بندی</RequiredLabel>
             <CustomInput
               value={editingCategory.title}
-              placeholder="Category title"
+              placeholder="عنوان دسته‌بندی"
               invalid={hasRequiredError("editingCategory.title") && !editingCategory.title.trim()}
               onChange={(event) => updateEditingCategory({ title: event.target.value })}
             />
@@ -1701,23 +1954,39 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               onChange={(event) => updateEditingCategory({ slug: event.target.value })}
             />
             <CustomInput
+              value={editingCategory.imageUrl}
+              placeholder="آدرس تصویر دسته‌بندی"
+              onChange={(event) => updateEditingCategory({ imageUrl: event.target.value })}
+            />
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-3 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
+              <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
+              <span className="text-sm font-semibold">بارگذاری تصویر دسته‌بندی</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => handleCategoryImageUpload(event.target.files?.[0] ?? null, "edit")}
+              />
+            </label>
+            <CategoryOption label={editingCategory.title || "دسته‌بندی"} imageUrl={editingCategory.imageUrl} />
+            <CustomInput
               type="number"
               value={editingCategory.sortOrder}
-              placeholder="Sort order"
+              placeholder="ترتیب نمایش"
               onChange={(event) => updateEditingCategory({ sortOrder: Number(event.target.value) })}
             />
             <CustomSwitch
               checked={editingCategory.active}
               onChange={(active) => updateEditingCategory({ active })}
-              label={editingCategory.active ? "Active" : "Hidden"}
+              label={editingCategory.active ? "فعال" : "مخفی"}
               size="sm"
             />
             <div className="flex flex-col gap-2 sm:flex-row">
               <CustomButton variant="danger" border="base" fullWidth icon={<IoTrashOutline />} onClick={deleteEditingCategory}>
-                Delete
+                حذف
               </CustomButton>
               <CustomButton border="base" fullWidth icon={<IoSaveOutline />} onClick={submitEditingCategory}>
-                Save category
+                ذخیره دسته‌بندی
               </CustomButton>
             </div>
           </div>
@@ -1728,7 +1997,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={isBannerOpen}
         onClose={() => setIsBannerOpen(false)}
         title="Register banner"
-        closeText="Close"
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
@@ -1741,10 +2010,52 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             />
           <CustomInput
             type="number"
-            value={draftBanner.sortOrder}
-            placeholder="Sort order"
-            onChange={(event) => updateDraftBanner({ sortOrder: Number(event.target.value) })}
+            value={draftBanner.homeSortOrder}
+            placeholder="ترتیب نمایش"
+            onChange={(event) => updateDraftBanner({ homeSortOrder: Number(event.target.value), sortOrder: Number(event.target.value) })}
           />
+          <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-soft p-3">
+            <div className="text-sm font-bold text-primary-text">محل نمایش بنر</div>
+            <div className="flex flex-wrap gap-2">
+              <CustomSwitch
+                checked={draftBanner.showOnHome}
+                onChange={(showOnHome) => updateDraftBanner({ showOnHome })}
+                label={draftBanner.showOnHome ? "خانه فعال" : "خانه غیرفعال"}
+                size="sm"
+              />
+              <CustomSwitch
+                checked={draftBanner.showOnShowcase}
+                onChange={(showOnShowcase) => updateDraftBanner({
+                  showOnShowcase,
+                  showcaseId: showOnShowcase ? draftBanner.showcaseId || sortedShowcases[0]?.id || "" : draftBanner.showcaseId,
+                })}
+                label={draftBanner.showOnShowcase ? "ویترین فعال" : "ویترین غیرفعال"}
+                size="sm"
+              />
+            </div>
+            {draftBanner.showOnShowcase ? (
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <CustomSelect
+                  value={draftBanner.showcaseId}
+                  aria-label="انتخاب ویترین بنر"
+                  onChange={(event) => updateDraftBanner({ showcaseId: event.target.value })}
+                >
+                  <option value="">انتخاب ویترین</option>
+                  {sortedShowcases.map((showcase) => (
+                    <option key={showcase.id} value={showcase.id}>
+                      {showcase.title || showcase.id}
+                    </option>
+                  ))}
+                </CustomSelect>
+                <CustomInput
+                  type="number"
+                  value={draftBanner.showcaseSortOrder}
+                  placeholder="ترتیب در ویترین"
+                  onChange={(event) => updateDraftBanner({ showcaseSortOrder: Number(event.target.value) })}
+                />
+              </div>
+            ) : null}
+          </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <CustomInput
               name="draft-banner-interval-seconds"
@@ -1776,16 +2087,16 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <div className="flex gap-2">
               <CustomInput
                 value={draftBannerImageUrl}
-                placeholder="Image URL"
+                placeholder="آدرس تصویر"
                 onChange={(event) => setDraftBannerImageUrl(event.target.value)}
               />
               <CustomButton border="base" icon={<IoAdd />} onClick={() => addBannerImageUrl("draft")}>
-                Add 
+                افزودن
               </CustomButton>
             </div>
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-4 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
               <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
-              <span className="text-sm font-semibold">Upload images</span>
+              <span className="text-sm font-semibold">بارگذاری تصاویر</span>
               <input
                 type="file"
                 accept="image/*"
@@ -1804,7 +2115,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     type="button"
                     className="h-24 overflow-hidden rounded-md border border-primary-border bg-primary-media"
                     onClick={() => openImagePreview(imageUrl)}
-                    aria-label="Open banner image"
+                    aria-label="باز کردن تصویر بنر"
                   >
                     <img src={imageUrl} alt={`Banner image ${index + 1}`} className="h-full w-full object-cover" />
                   </button>
@@ -1824,7 +2135,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           <CustomSwitch
             checked={draftBanner.active}
             onChange={(active) => updateDraftBanner({ active })}
-            label={draftBanner.active ? "Active" : "Hidden"}
+            label={draftBanner.active ? "فعال" : "مخفی"}
             size="sm"
           />
           <CustomButton
@@ -1844,8 +2155,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setIsEditBannerOpen(false);
           setEditingBanner(null);
         }}
-        title={editingBanner?.title || "Edit banner"}
-        closeText="Close"
+        title={editingBanner?.title || "ویرایش بنر"}
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
@@ -1859,10 +2170,52 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             />
             <CustomInput
               type="number"
-              value={editingBanner.sortOrder}
-              placeholder="Sort order"
-              onChange={(event) => updateEditingBanner({ sortOrder: Number(event.target.value) })}
+              value={editingBanner.homeSortOrder}
+              placeholder="ترتیب نمایش"
+              onChange={(event) => updateEditingBanner({ homeSortOrder: Number(event.target.value), sortOrder: Number(event.target.value) })}
             />
+            <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-soft p-3">
+              <div className="text-sm font-bold text-primary-text">محل نمایش بنر</div>
+              <div className="flex flex-wrap gap-2">
+                <CustomSwitch
+                  checked={editingBanner.showOnHome}
+                  onChange={(showOnHome) => updateEditingBanner({ showOnHome })}
+                  label={editingBanner.showOnHome ? "خانه فعال" : "خانه غیرفعال"}
+                  size="sm"
+                />
+                <CustomSwitch
+                  checked={editingBanner.showOnShowcase}
+                  onChange={(showOnShowcase) => updateEditingBanner({
+                    showOnShowcase,
+                    showcaseId: showOnShowcase ? editingBanner.showcaseId || sortedShowcases[0]?.id || "" : editingBanner.showcaseId,
+                  })}
+                  label={editingBanner.showOnShowcase ? "ویترین فعال" : "ویترین غیرفعال"}
+                  size="sm"
+                />
+              </div>
+              {editingBanner.showOnShowcase ? (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <CustomSelect
+                    value={editingBanner.showcaseId}
+                    aria-label="انتخاب ویترین بنر"
+                    onChange={(event) => updateEditingBanner({ showcaseId: event.target.value })}
+                  >
+                    <option value="">انتخاب ویترین</option>
+                    {sortedShowcases.map((showcase) => (
+                      <option key={showcase.id} value={showcase.id}>
+                        {showcase.title || showcase.id}
+                      </option>
+                    ))}
+                  </CustomSelect>
+                  <CustomInput
+                    type="number"
+                    value={editingBanner.showcaseSortOrder}
+                    placeholder="ترتیب در ویترین"
+                    onChange={(event) => updateEditingBanner({ showcaseSortOrder: Number(event.target.value) })}
+                  />
+                </div>
+              ) : null}
+            </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <CustomInput
                 name="edit-banner-interval-seconds"
@@ -1894,16 +2247,16 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               <div className="flex gap-2">
                 <CustomInput
                   value={editingBannerImageUrl}
-                  placeholder="Image URL"
+                  placeholder="آدرس تصویر"
                   onChange={(event) => setEditingBannerImageUrl(event.target.value)}
                 />
                 <CustomButton border="base" icon={<IoAdd />} onClick={() => addBannerImageUrl("edit")}>
-                  Add
+                  افزودن
                 </CustomButton>
               </div>
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-4 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
                 <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
-                <span className="text-sm font-semibold">Upload images</span>
+                <span className="text-sm font-semibold">بارگذاری تصاویر</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -1919,7 +2272,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                       type="button"
                       className="h-24 overflow-hidden rounded-md border border-primary-border bg-primary-media"
                       onClick={() => openImagePreview(imageUrl)}
-                      aria-label="Open banner image"
+                      aria-label="باز کردن تصویر بنر"
                     >
                       <img src={imageUrl} alt={`Banner image ${index + 1}`} className="h-full w-full object-cover" />
                     </button>
@@ -1939,7 +2292,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <CustomSwitch
               checked={editingBanner.active}
               onChange={(active) => updateEditingBanner({ active })}
-              label={editingBanner.active ? "Active" : "Hidden"}
+              label={editingBanner.active ? "فعال" : "مخفی"}
               size="sm"
             />
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -1950,7 +2303,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingBanner}
               >
-                Delete
+                حذف
               </CustomButton>
               <CustomButton
                 border="base"
@@ -1958,7 +2311,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 icon={<IoSaveOutline />}
                 onClick={submitEditingBanner}
               >
-                Save banner
+                ذخیره بنر
               </CustomButton>
             </div>
           </div>
@@ -1969,28 +2322,28 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={isShowcaseOpen}
         onClose={() => setIsShowcaseOpen(false)}
         title="Register showcase"
-        closeText="Close"
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
       >
         <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
-          <RequiredLabel required className="text-primary-text">Showcase title</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">عنوان ویترین</RequiredLabel>
           <CustomInput
             value={draftShowcase.title}
-            placeholder="Showcase title"
+            placeholder="عنوان ویترین"
             invalid={hasRequiredError("draftShowcase.title") && !draftShowcase.title.trim()}
             onChange={(event) => updateDraftShowcase({ title: event.target.value })}
           />
           <CustomInput
             type="number"
             value={draftShowcase.sortOrder}
-            placeholder="Sort order"
+            placeholder="ترتیب نمایش"
             onChange={(event) => updateDraftShowcase({ sortOrder: Number(event.target.value) })}
           />
           <CustomSelect
             value={draftShowcase.mode}
-            aria-label="Showcase mode"
+            aria-label="حالت ویترین"
             onChange={(event) => updateDraftShowcase({ mode: event.target.value === "auto" ? "auto" : "manual" })}
           >
             <option value="manual">Manual product selection</option>
@@ -2014,7 +2367,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 aria-label="Automatic showcase category"
                 onChange={(event) => updateDraftShowcase({ categoryId: event.target.value })}
               >
-                <option value="">All categories</option>
+                <option value="">همه دسته‌بندی‌ها</option>
                 {sortedCategories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.title}
@@ -2024,13 +2377,13 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               <CustomInput
                 type="number"
                 value={draftShowcase.limit}
-                placeholder="Product count"
+                placeholder="تعداد محصول"
                 onChange={(event) => updateDraftShowcase({ limit: Number(event.target.value) })}
               />
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              <div className="text-xs font-bold text-secondary-text">Manual products</div>
+              <div className="text-xs font-bold text-secondary-text">محصولات دستی</div>
               <div className="flex max-h-48 flex-col gap-2 overflow-y-auto">
                 {sortedProducts.map((product) => (
                   <CustomButton
@@ -2049,7 +2402,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           <CustomSwitch
             checked={draftShowcase.active}
             onChange={(active) => updateDraftShowcase({ active })}
-            label={draftShowcase.active ? "Active" : "Hidden"}
+            label={draftShowcase.active ? "فعال" : "مخفی"}
             size="sm"
           />
           <CustomButton
@@ -2069,30 +2422,30 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setIsEditShowcaseOpen(false);
           setEditingShowcase(null);
         }}
-        title={editingShowcase?.title || "Edit showcase"}
-        closeText="Close"
+        title={editingShowcase?.title || "ویرایش ویترین"}
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
       >
         {editingShowcase && (
           <div className="flex flex-col gap-3">
-            <RequiredLabel required className="text-primary-text">Showcase title</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">عنوان ویترین</RequiredLabel>
             <CustomInput
               value={editingShowcase.title}
-              placeholder="Showcase title"
+              placeholder="عنوان ویترین"
               invalid={hasRequiredError("editingShowcase.title") && !editingShowcase.title.trim()}
               onChange={(event) => updateEditingShowcase({ title: event.target.value })}
             />
             <CustomInput
               type="number"
               value={editingShowcase.sortOrder}
-              placeholder="Sort order"
+              placeholder="ترتیب نمایش"
               onChange={(event) => updateEditingShowcase({ sortOrder: Number(event.target.value) })}
             />
             <CustomSelect
               value={editingShowcase.mode}
-              aria-label="Showcase mode"
+              aria-label="حالت ویترین"
               onChange={(event) => updateEditingShowcase({ mode: event.target.value === "auto" ? "auto" : "manual" })}
             >
               <option value="manual">Manual product selection</option>
@@ -2116,7 +2469,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   aria-label="Automatic showcase category"
                   onChange={(event) => updateEditingShowcase({ categoryId: event.target.value })}
                 >
-                  <option value="">All categories</option>
+                  <option value="">همه دسته‌بندی‌ها</option>
                   {sortedCategories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.title}
@@ -2126,13 +2479,13 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 <CustomInput
                   type="number"
                   value={editingShowcase.limit}
-                  placeholder="Product count"
+                  placeholder="تعداد محصول"
                   onChange={(event) => updateEditingShowcase({ limit: Number(event.target.value) })}
                 />
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <div className="text-xs font-bold text-secondary-text">Manual products</div>
+                <div className="text-xs font-bold text-secondary-text">محصولات دستی</div>
                 <div className="flex max-h-48 flex-col gap-2 overflow-y-auto">
                   {sortedProducts.map((product) => (
                     <CustomButton
@@ -2151,7 +2504,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <CustomSwitch
               checked={editingShowcase.active}
               onChange={(active) => updateEditingShowcase({ active })}
-              label={editingShowcase.active ? "Active" : "Hidden"}
+              label={editingShowcase.active ? "فعال" : "مخفی"}
               size="sm"
             />
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -2162,7 +2515,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingShowcase}
               >
-                Delete
+                حذف
               </CustomButton>
               <CustomButton
                 border="base"
@@ -2170,7 +2523,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 icon={<IoSaveOutline />}
                 onClick={submitEditingShowcase}
               >
-                Save showcase
+                ذخیره ویترین
               </CustomButton>
             </div>
           </div>
@@ -2180,8 +2533,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
       <CustomModal
         open={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        title="Register product"
-        closeText="Close"
+        title="ثبت محصول"
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
@@ -2189,7 +2542,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         <div className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-2">
-              <div className="text-sm font-bold">Showcase</div>
+              <div className="text-sm font-bold">ویترین</div>
               <div className="flex flex-wrap gap-2">
                 {sortedShowcases.map((showcase) => (
                   <CustomButton
@@ -2200,33 +2553,33 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     border="base"
                     onClick={() => updateDraftProduct({ showcaseId: showcase.id })}
                   >
-                    {showcase.title || "Untitled"}
+                    {showcase.title || "بدون عنوان"}
                   </CustomButton>
                 ))}
               </div>
             </div>
-            <RequiredLabel required className="text-primary-text">Title</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">عنوان</RequiredLabel>
             <CustomInput
               value={draftProduct.title}
-              placeholder="Title"
+              placeholder="عنوان"
               invalid={hasRequiredError("draftProduct.title") && !draftProduct.title.trim()}
               onChange={(event) => updateDraftProduct({ title: event.target.value })}
             />
             <CustomInput
               value={draftProduct.originalPrice}
-              placeholder="Price before discount"
+              placeholder="قیمت قبل از تخفیف"
               onChange={(event) => updateDraftPricing({ originalPrice: event.target.value })}
             />
-            <RequiredLabel required className="text-primary-text">Discounted price</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">قیمت با تخفیف</RequiredLabel>
             <CustomInput
               value={draftProduct.discountPrice}
-              placeholder="Discounted price"
+              placeholder="قیمت با تخفیف"
               invalid={hasRequiredError("draftProduct.discountPrice") && !draftProduct.discountPrice.trim()}
               onChange={(event) => updateDraftPricing({ discountPrice: event.target.value })}
             />
             <CustomInput
               value={draftProduct.badge}
-              placeholder="Badge"
+              placeholder="برچسب"
               onChange={(event) => updateDraftProduct({ badge: event.target.value })}
             />
             <InventoryControls product={draftProduct} onChange={updateDraftProduct} />
@@ -2240,31 +2593,31 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <CustomInput
               type="number"
               value={draftProduct.sortOrder}
-              placeholder="Sort order"
+              placeholder="ترتیب نمایش"
               onChange={(event) => updateDraftProduct({ sortOrder: Number(event.target.value) })}
             />
             <CustomInput
               value={draftProduct.ctaLabel}
-              placeholder="CTA label"
+              placeholder="متن دکمه"
               onChange={(event) => updateDraftProduct({ ctaLabel: event.target.value })}
             />
             <CustomInput
               value={draftProduct.ctaHref}
-              placeholder="CTA href"
+              placeholder="لینک دکمه"
               onChange={(event) => updateDraftProduct({ ctaHref: event.target.value })}
             />
           </div>
 
           <div className="flex min-h-10 items-center rounded-md border border-primary-border bg-primary-card">
             <span className="text-xs text-secondary-text">
-              Discount formula: ((price before discount - discounted price) / price before discount) x 100
+              فرمول تخفیف: ((قیمت قبل از تخفیف - قیمت با تخفیف) / قیمت قبل از تخفیف) × ۱۰۰
             </span>
           </div>
 
-          <RequiredLabel required className="text-primary-text">Description</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">توضیحات</RequiredLabel>
           <textarea
             value={draftProduct.description}
-            placeholder="Description"
+            placeholder="توضیحات"
             aria-invalid={hasRequiredError("draftProduct.description") && !draftProduct.description.trim()}
             data-invalid={hasRequiredError("draftProduct.description") && !draftProduct.description.trim() ? "true" : undefined}
             onChange={(event) => updateDraftProduct({ description: event.target.value })}
@@ -2272,15 +2625,15 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           />
 
           <div className="flex flex-col gap-3 rounded-lg border border-primary-border">
-            <div className="text-sm font-bold">Product image</div>
+            <div className="text-sm font-bold">تصویر محصول</div>
             <CustomInput
               value={draftProduct.imageUrl}
-              placeholder="Image URL or uploaded image data"
+              placeholder="آدرس تصویر یا داده تصویر بارگذاری‌شده"
               onChange={(event) => updateDraftProduct({ imageUrl: event.target.value })}
             />
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-4 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
               <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
-              <span className="text-sm font-semibold">Upload image</span>
+              <span className="text-sm font-semibold">بارگذاری تصویر</span>
               <input
                 type="file"
                 accept="image/*"
@@ -2294,16 +2647,16 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   type="button"
                   className="h-full w-full"
                   onClick={() => openImagePreview(draftProduct.imageUrl)}
-                  aria-label="Open product image"
+                  aria-label="باز کردن تصویر محصول"
                 >
                   <img
                     src={draftProduct.imageUrl}
-                    alt="Product preview"
+                    alt="پیش‌نمایش محصول"
                     className="h-full w-full object-cover"
                   />
                 </button>
               ) : (
-                <span className="text-sm text-secondary-text">Image preview</span>
+                <span className="text-sm text-secondary-text">پیش‌نمایش تصویر</span>
               )}
             </div>
           </div>
@@ -2311,7 +2664,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           <CustomSwitch
             checked={draftProduct.isActive}
             onChange={(isActive) => updateDraftProduct({ isActive, active: isActive })}
-            label={draftProduct.isActive ? "Active" : "Hidden"}
+            label={draftProduct.isActive ? "فعال" : "مخفی"}
             size="sm"
           />
 
@@ -2320,11 +2673,11 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             fullWidth
             isLoading={saving}
             loading="dots"
-            loadingText="Saving..."
+            loadingText="در حال ذخیره..."
             icon={<IoSaveOutline />}
             onClick={submitDraftProduct}
           >
-            Register product
+            ثبت محصول
           </CustomButton>
         </div>
       </CustomModal>
@@ -2335,8 +2688,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setIsEditOpen(false);
           setEditingProduct(null);
         }}
-        title={editingProduct?.title || "Edit product"}
-        closeText="Close"
+        title={editingProduct?.title || "ویرایش محصول"}
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
@@ -2345,7 +2698,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           <div className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto">
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2">
-                <div className="text-sm font-bold">Showcase</div>
+                <div className="text-sm font-bold">ویترین</div>
                 <div className="flex flex-wrap gap-2">
                   {sortedShowcases.map((showcase) => (
                     <CustomButton
@@ -2356,33 +2709,33 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                       border="base"
                       onClick={() => updateEditingProduct({ showcaseId: showcase.id })}
                     >
-                      {showcase.title || "Untitled"}
+                      {showcase.title || "بدون عنوان"}
                     </CustomButton>
                   ))}
                 </div>
               </div>
-              <RequiredLabel required className="text-primary-text">Title</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">عنوان</RequiredLabel>
               <CustomInput
                 value={editingProduct.title}
-                placeholder="Title"
+                placeholder="عنوان"
                 invalid={hasRequiredError("editingProduct.title") && !editingProduct.title.trim()}
                 onChange={(event) => updateEditingProduct({ title: event.target.value })}
               />
               <CustomInput
                 value={editingProduct.originalPrice}
-                placeholder="Price before discount"
+                placeholder="قیمت قبل از تخفیف"
                 onChange={(event) => updateEditingPricing({ originalPrice: event.target.value })}
               />
-              <RequiredLabel required className="text-primary-text">Discounted price</RequiredLabel>
+              <RequiredLabel required className="text-primary-text">قیمت با تخفیف</RequiredLabel>
               <CustomInput
                 value={editingProduct.discountPrice}
-                placeholder="Discounted price"
+                placeholder="قیمت با تخفیف"
                 invalid={hasRequiredError("editingProduct.discountPrice") && !editingProduct.discountPrice.trim()}
                 onChange={(event) => updateEditingPricing({ discountPrice: event.target.value })}
               />
               <CustomInput
                 value={editingProduct.badge}
-                placeholder="Badge"
+                placeholder="برچسب"
                 onChange={(event) => updateEditingProduct({ badge: event.target.value })}
             />
               <InventoryControls product={editingProduct} onChange={updateEditingProduct} />
@@ -2396,31 +2749,31 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               <CustomInput
                 type="number"
                 value={editingProduct.sortOrder}
-                placeholder="Sort order"
+                placeholder="ترتیب نمایش"
                 onChange={(event) => updateEditingProduct({ sortOrder: Number(event.target.value) })}
               />
               <CustomInput
                 value={editingProduct.ctaLabel}
-                placeholder="CTA label"
+                placeholder="متن دکمه"
                 onChange={(event) => updateEditingProduct({ ctaLabel: event.target.value })}
               />
               <CustomInput
                 value={editingProduct.ctaHref}
-                placeholder="CTA href"
+                placeholder="لینک دکمه"
                 onChange={(event) => updateEditingProduct({ ctaHref: event.target.value })}
               />
             </div>
 
             <div className="flex min-h-10 items-center rounded-md border border-primary-border bg-primary-card">
               <span className="text-xs text-secondary-text">
-                Discount formula: ((price before discount - discounted price) / price before discount) x 100
+                فرمول تخفیف: ((قیمت قبل از تخفیف - قیمت با تخفیف) / قیمت قبل از تخفیف) × ۱۰۰
               </span>
             </div>
 
-            <RequiredLabel required className="text-primary-text">Description</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">توضیحات</RequiredLabel>
             <textarea
               value={editingProduct.description}
-              placeholder="Description"
+              placeholder="توضیحات"
               aria-invalid={hasRequiredError("editingProduct.description") && !editingProduct.description.trim()}
               data-invalid={hasRequiredError("editingProduct.description") && !editingProduct.description.trim() ? "true" : undefined}
               onChange={(event) => updateEditingProduct({ description: event.target.value })}
@@ -2428,15 +2781,15 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             />
 
             <div className="flex flex-col gap-3 rounded-lg border border-primary-border">
-              <div className="text-sm font-bold">Product image</div>
+              <div className="text-sm font-bold">تصویر محصول</div>
               <CustomInput
                 value={editingProduct.imageUrl}
-                placeholder="Image URL or uploaded image data"
+                placeholder="آدرس تصویر یا داده تصویر بارگذاری‌شده"
                 onChange={(event) => updateEditingProduct({ imageUrl: event.target.value })}
               />
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-4 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
                 <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
-                <span className="text-sm font-semibold">Upload image</span>
+                <span className="text-sm font-semibold">بارگذاری تصویر</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -2450,16 +2803,16 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     type="button"
                     className="h-full w-full"
                     onClick={() => openImagePreview(editingProduct.imageUrl)}
-                    aria-label="Open product image"
+                    aria-label="باز کردن تصویر محصول"
                   >
                     <img
                       src={editingProduct.imageUrl}
-                      alt="Product preview"
+                      alt="پیش‌نمایش محصول"
                       className="h-full w-full object-cover"
                     />
                   </button>
                 ) : (
-                  <span className="text-sm text-secondary-text">Image preview</span>
+                  <span className="text-sm text-secondary-text">پیش‌نمایش تصویر</span>
                 )}
               </div>
             </div>
@@ -2467,7 +2820,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <CustomSwitch
               checked={editingProduct.isActive}
               onChange={(isActive) => updateEditingProduct({ isActive, active: isActive })}
-              label={editingProduct.isActive ? "Active" : "Hidden"}
+              label={editingProduct.isActive ? "فعال" : "مخفی"}
               size="sm"
             />
 
@@ -2479,18 +2832,18 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingProduct}
               >
-                Delete
+                حذف
               </CustomButton>
               <CustomButton
                 border="base"
                 isLoading={saving}
                 loading="dots"
-                loadingText="Saving..."
+                loadingText="در حال ذخیره..."
                 fullWidth
                 icon={<IoSaveOutline />}
                 onClick={submitEditingProduct}
               >
-                Save changes
+                ذخیره تغییرات
               </CustomButton>
             </div>
           </div>
@@ -2500,36 +2853,38 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
       <CustomModal
         open={Boolean(relationProduct)}
         onClose={() => setRelationProduct(null)}
-        title={relationMode === "category" ? "Product categories" : "Product showcases"}
-        closeText="Close"
+        title={relationMode === "category" ? "دسته‌بندی‌های محصول" : "ویترین‌های محصول"}
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
       >
         {relationProduct ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <div className="text-sm font-bold text-primary-text">{relationProduct.title || "Untitled product"}</div>
+              <div className="text-sm font-bold text-primary-text">
+                {relationProduct.title || "محصول بدون عنوان"}
+              </div>
               <span className="text-xs text-secondary-text">
-                {relationMode === "category" ? "At least one category is required." : "Showcase selection can be empty."}
+                {relationMode === "category" ? "حداقل یک دسته‌بندی باید فعال بماند." : "انتخاب ویترین اختیاری است."}
               </span>
             </div>
 
             {relationMode === "category" ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-3">
                 {sortedCategories.map((category) => {
-                  const selected = relationProduct.categoryIds.includes(category.id);
-                  const isLastCategory = selected && relationProduct.categoryIds.length <= 1;
+                  const selected = relationCategoryIds.includes(category.id);
+                  const isLastCategory = selected && relationCategoryIds.length <= 1;
                   return (
-                    <CustomButton
+                    <CategoryOption
                       key={category.id}
-                      border="base"
-                      variant={selected ? "primary" : "neutral"}
+                      label={category.title}
+                      imageUrl={category.imageUrl}
+                      selected={selected}
+                      size="sm"
                       disabled={isLastCategory}
-                      onClick={() => void toggleCategoryProduct(category, relationProduct)}
-                    >
-                      {category.title}
-                    </CustomButton>
+                      onClick={() => toggleRelationCategory(category.id)}
+                    />
                   );
                 })}
               </div>
@@ -2537,7 +2892,80 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               <div className="flex flex-col gap-2">
                 {sortedShowcases.length === 0 ? (
                   <div className="rounded-md border border-primary-border bg-primary-card p-3 text-sm text-secondary-text">
-                    No showcases are available.
+                    ویترینی وجود ندارد.
+                  </div>
+                ) : null}
+                {sortedShowcases.map((showcase) => {
+                  const selected = relationShowcaseIds.includes(showcase.id);
+                  return (
+                    <CustomButton
+                      key={showcase.id}
+                      border="base"
+                      variant={selected ? "primary" : "neutral"}
+                      unstyled={!selected}
+                      className={!selected ? "border-primary-border bg-primary-card text-secondary-text" : undefined}
+                      onClick={() => toggleRelationShowcase(showcase.id)}
+                    >
+                      {showcase.title || "ویترین بدون عنوان"}
+                    </CustomButton>
+                  );
+                })}
+              </div>
+            )}
+
+            <CustomButton
+              border="base"
+              fullWidth
+              icon={<IoSaveOutline />}
+              onClick={() => void submitRelationSelection()}
+            >
+              تایید
+            </CustomButton>
+          </div>
+        ) : null}
+      </CustomModal>
+
+      <CustomModal
+        open={false}
+        onClose={() => setRelationProduct(null)}
+        title={relationMode === "category" ? "دسته‌بندی‌های محصول" : "ویترین‌های محصول"}
+        closeText="بستن"
+        rounded="lg"
+        border="base"
+        shadow="lg"
+      >
+        {relationProduct ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-bold text-primary-text">{relationProduct.title || "محصول بدون عنوان"}</div>
+              <span className="text-xs text-secondary-text">
+                {relationMode === "category" ? "حداقل یک دسته‌بندی الزامی است." : "انتخاب ویترین می‌تواند خالی باشد."}
+              </span>
+            </div>
+
+            {relationMode === "category" ? (
+              <div className="flex flex-wrap gap-3">
+                {sortedCategories.map((category) => {
+                  const selected = relationProduct.categoryIds.includes(category.id);
+                  const isLastCategory = selected && relationProduct.categoryIds.length <= 1;
+                  return (
+                    <CategoryOption
+                      key={category.id}
+                      label={category.title}
+                      imageUrl={category.imageUrl}
+                      selected={selected}
+                      size="sm"
+                      disabled={isLastCategory}
+                      onClick={() => void toggleCategoryProduct(category, relationProduct)}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {sortedShowcases.length === 0 ? (
+                  <div className="rounded-md border border-primary-border bg-primary-card p-3 text-sm text-secondary-text">
+                    ویترینی وجود ندارد.
                   </div>
                 ) : null}
                 {sortedShowcases.map((showcase) => {
@@ -2562,8 +2990,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
       <CustomModal
         open={Boolean(previewImage)}
         onClose={() => setPreviewImage("")}
-        title="Product image"
-        closeText="Close"
+        title="تصویر محصول"
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
@@ -2572,7 +3000,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           {previewImage && (
             <img
               src={previewImage}
-              alt="Product image preview"
+              alt="پیش‌نمایش تصویر محصول"
               className="max-h-[75vh] w-full object-contain"
             />
           )}

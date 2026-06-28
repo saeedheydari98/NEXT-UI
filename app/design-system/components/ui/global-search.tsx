@@ -113,7 +113,7 @@ export function GlobalSearch() {
             type="text"
             value={value}
             onChange={(e) => updateSearchValue(e.target.value)}
-            placeholder=" search products ..."
+            placeholder="جست‌وجوی محصول..."
             autoComplete="new-password"
             autoCorrect="off"
             autoCapitalize="none"
@@ -138,7 +138,7 @@ export function GlobalSearch() {
             }}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
-            aria-label="global-search"
+            aria-label="جست‌وجوی محصولات"
           />
 
           <button
@@ -153,7 +153,7 @@ export function GlobalSearch() {
 
               submit();
             }}
-            aria-label="submit-search"
+            aria-label="ثبت جست‌وجو"
             className={`absolute top-1/2 flex -translate-y-1/2 items-center justify-center text-secondary-text md:right-1.5 md:p-0.5 ${isOpen ? "right-1.5 p-0.5" : "left-1/2 -translate-x-1/2 p-0.5 md:left-auto md:translate-x-0"}`}
           >
             <FiSearch />
@@ -163,7 +163,7 @@ export function GlobalSearch() {
             <button
               type="button"
               onClick={close}
-              aria-label="close-search"
+              aria-label="بستن جست‌وجو"
               className="absolute left-1.5 top-1/2 flex -translate-y-1/2 items-center justify-center p-0.5 text-secondary-text"
             >
               <IoClose />

@@ -80,6 +80,7 @@ export type CategoryRecord = {
   id: string;
   title: string;
   slug?: string;
+  imageUrl?: string | null;
   active?: boolean;
   sortOrder?: number | string;
 };
@@ -91,8 +92,12 @@ export type BannerRecord = {
   imageUrls?: string[];
   images?: unknown;
   active?: boolean;
+  showOnHome?: boolean;
+  showOnShowcase?: boolean;
   intervalSeconds?: number | string;
   heightPercent?: number | string;
+  homeSortOrder?: number | string;
+  showcaseSortOrder?: number | string;
   sortOrder?: number;
   placement?: number | string;
 };
@@ -210,6 +215,12 @@ function getBannerImageUrls(banner: BannerRecord) {
     return banner.imageUrls.map((item) => String(item)).filter(Boolean);
   }
 
+  if (banner.images && typeof banner.images === "object" && !Array.isArray(banner.images)) {
+    const images = banner.images as { urls?: unknown; imageUrls?: unknown };
+    const urls = Array.isArray(images.urls) ? images.urls : images.imageUrls;
+    return Array.isArray(urls) ? urls.map((item) => String(item)).filter(Boolean) : [];
+  }
+
   if (!Array.isArray(banner.images)) return [];
 
   return banner.images
@@ -221,6 +232,31 @@ function getBannerImageUrls(banner: BannerRecord) {
       return "";
     })
     .filter(Boolean);
+}
+
+function getBannerMeta(banner: BannerRecord) {
+  const images = banner.images && typeof banner.images === "object" && !Array.isArray(banner.images)
+    ? banner.images as Partial<BannerRecord>
+    : {};
+  const showcaseId = String(banner.showcaseId ?? images.showcaseId ?? "").trim();
+  const hasExplicitTargets = typeof banner.showOnHome === "boolean"
+    || typeof banner.showOnShowcase === "boolean"
+    || typeof images.showOnHome === "boolean"
+    || typeof images.showOnShowcase === "boolean";
+  const showOnHome = hasExplicitTargets
+    ? (banner.showOnHome ?? images.showOnHome) !== false
+    : !showcaseId;
+  const showOnShowcase = hasExplicitTargets
+    ? (banner.showOnShowcase ?? images.showOnShowcase) === true
+    : Boolean(showcaseId);
+  const homeSortOrder = Number.isFinite(Number(banner.homeSortOrder ?? images.homeSortOrder))
+    ? Number(banner.homeSortOrder ?? images.homeSortOrder)
+    : getPlacement(banner, 0);
+  const showcaseSortOrder = Number.isFinite(Number(banner.showcaseSortOrder ?? images.showcaseSortOrder))
+    ? Number(banner.showcaseSortOrder ?? images.showcaseSortOrder)
+    : getPlacement(banner, 0);
+
+  return { showcaseId, showOnHome, showOnShowcase, homeSortOrder, showcaseSortOrder };
 }
 
 export function normalizeColorStock(value: unknown) {
@@ -304,6 +340,7 @@ function normalizeCategoryRecord(category: CategoryRecord, fallbackOrder: number
     id: String(category.id ?? (slug || `category-${fallbackOrder}`)),
     title: title || `Category ${fallbackOrder}`,
     slug,
+    imageUrl: String(category.imageUrl ?? "").trim(),
     active: category.active !== false,
     sortOrder: placement,
   };
@@ -312,15 +349,17 @@ function normalizeCategoryRecord(category: CategoryRecord, fallbackOrder: number
 function normalizeBannerRecord(banner: BannerRecord, fallbackOrder: number): BannerRecord {
   const placement = getPlacement(banner, fallbackOrder);
   const imageUrls = getBannerImageUrls(banner);
+  const meta = getBannerMeta(banner);
 
   return {
     ...banner,
+    ...meta,
     imageUrls,
     active: banner.active !== false,
     intervalSeconds: Number.isFinite(Number(banner.intervalSeconds)) ? Math.max(1, Math.round(Number(banner.intervalSeconds))) : 5,
     heightPercent: Number.isFinite(Number(banner.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(banner.heightPercent)))) : 28,
-    sortOrder: placement,
-    placement,
+    sortOrder: meta.homeSortOrder || placement,
+    placement: meta.homeSortOrder || placement,
   };
 }
 
@@ -463,9 +502,9 @@ function resolveTree(apiData: ProductsCache): CatalogTree {
           sections: [
             ...apiData.banners.map((banner, index) => ({
               type: "banner" as const,
-              sortOrder: getPlacement(banner, index + 1),
+              sortOrder: Number(banner.homeSortOrder ?? getPlacement(banner, index + 1)),
               item: banner,
-            })),
+            })).filter((section) => section.item.showOnHome !== false),
             ...apiData.showcases.map((showcase, index) => ({
               type: "showcase" as const,
               sortOrder: getPlacement(showcase, index + 1),

@@ -27,7 +27,7 @@ export default function ShowcaseLink({
       size={size}
       rounded="full"
     >
-      {children ?? "See all"}
+      {children ?? "مشاهده همه"}
     </CustomLink>
   );
 }

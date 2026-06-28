@@ -52,9 +52,14 @@ export type Showcase = {
 export type Banner = {
   id: string;
   title: string;
+  showcaseId?: string | null;
   imageUrls: string[];
   active: boolean;
+  showOnHome?: boolean;
+  showOnShowcase?: boolean;
   intervalSeconds?: number | string;
   heightPercent?: number | string;
+  homeSortOrder?: number | string;
+  showcaseSortOrder?: number | string;
   sortOrder: number;
 };

@@ -15,12 +15,12 @@ import ColorStockDots from "@/app/design-system/components/ui/color-stock-dots";
 
 const LOADING_PRODUCT: ProductRecord = {
   id: "loading-product",
-  title: "Product title placeholder text",
-  description: "Description line one for layout sizing\nDescription line two continues here",
+  title: "عنوان محصول",
+  description: "توضیح کوتاه محصول برای پیش‌نمایش\nادامه توضیحات محصول در این بخش نمایش داده می‌شود",
   price: "$2,499",
   originalPrice: "$2,899",
   discountPercent: 15,
-  badge: "Featured",
+  badge: "ویژه",
   active: true,
   sortOrder: 1,
 };
@@ -49,7 +49,7 @@ function formatDate(value?: string | null) {
   if (!value) return "";
   const time = new Date(value).getTime();
   if (!Number.isFinite(time)) return String(value);
-  return new Date(time).toLocaleDateString("en-US", {
+  return new Date(time).toLocaleDateString("fa-IR", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -96,7 +96,7 @@ export default function ProductPage() {
       const response = await fetch(`/api/products/${numericProductId}/comments`, { cache: "no-store" });
       const data = await response.json();
       if (!response.ok || data?.ok === false) {
-        throw new Error(data?.message || "Reviews could not be loaded.");
+        throw new Error(data?.message || "دیدگاه‌ها بارگذاری نشدند.");
       }
       const comments = Array.isArray(data?.data?.comments) ? data.data.comments : [];
       setReviews(comments.map((comment: any) => ({
@@ -141,18 +141,18 @@ export default function ProductPage() {
     setReviewError("");
 
     if (rating && !isPurchased) {
-      setReviewError("Only customers who purchased this product can submit a rating. You may still leave a comment.");
+      setReviewError("فقط خریداران این محصول می‌توانند امتیاز ثبت کنند. همچنان می‌توانید دیدگاه متنی بنویسید.");
       return;
     }
 
     if (rating && hasRated) {
-      setReviewError("You have already submitted a star rating for this product.");
+      setReviewError("شما قبلا برای این محصول امتیاز ثبت کرده‌اید.");
       return;
     }
 
     const numericProductId = Number(productApiId);
     if (!Number.isInteger(numericProductId) || numericProductId <= 0) {
-      setReviewError("Product is not ready for reviews yet.");
+      setReviewError("این محصول هنوز برای ثبت دیدگاه آماده نیست.");
       return;
     }
 
@@ -167,7 +167,7 @@ export default function ProductPage() {
       });
       const data = await response.json();
       if (!response.ok || data?.ok === false) {
-        throw new Error(data?.message || "Review could not be submitted.");
+        throw new Error(data?.message || "دیدگاه ثبت نشد.");
       }
       setText("");
       setRating(undefined);
@@ -177,13 +177,13 @@ export default function ProductPage() {
         await refresh();
       }
     } catch (error) {
-      setReviewError(error instanceof Error ? error.message : "Review could not be submitted.");
+      setReviewError(error instanceof Error ? error.message : "دیدگاه ثبت نشد.");
     }
   };
 
   const addToCart = async (item: ProductRecord) => {
     if (Number(item.stockQuantity ?? 0) <= 0) {
-      setCartMessage(`${item.title} is out of stock.`);
+      setCartMessage(`${item.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 2000);
       return;
     }
@@ -194,7 +194,7 @@ export default function ProductPage() {
     }
 
     await addProductToCart(item, 1, cartColor);
-    setCartMessage(`${item.title} added to cart.`);
+    setCartMessage(`${item.title} به سبد خرید اضافه شد.`);
     window.setTimeout(() => setCartMessage(""), 2000);
   };
 
@@ -236,7 +236,7 @@ export default function ProductPage() {
                   <span className="text-sm font-semibold text-primary-text">4.8</span>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading>
-                  <span className="text-sm text-secondary-text">(128 reviews)</span>
+                  <span className="text-sm text-secondary-text">(۱۲۸ دیدگاه)</span>
                 </Loading>
               </div>
               <div className="flex flex-col gap-1 rounded-xl border border-border-default bg-primary-card p-4">
@@ -251,7 +251,7 @@ export default function ProductPage() {
               </div>
               <div className="flex flex-col gap-2">
                 <Loading loading="skeleton-item" isLoading>
-                  <div className="text-sm font-bold text-primary-text">About this product</div>
+                  <div className="text-sm font-bold text-primary-text">درباره این محصول</div>
                 </Loading>
                 <Loading loading="skeleton-item" isLoading>
                   <div className="text-sm leading-7 text-secondary-text whitespace-pre-wrap">
@@ -262,7 +262,7 @@ export default function ProductPage() {
               <div className="flex flex-wrap gap-3">
               <Loading loading="skeleton-item" isLoading>
                 <CustomButton type="button" variant="success" border="base" icon={<IoBagAddOutline />}>
-                  Add to cart
+                  افزودن به سبد
                 </CustomButton>
               </Loading>
             </div>
@@ -272,11 +272,11 @@ export default function ProductPage() {
           <section className="flex w-full flex-col gap-8 rounded-2xl border border-border-default bg-primary-soft p-6 shadow-sm">
             <div className="flex flex-col gap-2 border-b border-border-default pb-6">
               <Loading loading="skeleton-item" isLoading>
-                <div className="text-2xl font-bold text-primary-text">Customer reviews</div>
+              <div className="text-2xl font-bold text-primary-text">دیدگاه‌های خریداران</div>
               </Loading>
               <Loading loading="skeleton-item" isLoading>
                 <div className="text-sm text-secondary-text">
-                  Read what shoppers think about this product.
+                  نظر خریداران درباره این محصول را بخوانید.
                 </div>
               </Loading>
             </div>
@@ -290,14 +290,14 @@ export default function ProductPage() {
                     <StarRating value={4} size="lg" />
                   </Loading>
                   <Loading loading="skeleton-item" isLoading>
-                    <div className="text-sm text-secondary-text">128 rated reviews</div>
+                    <div className="text-sm text-secondary-text">۱۲۸ دیدگاه امتیازدار</div>
                   </Loading>
                 </div>
               </div>
               <div className="flex flex-1 flex-col gap-4">
                 <div className="flex flex-col gap-4 rounded-xl border border-border-default bg-primary-card p-5">
                   <Loading loading="skeleton-item" isLoading>
-                    <div className="text-lg font-bold">Write a review</div>
+                    <div className="text-lg font-bold">ثبت دیدگاه</div>
                   </Loading>
                   <Loading loading="skeleton-item" isLoading>
                     <div className="min-h-28 w-full rounded-lg border border-border-default bg-primary-media" />
@@ -314,8 +314,8 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 bg-bg-base p-6">
-        <div className="text-lg font-bold text-primary-text">Product not found</div>
-        <div className="text-sm text-secondary-text">The requested product could not be located.</div>
+        <div className="text-lg font-bold text-primary-text">محصول پیدا نشد</div>
+        <div className="text-sm text-secondary-text">محصول موردنظر در فروشگاه پیدا نشد.</div>
       </div>
     );
   }
@@ -324,20 +324,20 @@ export default function ProductPage() {
   const finalPrice = formatPrice(getFinalPrice(product));
   const originalPrice = formatPrice(product.originalPrice);
   const detailRows = [
-    ["Brand", product.brand],
-    ["Vendor", product.vendor],
+    ["برند", product.brand],
+    ["فروشنده", product.vendor],
     ["SKU", product.sku],
     ["Barcode", product.barcode],
-    ["Manufacture year", product.manufactureYear],
-    ["Category", product.categoryId],
-    ["Stock status", product.stockStatus],
-    ["Minimum order", product.minOrder],
-    ["Maximum order", product.maxOrder],
-    ["Weight", product.weight],
-    ["Length", product.length],
-    ["Width", product.width],
-    ["Height", product.height],
-    ["Published", formatDate(product.publishedAt)],
+    ["سال تولید", product.manufactureYear],
+    ["دسته‌بندی", product.categoryId],
+    ["وضعیت موجودی", product.stockStatus],
+    ["حداقل سفارش", product.minOrder],
+    ["حداکثر سفارش", product.maxOrder],
+    ["وزن", product.weight],
+    ["طول", product.length],
+    ["عرض", product.width],
+    ["ارتفاع", product.height],
+    ["تاریخ انتشار", formatDate(product.publishedAt)],
   ].filter(([, value]) => String(value ?? "").trim());
   const finalPriceDate = formatDate(product.updatedAt || product.publishedAt || product.createdAt);
 
@@ -382,14 +382,14 @@ export default function ProductPage() {
               <button
                 type="button"
                 onClick={scrollToReviews}
-                className="flex w-fit flex-wrap items-center gap-3 rounded-lg text-left transition-opacity hover:opacity-80"
+                className="flex w-fit flex-wrap items-center gap-3 rounded-lg text-right transition-opacity hover:opacity-80"
               >
                 <StarRating value={avgRating} size="md" />
                 <span className="text-sm font-semibold text-primary-text">
-                  {avgRating > 0 ? avgRating.toFixed(1) : "No ratings"}
+                  {avgRating > 0 ? avgRating.toFixed(1) : "بدون امتیاز"}
                 </span>
                 <span className="text-sm text-secondary-text">
-                  ({reviews.length} review{reviews.length === 1 ? "" : "s"})
+                  ({reviews.length} دیدگاه)
                 </span>
               </button>
             </div>
@@ -399,17 +399,17 @@ export default function ProductPage() {
                 <div className="text-sm text-danger-text-nomode line-through">{originalPrice}</div>
               ) : null}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="text-3xl font-bold text-primary">{finalPrice || "No price"}</div>
+                <div className="text-3xl font-bold text-primary">{finalPrice || "بدون قیمت"}</div>
                 {discountPercent > 0 ? (
                   <CustomTag size="xs" rounded="full" border="base">
-                    {discountPercent}% off
+                    {discountPercent}٪ تخفیف
                   </CustomTag>
                 ) : null}
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="text-sm font-bold text-primary-text">About this product</div>
+              <div className="text-sm font-bold text-primary-text">درباره این محصول</div>
               <div className="text-sm leading-7 text-secondary-text whitespace-pre-wrap">
                 {product.description}
               </div>
@@ -423,7 +423,7 @@ export default function ProductPage() {
                 icon={<IoBagAddOutline />}
                 onClick={() => addToCart(product)}
               >
-                Add to cart
+                افزودن به سبد
               </CustomButton>
             </div>
             </div>
@@ -433,9 +433,9 @@ export default function ProductPage() {
         <section id="product-tabs" className="flex min-w-0 flex-1 flex-col gap-4">
           <div className="flex flex-wrap gap-2 border-b border-primary-border">
             {[
-              { id: "details", label: "Product details" },
-              { id: "reviews", label: "Reviews and rating" },
-              { id: "price", label: "Price changes" },
+              { id: "details", label: "جزئیات محصول" },
+              { id: "reviews", label: "دیدگاه و امتیاز" },
+              { id: "price", label: "تغییرات قیمت" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -454,7 +454,7 @@ export default function ProductPage() {
             <Loading loading="skeleton-card" isLoading={catalogLoading}>
               <section className="flex flex-col gap-6 rounded-2xl border border-primary-border bg-primary-soft p-6">
                 <div className="flex flex-col gap-2">
-                  <div className="text-2xl font-bold text-primary-text">Full product information</div>
+                  <div className="text-2xl font-bold text-primary-text">اطلاعات کامل محصول</div>
                   <div className="text-sm leading-7 text-secondary-text whitespace-pre-wrap">{product.description}</div>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -464,13 +464,13 @@ export default function ProductPage() {
                       <span className="text-sm font-bold text-primary-text">{String(value)}</span>
                     </div>
                   )) : (
-                    <div className="text-sm text-secondary-text">No additional product fields are available.</div>
+                    <div className="text-sm text-secondary-text">اطلاعات تکمیلی برای این محصول ثبت نشده است.</div>
                   )}
                 </div>
                 <div className="flex flex-col gap-2 rounded-md border border-primary-border bg-primary-card p-3">
-                  <div className="text-sm font-bold text-primary-text">Color inventory</div>
+                  <div className="text-sm font-bold text-primary-text">موجودی رنگ‌ها</div>
                   <span className="text-sm font-semibold text-secondary-text">
-                    Total stock: {Number(product.stockQuantity ?? 0)}
+                    موجودی کل: {Number(product.stockQuantity ?? 0)}
                   </span>
                   <ColorStockDots
                     value={product.colorStock}
@@ -504,17 +504,17 @@ export default function ProductPage() {
             <Loading loading="skeleton-card" isLoading={catalogLoading}>
               <section className="flex flex-col gap-5 rounded-2xl border border-primary-border bg-primary-soft p-6">
                 <div className="flex flex-col gap-2">
-                  <div className="text-2xl font-bold text-primary-text">Price changes</div>
-                  <div className="text-sm text-secondary-text">Final product price and the date it was recorded.</div>
+                  <div className="text-2xl font-bold text-primary-text">تغییرات قیمت</div>
+                  <div className="text-sm text-secondary-text">قیمت نهایی محصول و تاریخ ثبت آن.</div>
                 </div>
                 <div className="flex flex-col gap-1 rounded-md border border-primary-border bg-primary-card p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm font-bold text-primary-text">Final price</span>
+                    <span className="text-sm font-bold text-primary-text">قیمت نهایی</span>
                     <span className="text-xs text-secondary-text">
-                      {finalPriceDate ? `Recorded on ${finalPriceDate}` : "Recorded date is not available"}
+                      {finalPriceDate ? `ثبت شده در ${finalPriceDate}` : "تاریخ ثبت قیمت موجود نیست"}
                     </span>
                   </div>
-                  <span className="text-lg font-bold text-primary">{finalPrice || "No price"}</span>
+                  <span className="text-lg font-bold text-primary">{finalPrice || "بدون قیمت"}</span>
                 </div>
               </section>
             </Loading>

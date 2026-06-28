@@ -47,15 +47,15 @@ export function ShowcaseSection({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Loading loading="skeleton-item" isLoading={isLoading}>
-            <div className="text-xl font-bold">{showcase.title || "Untitled showcase"}</div>
+            <div className="text-xl font-bold">{showcase.title || "ویترین بدون عنوان"}</div>
           </Loading>
         </div>
         <div className="flex items-center gap-2">
           <Loading loading="skeleton-item" isLoading={isLoading}>
-            <span className="text-xs font-semibold text-secondary-text">{products.length} items</span>
+            <span className="text-xs font-semibold text-secondary-text">{products.length} محصول</span>
           </Loading>
           <Loading loading="skeleton-item" isLoading={isLoading}>
-            <ShowcaseLink showcaseId={showcase.id} showcaseTitle={showcase.title}>See all</ShowcaseLink>
+            <ShowcaseLink showcaseId={showcase.id} showcaseTitle={showcase.title}>مشاهده همه</ShowcaseLink>
           </Loading>
         </div>
       </div>
@@ -80,7 +80,7 @@ export function ShowcaseSection({
                 className="relative flex min-h-28 w-1/3 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media"
                 onClick={() => onPreview(product.imageUrl)}
                 disabled={isLoading || !product.imageUrl}
-                aria-label="Open product image"
+                aria-label="باز کردن تصویر محصول"
               >
                 <Loading loading="skeleton-item" isLoading={isLoading} className="h-full w-full">
                   <div className="flex h-full w-full items-center justify-center">
@@ -126,7 +126,7 @@ export function ShowcaseSection({
                   </div>
                   {getDiscountPercent(product) > 0 && !isLoading ? (
                     <CustomTag size="xs" rounded="full" border="base">
-                      {getDiscountPercent(product)}% off
+                      {getDiscountPercent(product)}٪ تخفیف
                     </CustomTag>
                   ) : null}
                 </div>
@@ -153,13 +153,13 @@ export function ShowcaseSection({
                   icon={<IoBagAddOutline />}
                   onClick={() => onAddToCart(product)}
                 >
-                  Add to cart
+                  افزودن به سبد
                 </CustomButton>
               </Loading>
               <Loading loading="skeleton-item" isLoading={isLoading} className="flex-1">
                 <div className="flex flex-1 gap-2 w-full">
                   <ProductLink iconAfter={<FiExternalLink />} className="w-full flex justify-center items-center gap-1" productId={product.id ?? String(product.id)} productTitle={product.title}>
-                    {product.ctaLabel || "View"}  
+                    {product.ctaLabel || "مشاهده"}  
                   </ProductLink>
                 </div>
               </Loading>

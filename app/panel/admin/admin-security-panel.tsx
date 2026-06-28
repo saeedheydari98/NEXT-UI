@@ -42,7 +42,7 @@ export function AdminSecurityPanel() {
   const loadAdminRequests = async () => {
     const res = await fetch("/api/admin/security/requests", { cache: "no-store" });
     const data = await res.json();
-    if (!res.ok || data?.ok === false) throw new Error(data?.error || "Admin requests load failed.");
+    if (!res.ok || data?.ok === false) throw new Error(data?.error || "بارگذاری درخواست‌های مدیریت ناموفق بود.");
     setAdminRequests(Array.isArray(data?.data?.requests) ? data.data.requests : []);
   };
 
@@ -74,11 +74,11 @@ export function AdminSecurityPanel() {
         body: JSON.stringify({ id, approved }),
       });
       const data = await res.json();
-      if (!res.ok || data?.ok === false) throw new Error(data?.error || "Admin request update failed.");
+      if (!res.ok || data?.ok === false) throw new Error(data?.error || "به‌روزرسانی درخواست مدیریت ناموفق بود.");
       await loadAdminRequests();
-      setStatus(approved ? "Admin request approved." : "Admin request rejected.");
+      setStatus(approved ? "درخواست مدیریت تایید شد." : "درخواست مدیریت رد شد.");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Admin request update failed.");
+      setStatus(error instanceof Error ? error.message : "به‌روزرسانی درخواست مدیریت ناموفق بود.");
     }
   };
 
@@ -92,10 +92,10 @@ export function AdminSecurityPanel() {
       const saved = await saveAdminPanelLock(nextLocked);
       setHasAdminCode(saved.hasCode);
       setIsPanelLocked(saved.isPanelLocked);
-      setStatus(saved.isPanelLocked ? "Admin panel is locked for everyone else." : "Admin panel is open for everyone.");
+      setStatus(saved.isPanelLocked ? "پنل مدیریت برای دیگر کاربران قفل شد." : "پنل مدیریت برای همه باز است.");
     } catch (error) {
       setIsPanelLocked(previousLocked);
-      setStatus(error instanceof Error ? error.message : "Admin lock update failed.");
+      setStatus(error instanceof Error ? error.message : "به‌روزرسانی قفل مدیریت ناموفق بود.");
     } finally {
       setSavingLock(false);
     }
@@ -104,7 +104,7 @@ export function AdminSecurityPanel() {
   const saveSecurityCode = async () => {
     if ((hasAdminCode && !currentAdminCode.trim()) || !adminCode.trim() || !confirmAdminCode.trim()) {
       setShowCodeRequiredErrors(true);
-      setStatus("Required admin code fields must be filled.");
+      setStatus("فیلدهای ضروری کد مدیریت باید تکمیل شوند.");
       window.setTimeout(() => scrollToFirstInvalidField(codeFormRef.current), 0);
       return;
     }
@@ -122,11 +122,11 @@ export function AdminSecurityPanel() {
       setShowCodeRequiredErrors(false);
       setStatus(
         saved.isPanelLocked
-          ? "Admin security code saved. Admin access is locked until the code is entered again."
-          : "Admin security code saved. Admin panel remains open for everyone until locked."
+          ? "کد امنیتی مدیریت ذخیره شد. دسترسی مدیریت تا ورود دوباره کد قفل می‌ماند."
+          : "کد امنیتی مدیریت ذخیره شد. پنل مدیریت تا زمان قفل شدن برای همه باز می‌ماند."
       );
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Admin security code save failed.");
+      setStatus(error instanceof Error ? error.message : "ذخیره کد امنیتی مدیریت ناموفق بود.");
     } finally {
       setSavingCode(false);
     }
@@ -146,15 +146,15 @@ export function AdminSecurityPanel() {
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-primary-border bg-primary-bg p-4 text-primary-text">
       <div className="flex flex-col gap-1">
-        <div className="text-base font-bold text-primary-text">Admin panel lock</div>
+        <div className="text-base font-bold text-primary-text">قفل پنل مدیریت</div>
         <div className="text-sm text-primary-text">
-          Set the code that unlocks admin access for each profile.
+          کدی را تنظیم کنید که دسترسی مدیریت را برای هر پروفایل باز می‌کند.
         </div>
       </div>
 
       {checkedSuperadmin && !isSuperadmin ? (
         <div className="rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
-          Only the superadmin account can change admin security settings.
+          فقط حساب مدیر ارشد می‌تواند تنظیمات امنیت مدیریت را تغییر دهد.
         </div>
       ) : null}
 
@@ -173,43 +173,43 @@ export function AdminSecurityPanel() {
         />
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col gap-1">
-            <div className="text-sm font-bold text-primary-text">Panel access</div>
+            <div className="text-sm font-bold text-primary-text">دسترسی پنل</div>
             <span className="text-xs text-secondary-text">
-              {isPanelLocked ? "Locked: only unlocked profiles can open admin." : "Unlocked: everyone can open admin."}
+              {isPanelLocked ? "قفل: فقط پروفایل‌های تاییدشده می‌توانند پنل مدیریت را باز کنند." : "باز: همه می‌توانند پنل مدیریت را باز کنند."}
             </span>
           </div>
           <CustomSwitch
             checked={isPanelLocked}
             onChange={togglePanelLock}
             isLoading={savingLock}
-            label={isPanelLocked ? "Locked" : "Open"}
+            label={isPanelLocked ? "قفل" : "باز"}
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
         <div className="flex flex-col gap-1">
-          <div className="text-sm font-bold text-primary-text">Admin security code</div>
+          <div className="text-sm font-bold text-primary-text">کد امنیتی مدیریت</div>
           <span className="text-xs text-secondary-text">
-            {hasAdminCode ? "Custom code is active." : "Set a custom code for admin access."}
+            {hasAdminCode ? "کد اختصاصی فعال است." : "برای دسترسی مدیریت یک کد اختصاصی تنظیم کنید."}
           </span>
         </div>
         {hasAdminCode ? (
           <div className="flex flex-col gap-2">
-          <RequiredLabel required className="text-primary-text">Current code</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">کد فعلی</RequiredLabel>
           <CustomInput
             name="admin-security-current-code"
             value={currentAdminCode}
             type={showCurrentCode ? "text" : "password"}
-            placeholder="Current code"
+            placeholder="کد فعلی"
             autoComplete="current-password"
-            aria-label="Current admin security code"
+            aria-label="کد امنیتی فعلی مدیریت"
             invalid={showCodeRequiredErrors && !currentAdminCode.trim()}
             showLabel={false}
             iconAfter={passwordVisibilityButton(
               showCurrentCode,
               () => setShowCurrentCode((isVisible) => !isVisible),
-              showCurrentCode ? "Hide current admin code" : "Show current admin code"
+              showCurrentCode ? "پنهان کردن کد فعلی مدیریت" : "نمایش کد فعلی مدیریت"
             )}
             onChange={(event) => {
               setCurrentAdminCode(event.target.value);
@@ -219,20 +219,20 @@ export function AdminSecurityPanel() {
           </div>
         ) : null}
         <div className="flex flex-col gap-2">
-        <RequiredLabel required className="text-primary-text">New code</RequiredLabel>
+        <RequiredLabel required className="text-primary-text">کد جدید</RequiredLabel>
         <CustomInput
           name="admin-security-new-code"
           value={adminCode}
           type={showAdminCode ? "text" : "password"}
-          placeholder="New code"
+          placeholder="کد جدید"
           autoComplete="new-password"
-          aria-label="New admin security code"
+          aria-label="کد امنیتی جدید مدیریت"
           invalid={showCodeRequiredErrors && !adminCode.trim()}
           showLabel={false}
           iconAfter={passwordVisibilityButton(
             showAdminCode,
             () => setShowAdminCode((isVisible) => !isVisible),
-            showAdminCode ? "Hide new admin code" : "Show new admin code"
+            showAdminCode ? "پنهان کردن کد جدید مدیریت" : "نمایش کد جدید مدیریت"
           )}
           onChange={(event) => {
             setAdminCode(event.target.value);
@@ -241,20 +241,20 @@ export function AdminSecurityPanel() {
         />
         </div>
         <div className="flex flex-col gap-2">
-        <RequiredLabel required className="text-primary-text">Confirm new code</RequiredLabel>
+        <RequiredLabel required className="text-primary-text">تکرار کد جدید</RequiredLabel>
         <CustomInput
           name="admin-security-confirm-code"
           value={confirmAdminCode}
           type={showConfirmAdminCode ? "text" : "password"}
-          placeholder="Confirm new code"
+          placeholder="تکرار کد جدید"
           autoComplete="new-password"
-          aria-label="Confirm new admin security code"
+          aria-label="تکرار کد امنیتی جدید مدیریت"
           invalid={showCodeRequiredErrors && !confirmAdminCode.trim()}
           showLabel={false}
           iconAfter={passwordVisibilityButton(
             showConfirmAdminCode,
             () => setShowConfirmAdminCode((isVisible) => !isVisible),
-            showConfirmAdminCode ? "Hide confirmed admin code" : "Show confirmed admin code"
+            showConfirmAdminCode ? "پنهان کردن تکرار کد مدیریت" : "نمایش تکرار کد مدیریت"
           )}
           onChange={(event) => {
             setConfirmAdminCode(event.target.value);
@@ -270,7 +270,7 @@ export function AdminSecurityPanel() {
           loadingText="Saving..."
           onClick={saveSecurityCode}
         >
-          Save security code
+          ذخیره کد امنیتی
         </CustomButton>
       </div>
 
@@ -282,11 +282,11 @@ export function AdminSecurityPanel() {
 
         <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
           <div className="flex flex-col gap-1">
-            <div className="text-sm font-bold text-primary-text">Admin requests</div>
-            <span className="text-xs text-secondary-text">Approve users who entered the admin code.</span>
+            <div className="text-sm font-bold text-primary-text">درخواست‌های مدیریت</div>
+            <span className="text-xs text-secondary-text">کاربرانی را که کد مدیریت را وارد کرده‌اند تایید کنید.</span>
           </div>
           {adminRequests.length === 0 ? (
-            <span className="text-xs text-secondary-text">No requests yet.</span>
+            <span className="text-xs text-secondary-text">هنوز درخواستی ثبت نشده است.</span>
           ) : (
             <div className="flex flex-col gap-2">
               {adminRequests.map((request) => (
@@ -297,10 +297,10 @@ export function AdminSecurityPanel() {
                   </div>
                   <div className="flex gap-2">
                     <CustomButton size="sm" border="base" onClick={() => void reviewAdminRequest(request.id, true)}>
-                      Approve
+                      تایید
                     </CustomButton>
                     <CustomButton size="sm" variant="danger" border="base" onClick={() => void reviewAdminRequest(request.id, false)}>
-                      Reject
+                      رد
                     </CustomButton>
                   </div>
                 </div>

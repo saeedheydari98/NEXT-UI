@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CustomButton } from "@/app/design-system/components/ui/button";
-import { CustomInput } from "@/app/design-system/components/ui/input";
+import { IoCheckmarkCircleOutline } from "react-icons/io5";
+import ProductLink from "@/app/design-system/components/ui/ProductLink";
 import { UserProfilePanel } from "./user-profile-panel";
 import { UserThemePanel } from "./user-theme-panel";
 import { readUserProfile } from "@/lib/user-profile";
@@ -20,82 +20,69 @@ type OrderItem = {
 
 function UserOrdersPanel() {
   const [orders, setOrders] = useState<Array<{ id: string; createdAt: string; items: OrderItem[] }>>([]);
-  const [ratings, setRatings] = useState<Record<string, string>>({});
-  const [comments, setComments] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState("");
 
   useEffect(() => {
     const nationalId = readUserProfile()?.nationalId ?? "";
     const query = nationalId ? `?nationalId=${encodeURIComponent(nationalId)}` : "";
     void fetch(`/api/user/orders${query}`, { cache: "no-store" })
-      .then((res) => res.ok ? res.json() : null)
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => setOrders(Array.isArray(data?.data?.orders) ? data.data.orders : []))
       .catch(() => setOrders([]));
   }, []);
 
-  const submitRating = async (item: OrderItem) => {
-    if (!item.productId) return;
-    const rating = Number(ratings[item.id] ?? 5);
-    const content = (comments[item.id] || "Rated after purchase.").trim();
-    const res = await fetch(`/api/products/${item.productId}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rating, content }),
-    });
-    const data = await res.json();
-    setStatus(res.ok && data?.ok !== false ? "Rating saved." : data?.message || data?.error || "Rating failed.");
-  };
-
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-secondary-border bg-secondary-card p-4 text-primary-text">
       <div className="flex flex-col gap-1">
-        <div className="text-base font-bold text-secondary-text">Purchases</div>
-        <span className="text-sm text-secondary-text">Rate products after payment.</span>
+        <div className="text-base font-bold text-secondary-text">خریدها</div>
+        <span className="text-sm text-secondary-text">
+          برای ثبت دیدگاه و امتیاز، وارد صفحه محصول شوید.
+        </span>
       </div>
       {orders.length === 0 ? (
-        <span className="text-sm text-secondary-text">No purchases yet.</span>
+        <span className="text-sm text-secondary-text">هنوز خریدی ثبت نشده است.</span>
       ) : (
-        <div className="flex flex-col gap-3">
-          {orders.flatMap((order) => order.items.map((item) => (
-            <div key={item.id} className="flex flex-col gap-2 rounded-md border border-secondary-border bg-bg-base p-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media">
-                  {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /> : <span className="text-xs text-secondary-text">No image</span>}
+        <div className="flex flex-wrap gap-3">
+          {orders.flatMap((order) =>
+            order.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex w-full max-w-sm flex-col gap-3 rounded-md border border-secondary-border bg-bg-base p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media">
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-xs text-secondary-text">بدون تصویر</span>
+                    )}
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <span className="text-sm font-bold text-primary-text">{item.title}</span>
+                    <span className="text-xs text-secondary-text">
+                      تعداد: {item.quantity}
+                      {item.selectedColor ? ` | رنگ: ${item.selectedColor}` : ""}
+                    </span>
+                    <span className="text-xs font-semibold text-primary">
+                      {item.discountPrice || item.price || "بدون قیمت"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex min-w-0 flex-col gap-1">
-                  <span className="text-sm font-bold text-primary-text">{item.title}</span>
-                  <span className="text-xs text-secondary-text">
-                    Quantity: {item.quantity}{item.selectedColor ? ` | Color: ${item.selectedColor}` : ""}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-secondary-border pt-2">
+                  <span className="flex items-center gap-1 rounded-full border border-success-border bg-success-bg px-3 py-1 text-xs font-bold text-success-text">
+                    <IoCheckmarkCircleOutline aria-hidden="true" />
+                    <span>خریداری‌شده</span>
                   </span>
-                  <span className="text-xs font-semibold text-primary">
-                    {item.discountPrice || item.price || "No price"}
-                  </span>
+                  {item.productId ? (
+                    <ProductLink productId={item.productId} productTitle={item.title} size="sm">
+                      مشاهده محصول
+                    </ProductLink>
+                  ) : null}
                 </div>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <CustomInput
-                  value={ratings[item.id] ?? "5"}
-                  type="number"
-                  min={1}
-                  max={5}
-                  aria-label="Rating"
-                  onChange={(event) => setRatings((current) => ({ ...current, [item.id]: event.target.value }))}
-                />
-                <CustomInput
-                  value={comments[item.id] ?? ""}
-                  placeholder="Comment"
-                  aria-label="Comment"
-                  onChange={(event) => setComments((current) => ({ ...current, [item.id]: event.target.value }))}
-                />
-                <CustomButton size="sm" variant="secondary" border="base" onClick={() => void submitRating(item)}>
-                  Rate
-                </CustomButton>
-              </div>
-            </div>
-          )))}
+            ))
+          )}
         </div>
       )}
-      {status ? <div className="rounded-md border border-secondary-border bg-secondary-card px-3 py-2 text-sm font-semibold text-secondary-text">{status}</div> : null}
     </section>
   );
 }
@@ -106,12 +93,12 @@ export default function UserPanelPage() {
   return (
     <main className="min-h-screen bg-bg-base p-6 text-primary-text">
       <div className="flex flex-col gap-4">
-        <div className="text-2xl text-user-user-user font-bold">User Control</div>
+        <div className="text-2xl text-user-user-user font-bold">حساب کاربری</div>
         <div className="flex flex-wrap gap-2 rounded-lg border border-secondary-border bg-secondary-card p-2">
           {[
-            { id: "profile", label: "Profile" },
-            { id: "orders", label: "Purchases" },
-            { id: "theme", label: "Theme" },
+            { id: "profile", label: "پروفایل" },
+            { id: "orders", label: "خریدها" },
+            { id: "theme", label: "ظاهر" },
           ].map((tab) => (
             <button
               key={tab.id}

@@ -4,7 +4,8 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { CustomButton } from "./button";
 import { CustomCard } from "./card";
-import { UICommonVariant } from "../../variants/ui.variant";
+import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant";
+import { useTheme } from "../../theme/provider";
 import { LoadingVariant } from "../loading/loading";
 import { borderVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
 
@@ -24,22 +25,32 @@ type CustomModalProps = {
   loadingText?: string;
 };
 
+function withAlpha(color: string, alpha: number) {
+  const match = color.match(/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+  if (!match) return color;
+
+  const [red, green, blue] = match.slice(1).map((value) => Number.parseInt(value, 16));
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 export function CustomModal({
   open,
   onClose,
-  title = "Modal",
+  title = "پنجره",
   children,
   variant = "primary",
   size = "md",
   rounded = "lg",
   border = "base",
   shadow = "lg",
-  closeText = "Close",
+  closeText = "بستن",
   loading = "spinner",
   isLoading = false,
   loadingText,
 }: CustomModalProps) {
+  const { theme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const overlayColor = withAlpha(resolveVariantColors("primary", theme).backgroundColor, 0.08);
 
   React.useEffect(() => {
     setMounted(true);
@@ -49,7 +60,8 @@ export function CustomModal({
 
   const modal = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: overlayColor }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -59,7 +71,7 @@ export function CustomModal({
         size={size}
         rounded={rounded}
         border={border}
-        className="w-full max-w-lg"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto bg-primary-card/95"
         shadow={shadow}
         hover="none"
         onClick={(event) => event.stopPropagation()}

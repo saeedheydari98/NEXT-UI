@@ -23,11 +23,11 @@ export function AdminBannerList({ banner, onEdit, onPreview, isLoading = false }
     >
       <div className="flex items-center justify-between gap-3">
         <Loading loading="skeleton-item" isLoading={isLoading}>
-          <div className="text-xl font-bold text-primary-text">{banner.title || "Untitled banner"}</div>
+          <div className="text-xl font-bold text-primary-text">{banner.title || "بنر بدون عنوان"}</div>
         </Loading>
         <div className="flex justify-center items-center gap-2">
           <Loading loading="skeleton-item" isLoading={isLoading}>
-            <span className="text-xs font-semibold text-secondary-text">{banner.imageUrls.length} images</span>
+            <span className="text-xs font-semibold text-secondary-text">{banner.imageUrls.length} تصویر</span>
           </Loading>
           <Loading loading="skeleton-item" isLoading={isLoading}>
             <CustomButton
@@ -38,7 +38,7 @@ export function AdminBannerList({ banner, onEdit, onPreview, isLoading = false }
               icon={<IoCreateOutline />}
               onClick={() => onEdit(banner)}
             >
-              Edit
+              ویرایش
             </CustomButton>
           </Loading>
         </div>
@@ -54,14 +54,14 @@ export function AdminBannerList({ banner, onEdit, onPreview, isLoading = false }
           className="h-36 w-full"
           onClick={() => onPreview(previewImage)}
           disabled={isLoading || !previewImage}
-          aria-label="Open banner image"
+          aria-label="باز کردن تصویر بنر"
         >
           <Loading loading="skeleton-item" isLoading={isLoading} className="h-full w-full">
             <div className="flex h-full w-full items-center justify-center">
               {previewImage ? (
                 <img
                   src={previewImage}
-                  alt={banner.title || "Banner"}
+                  alt={banner.title || "بنر"}
                   className="h-full w-full object-cover"
                 />
               ) : (

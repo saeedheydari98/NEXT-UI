@@ -67,6 +67,7 @@ export type CategoryForm = {
   id: string;
   title: string;
   slug: string;
+  imageUrl: string;
   active: boolean;
   sortOrder: number;
 };
@@ -74,9 +75,14 @@ export type CategoryForm = {
 export type BannerForm = {
   id: string;
   title: string;
+  showcaseId: string;
   imageUrls: string[];
   active: boolean;
+  showOnHome: boolean;
+  showOnShowcase: boolean;
   intervalSeconds: number;
   heightPercent: number;
+  homeSortOrder: number;
+  showcaseSortOrder: number;
   sortOrder: number;
 };

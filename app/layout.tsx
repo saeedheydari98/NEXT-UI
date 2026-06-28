@@ -9,8 +9,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="flex flex-col min-h-screen">
+    <html lang="fa" dir="rtl">
+      <body className="flex flex-col min-h-screen text-right" dir="rtl">
         <ThemeProvider>
           <AppHeader />
           <main className="flex-1">

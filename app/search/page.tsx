@@ -28,7 +28,7 @@ export default function SearchPage() {
       setLoading(true);
       try {
         const data = await fetchJsonDeduped<any>(`/api/products/search?q=${encodeURIComponent(q)}&limit=24`);
-        if (data?.ok === false) throw new Error(data?.error || "Search request failed");
+        if (data?.ok === false) throw new Error(data?.error || "جست‌وجو ناموفق بود");
         const items = data?.data?.products?.items;
         if (!cancelled) setResults(Array.isArray(items) ? items : []);
       } catch {
@@ -43,14 +43,14 @@ export default function SearchPage() {
 
   const addToCart = async (product: ProductRecord) => {
     if (Number(product.stockQuantity ?? 0) <= 0) {
-      setCartMessage(`${product.title} is out of stock.`);
+      setCartMessage(`${product.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 1800);
       return;
     }
     const colorStock = normalizeColorStock(product.colorStock);
     const selectedColor = Object.entries(colorStock).find(([, count]) => count > 0)?.[0] ?? "";
     await addProductToCart(product, 1, selectedColor);
-    setCartMessage(`${product.title} added to cart.`);
+    setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
     window.setTimeout(() => setCartMessage(""), 1800);
   };
 
@@ -58,13 +58,13 @@ export default function SearchPage() {
     <main className="min-h-screen bg-bg-base text-primary-text">
       <section className="mx-auto w-full px-4 py-8">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-2xl font-bold">Search results for "{q}"</div>
+          <div className="text-2xl font-bold">نتایج جست‌وجو برای «{q}»</div>
         </div>
 
-        {loading && <div className="text-sm text-secondary-text">Searching…</div>}
+        {loading && <div className="text-sm text-secondary-text">در حال جست‌وجو...</div>}
 
         {!loading && results && results.length === 0 && (
-          <div className="text-sm text-secondary-text">No results found.</div>
+          <div className="text-sm text-secondary-text">نتیجه‌ای پیدا نشد.</div>
         )}
 
         {cartMessage ? (
@@ -80,7 +80,7 @@ export default function SearchPage() {
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-3">
                     <div className="w-24 h-24 shrink-0 overflow-hidden rounded bg-primary-media">
-                      {product.imageUrl ? <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" /> : <div className="p-2 text-sm">No image</div>}
+                      {product.imageUrl ? <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" /> : <div className="p-2 text-sm">بدون تصویر</div>}
                     </div>
                     <div className="flex-1 flex flex-col">
                       <div className="text-sm font-bold">{product.title}</div>
@@ -103,9 +103,9 @@ export default function SearchPage() {
                       icon={<IoBagAddOutline />}
                       onClick={() => void addToCart(product)}
                     >
-                      Add
+                      افزودن
                     </CustomButton>
-                    <ProductLink productId={product.id} productTitle={product.title} className="flex-1">View</ProductLink>
+                    <ProductLink productId={product.id} productTitle={product.title} className="flex-1">مشاهده</ProductLink>
                   </div>
                 </div>
               </div>

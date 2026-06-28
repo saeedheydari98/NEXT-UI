@@ -21,7 +21,7 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
   const submitCode = async () => {
     if (!username.trim() || !code.trim()) {
       setShowRequiredError(true);
-      setStatus("Username and security code are required.");
+      setStatus("نام کاربری و کد امنیتی الزامی است.");
       return;
     }
 
@@ -38,9 +38,9 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
         return;
       }
 
-      setStatus("Request sent. Superadmin must approve admin access.");
+      setStatus("درخواست ارسال شد. مدیر ارشد باید دسترسی مدیریت را تایید کند.");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Security code was not accepted.");
+      setStatus(error instanceof Error ? error.message : "کد امنیتی پذیرفته نشد.");
     } finally {
       setIsSubmitting(false);
     }
@@ -49,18 +49,18 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
   return (
     <section className="flex w-full max-w-md flex-col gap-4 rounded-lg border border-primary-border bg-primary-card p-6 shadow-sm">
       <div className="flex flex-col gap-1">
-        <div className="text-xl font-bold text-primary-text">Admin access</div>
+        <div className="text-xl font-bold text-primary-text">دسترسی مدیریت</div>
         <div className="text-sm text-secondary-text">
-          Enter the security code to open the admin panel for the active profile.
+          برای باز کردن پنل مدیریت، کد امنیتی حساب فعال را وارد کنید.
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <RequiredLabel required className="text-primary-text">Username</RequiredLabel>
+        <RequiredLabel required className="text-primary-text">نام کاربری</RequiredLabel>
         <CustomInput
           value={username}
-          placeholder="Enter your username"
-          aria-label="Admin username"
+          placeholder="نام کاربری خود را وارد کنید"
+          aria-label="نام کاربری مدیریت"
           invalid={showRequiredError && !username.trim()}
           onChange={(event) => {
             setUsername(event.target.value);
@@ -68,12 +68,12 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
             setStatus("");
           }}
         />
-        <RequiredLabel required className="text-primary-text">Security code</RequiredLabel>
+        <RequiredLabel required className="text-primary-text">کد امنیتی</RequiredLabel>
         <CustomInput
           value={code}
           type="password"
-          placeholder="Enter admin code"
-          aria-label="Admin access code"
+          placeholder="کد مدیریت را وارد کنید"
+          aria-label="کد دسترسی مدیریت"
           invalid={showRequiredError && !code.trim()}
           onChange={(event) => {
             setCode(event.target.value);
@@ -101,7 +101,7 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
         isLoading={isSubmitting}
         onClick={submitCode}
       >
-        Open admin panel
+        باز کردن پنل مدیریت
       </CustomButton>
     </section>
   );

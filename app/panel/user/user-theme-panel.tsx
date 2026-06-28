@@ -51,14 +51,14 @@ export function UserThemePanel() {
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm font-semibold text-secondary-text">
-            mode: <span className="font-bold text-user-user-user">{mode}</span>
+            حالت: <span className="font-bold text-user-user-user">{mode === "dark" ? "تیره" : "روشن"}</span>
           </div>
           <div
             className="flex flex-wrap items-center gap-2 rounded-full border border-secondary-border p-2"
           >
-            {renderModeButton("system", "device")}
-            {renderModeButton("light", "light")}
-            {renderModeButton("dark", "dark")}
+            {renderModeButton("system", "دستگاه")}
+            {renderModeButton("light", "روشن")}
+            {renderModeButton("dark", "تیره")}
           </div>
         </div>
       </div>
@@ -67,7 +67,7 @@ export function UserThemePanel() {
           <div
             className="rounded-lg border border-secondary-border bg-secondary-card p-3 text-sm font-semibold text-secondary-text"
           >
-            <span>User color panel is locked by admin.</span>
+            <span>پنل رنگ کاربر توسط مدیر قفل شده است.</span>
           </div>
       ) : null}
 

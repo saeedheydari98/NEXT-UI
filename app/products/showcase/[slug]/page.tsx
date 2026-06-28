@@ -13,34 +13,35 @@ import { CustomInput } from "@/app/design-system/components/ui/input";
 import { CustomSelect } from "@/app/design-system/components/ui/select";
 import ProductLink from "@/app/design-system/components/ui/ProductLink";
 import ProductRatingSummary from "@/app/design-system/components/ui/product-rating-summary";
+import { BannerCarousel } from "../../product-showcase/banner-carousel";
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
-  { value: "oldest", label: "Oldest" },
-  { value: "cheapest", label: "Cheapest" },
-  { value: "expensive", label: "Most expensive" },
-  { value: "bestseller", label: "Bestseller" },
-  { value: "mostDiscounted", label: "Most discounted" },
+  { value: "newest", label: "جدیدترین" },
+  { value: "oldest", label: "قدیمی‌ترین" },
+  { value: "cheapest", label: "ارزان‌ترین" },
+  { value: "expensive", label: "گران‌ترین" },
+  { value: "bestseller", label: "پرفروش‌ترین" },
+  { value: "mostDiscounted", label: "بیشترین تخفیف" },
 ];
 
 const LOADING_PRODUCTS = [
   {
     id: "loading-product-1",
-    title: "Product title placeholder",
+    title: "عنوان محصول",
     price: "1299",
-    description: "Short product description for loading layout",
+    description: "توضیح کوتاه محصول",
   },
   {
     id: "loading-product-2",
-    title: "Another product item",
+    title: "محصول نمونه دیگر",
     price: "899",
-    description: "Second product description for sizing",
+    description: "توضیح محصول برای پیش‌نمایش",
   },
   {
     id: "loading-product-3",
-    title: "Premium catalog item",
+    title: "محصول ویژه فروشگاه",
     price: "2499",
-    description: "Third product description for sizing",
+    description: "توضیح کوتاه محصول ویژه",
   },
 ];
 
@@ -48,7 +49,7 @@ export default function ShowcasePage() {
   const params = useParams();
   const rawSlug = params?.slug ?? params?.id ?? "";
   const showcaseId = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
-  const { getShowcaseById, loading } = useProductsCatalog();
+  const { getShowcaseById, banners, loading } = useProductsCatalog();
   const showcase = useMemo(() => getShowcaseById(showcaseId), [getShowcaseById, showcaseId]);
   const products = showcase?.products ?? [];
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,6 +65,7 @@ export default function ShowcasePage() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [sort, setSort] = useState("newest");
   const [cartMessage, setCartMessage] = useState("");
+  const [previewImage, setPreviewImage] = useState("");
 
   const parsePrice = (value: any) => {
     try {
@@ -149,17 +151,28 @@ export default function ShowcasePage() {
     () => sortProductsBy(filteredProducts, sort),
     [filteredProducts, sort]
   );
+  const showcaseBanners = useMemo(
+    () =>
+      banners
+        .filter((banner) =>
+          banner.active !== false
+          && banner.showOnShowcase === true
+          && String(banner.showcaseId ?? "") === String(showcase?.id ?? showcaseId)
+        )
+        .sort((a, b) => Number(a.showcaseSortOrder ?? a.sortOrder ?? 0) - Number(b.showcaseSortOrder ?? b.sortOrder ?? 0)),
+    [banners, showcase?.id, showcaseId]
+  );
 
   const addToCart = async (product: ProductRecord) => {
     if (Number(product.stockQuantity ?? 0) <= 0) {
-      setCartMessage(`${product.title} is out of stock.`);
+      setCartMessage(`${product.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 1800);
       return;
     }
     const colorStock = normalizeColorStock(product.colorStock);
     const selectedColor = Object.entries(colorStock).find(([, count]) => count > 0)?.[0] ?? "";
     await addProductToCart(product, 1, selectedColor);
-    setCartMessage(`${product.title} added to cart.`);
+    setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
     window.setTimeout(() => setCartMessage(""), 1800);
   };
 
@@ -169,7 +182,7 @@ export default function ShowcasePage() {
         <div className="p-4 w-full">
           <div className="flex items-center justify-between">
             <Loading loading="skeleton-item" isLoading>
-              <div className="text-2xl font-bold">Showcase title placeholder</div>
+              <div className="text-2xl font-bold">عنوان ویترین</div>
             </Loading>
           </div>
           <div className="mt-4">
@@ -196,7 +209,7 @@ export default function ShowcasePage() {
                       </div>
                       <div className=" flex gap-2">
                         <Loading loading="skeleton-item" isLoading className="w-full">
-                          <ProductLink productId={product.id ?? product.title} productTitle={product.title} className="w-full" iconAfter={<FiExternalLink />}>View</ProductLink>
+                          <ProductLink productId={product.id ?? product.title} productTitle={product.title} className="w-full" iconAfter={<FiExternalLink />}>مشاهده</ProductLink>
                         </Loading>
                       </div>
                     </div>
@@ -214,7 +227,7 @@ export default function ShowcasePage() {
     <div className="p-4 w-full">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Loading loading="skeleton-item" isLoading={loading}>
-          <div className="text-2xl font-bold">{showcase?.title || `Showcase: ${showcaseId}`}</div>
+          <div className="text-2xl font-bold">{showcase?.title || `ویترین: ${showcaseId}`}</div>
         </Loading>
 
         <div className="w-full sm:w-auto">
@@ -229,7 +242,7 @@ export default function ShowcasePage() {
                   setSearchQuery(event.currentTarget.value.trim());
                 }
               }}
-              placeholder="Search across all products..."
+              placeholder="جست‌وجو بین محصولات..."
               size="sm"
               rounded="full"
               border="base"
@@ -249,7 +262,7 @@ export default function ShowcasePage() {
                     setSearchQuery(event.currentTarget.value.trim());
                   }
                 }}
-                placeholder="Search..."
+                placeholder="جست‌وجو..."
                 size="sm"
                 rounded="full"
                 border="base"
@@ -258,20 +271,20 @@ export default function ShowcasePage() {
                 style={{ backgroundColor: "var(--primary-media)" }}
               />
             ) : (
-              <CustomButton size="sm" variant="neutral" icon={<FiSearch />} onClick={() => setShowMobileSearch(true)}>Search</CustomButton>
+              <CustomButton size="sm" variant="neutral" icon={<FiSearch />} onClick={() => setShowMobileSearch(true)}>جست‌وجو</CustomButton>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <CustomSelect value={sort} aria-label="Sort showcase products" onChange={(event) => setSort(event.target.value)}>
+          <CustomSelect value={sort} aria-label="مرتب‌سازی محصولات ویترین" onChange={(event) => setSort(event.target.value)}>
             {SORT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </CustomSelect>
-          <CustomButton size="sm" variant="secondary" icon={<FiSliders />} onClick={() => setShowFilterModal(true)}>Filter</CustomButton>
+          <CustomButton size="sm" variant="secondary" icon={<FiSliders />} onClick={() => setShowFilterModal(true)}>فیلتر</CustomButton>
         </div>
       </div>
 
@@ -289,8 +302,32 @@ export default function ShowcasePage() {
 
       <div className="mt-4 flex gap-4">
         <main className="flex-1">
+          {showcaseBanners.length > 0 ? (
+            <div className="mb-4 flex flex-col gap-4">
+              {showcaseBanners.map((banner) => (
+                <BannerCarousel
+                  key={banner.id}
+                  banner={{
+                    id: banner.id,
+                    title: banner.title ?? "",
+                    showcaseId: banner.showcaseId,
+                    imageUrls: banner.imageUrls ?? [],
+                    active: banner.active !== false,
+                    showOnHome: banner.showOnHome,
+                    showOnShowcase: banner.showOnShowcase,
+                    intervalSeconds: banner.intervalSeconds,
+                    heightPercent: banner.heightPercent,
+                    homeSortOrder: banner.homeSortOrder,
+                    showcaseSortOrder: banner.showcaseSortOrder,
+                    sortOrder: Number(banner.showcaseSortOrder ?? banner.sortOrder ?? 0),
+                  }}
+                  onPreview={(imageUrl) => setPreviewImage(imageUrl ?? "")}
+                />
+              ))}
+            </div>
+          ) : null}
           {sortedFilteredProducts.length === 0 ? (
-            <div className="text-sm text-secondary-text">No products found for this showcase.</div>
+            <div className="text-sm text-secondary-text">محصولی برای این ویترین پیدا نشد.</div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,220px))] gap-3">
               <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,220px))] gap-3">
@@ -303,7 +340,7 @@ export default function ShowcasePage() {
                             {product.imageUrl ? (
                               <img src={product.imageUrl} alt={product.title} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="p-2 text-sm">No image</div>
+                              <div className="p-2 text-sm">بدون تصویر</div>
                             )}
                           </Loading>
                         </div>
@@ -335,11 +372,11 @@ export default function ShowcasePage() {
                             icon={<IoBagAddOutline />}
                             onClick={() => void addToCart(product)}
                           >
-                            Add
+                            افزودن
                           </CustomButton>
                         </Loading>
                         <Loading loading="skeleton-item" isLoading={loading} className="w-full">
-                          <ProductLink productId={product.id ?? product.title} productTitle={product.title} className="flex-1" iconAfter={<FiExternalLink />}>View</ProductLink>
+                          <ProductLink productId={product.id ?? product.title} productTitle={product.title} className="flex-1" iconAfter={<FiExternalLink />}>مشاهده</ProductLink>
                         </Loading>
                       </div>
                     </div>
@@ -360,10 +397,10 @@ export default function ShowcasePage() {
           <div className="relative flex max-h-[85vh] w-full max-w-sm flex-col gap-4 overflow-y-auto rounded-lg border border-primary-border bg-primary-card p-4 text-primary-text shadow-xl sm:h-full sm:max-h-none sm:w-11/12 sm:max-w-md sm:rounded-none sm:border-y-0 sm:border-r-0">
             <div className="flex items-center justify-between gap-3 border-b border-primary-border pb-4">
               <div className="flex flex-col gap-1">
-                <div className="text-lg font-bold">Filters</div>
-                <div className="text-xs font-semibold text-secondary-text">Refine this showcase</div>
+                <div className="text-lg font-bold">فیلترها</div>
+                <div className="text-xs font-semibold text-secondary-text">نتایج این ویترین را دقیق‌تر کنید</div>
               </div>
-              <CustomButton size="sm" variant="neutral" icon={<FiX />} onClick={() => setShowFilterModal(false)}>Close</CustomButton>
+              <CustomButton size="sm" variant="neutral" icon={<FiX />} onClick={() => setShowFilterModal(false)}>بستن</CustomButton>
             </div>
             <div className="flex flex-col gap-5">
               <div className="flex flex-wrap gap-2">
@@ -375,7 +412,7 @@ export default function ShowcasePage() {
                       : "border-primary-border bg-primary-soft text-secondary-text"
                     }`}
                 >
-                  <span>Active only</span>
+                  <span>فقط فعال‌ها</span>
                 </button>
                 <button
                   type="button"
@@ -385,13 +422,13 @@ export default function ShowcasePage() {
                       : "border-primary-border bg-primary-soft text-secondary-text"
                     }`}
                 >
-                  <span>Deals</span>
+                  <span>تخفیف‌دارها</span>
                 </button>
               </div>
 
               <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-soft p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-bold">Price range</div>
+                  <div className="text-sm font-bold">بازه قیمت</div>
                   <div className="text-xs font-semibold text-primary">
                     ${selectedPriceMin.toLocaleString("en-US")} - ${selectedPriceMax.toLocaleString("en-US")}
                   </div>
@@ -413,7 +450,7 @@ export default function ShowcasePage() {
                       setPriceMin(String(next));
                     }}
                     className="absolute top-1 h-8 w-full cursor-pointer appearance-none bg-transparent accent-primary"
-                    aria-label="Minimum price"
+                    aria-label="حداقل قیمت"
                   />
                   <input
                     type="range"
@@ -425,25 +462,25 @@ export default function ShowcasePage() {
                       setPriceMax(String(next));
                     }}
                     className="absolute top-1 h-8 w-full cursor-pointer appearance-none bg-transparent accent-primary"
-                    aria-label="Maximum price"
+                    aria-label="حداکثر قیمت"
                   />
                 </div>
                 <div className="flex gap-2">
-                  <CustomInput value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="Min" size="sm" />
-                  <CustomInput value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="Max" size="sm" />
+                  <CustomInput value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="حداقل" size="sm" />
+                  <CustomInput value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="حداکثر" size="sm" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2 rounded-lg border border-primary-border bg-primary-soft p-3">
-                <div className="text-sm font-bold">Year range</div>
+                <div className="text-sm font-bold">بازه سال تولید</div>
                 <div className="flex gap-2">
-                  <CustomInput value={yearMin} onChange={(e) => setYearMin(e.target.value)} placeholder="From" size="sm" />
-                  <CustomInput value={yearMax} onChange={(e) => setYearMax(e.target.value)} placeholder="To" size="sm" />
+                  <CustomInput value={yearMin} onChange={(e) => setYearMin(e.target.value)} placeholder="از" size="sm" />
+                  <CustomInput value={yearMax} onChange={(e) => setYearMax(e.target.value)} placeholder="تا" size="sm" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2 rounded-lg border border-primary-border bg-primary-soft p-3">
-                <div className="text-sm font-bold">Category</div>
+                <div className="text-sm font-bold">دسته‌بندی</div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -451,7 +488,7 @@ export default function ShowcasePage() {
                     className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${!selectedCategory ? "border-primary bg-primary text-primary-text" : "border-primary-border bg-primary-card text-secondary-text"
                       }`}
                   >
-                    <span>All</span>
+                    <span>همه</span>
                   </button>
                   {categoryOptions.map((cat) => (
                     <button
@@ -468,7 +505,7 @@ export default function ShowcasePage() {
               </div>
 
               <div className="flex flex-col gap-2 rounded-lg border border-primary-border bg-primary-soft p-3">
-                <div className="text-sm font-bold">Type</div>
+                <div className="text-sm font-bold">نوع محصول</div>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -476,7 +513,7 @@ export default function ShowcasePage() {
                     className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${!selectedType ? "border-primary bg-primary text-primary-text" : "border-primary-border bg-primary-card text-secondary-text"
                       }`}
                   >
-                    <span>All</span>
+                    <span>همه</span>
                   </button>
                   {typeOptions.map((type) => (
                     <button
@@ -493,16 +530,27 @@ export default function ShowcasePage() {
               </div>
 
               <div className="flex gap-2 border-t border-primary-border pt-3">
-                <CustomButton size="sm" variant="primary" onClick={() => setShowFilterModal(false)}>Apply</CustomButton>
+                <CustomButton size="sm" variant="primary" onClick={() => setShowFilterModal(false)}>اعمال</CustomButton>
                 <CustomButton size="sm" variant="neutral" onClick={() => {
                   setPriceMin(""); setPriceMax(""); setYearMin(""); setYearMax(""); setSelectedCategory(""); setSelectedType(""); setOnlyDiscounted(false); setOnlyActive(true); setShowFilterModal(false);
-                }}>Clear</CustomButton>
+                }}>پاک کردن</CustomButton>
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+      {previewImage ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/10 p-4 backdrop-blur-sm" onClick={() => setPreviewImage("")}>
+          <div className="flex max-h-[75vh] w-full max-w-3xl items-center justify-center overflow-hidden rounded-lg border border-primary-border bg-primary-card p-2 shadow-xl">
+            <img
+              src={previewImage}
+              alt="پیش‌نمایش بنر"
+              className="max-h-[72vh] w-full object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
           </div>
         </div>
       ) : null}
     </div>
   );
 }
-

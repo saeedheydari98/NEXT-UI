@@ -26,7 +26,7 @@ type ProductReviewsSectionProps = {
 
 function formatReviewDate(value: string) {
   try {
-    return new Date(value).toLocaleDateString("en-US", {
+    return new Date(value).toLocaleDateString("fa-IR", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -84,9 +84,9 @@ export function ProductReviewsSection({
       className="flex w-full flex-col gap-8 rounded-2xl border border-primary-border bg-primary-soft p-6 shadow-sm"
     >
       <div className="flex flex-col gap-2 border-b border-primary-border pb-6">
-        <div className="text-2xl font-bold text-primary-text">Customer reviews</div>
+        <div className="text-2xl font-bold text-primary-text">دیدگاه‌های خریداران</div>
         <div className="text-sm text-secondary-text">
-          Read what shoppers think and share your own experience with this product.
+          تجربه خریداران را بخوانید و نظر خودتان را درباره این محصول ثبت کنید.
         </div>
       </div>
 
@@ -96,14 +96,14 @@ export function ProductReviewsSection({
             <div className="text-4xl font-bold leading-none text-primary-text">
               {avgRating > 0 ? avgRating.toFixed(1) : "—"}
             </div>
-            <StarRating value={avgRating} size="lg" ariaLabel={`Average rating ${avgRating} out of 5`} />
+            <StarRating value={avgRating} size="lg" ariaLabel={`میانگین امتیاز ${avgRating} از ۵`} />
             <div className="text-sm text-secondary-text">
               {ratedReviews.length > 0
-                ? `${ratedReviews.length} rated review${ratedReviews.length === 1 ? "" : "s"}`
-                : "No star ratings yet"}
+                ? `${ratedReviews.length} دیدگاه امتیازدار`
+                : "هنوز امتیازی ثبت نشده است"}
             </div>
             <div className="text-xs text-secondary-text">
-              {reviews.length} total review{reviews.length === 1 ? "" : "s"}
+              مجموع {reviews.length} دیدگاه
             </div>
           </div>
 
@@ -113,7 +113,7 @@ export function ProductReviewsSection({
 
               return (
                 <div key={item.stars} className="flex items-center gap-3">
-                  <div className="w-12 text-xs font-medium text-secondary-text">{item.stars} star</div>
+                  <div className="w-12 text-xs font-medium text-secondary-text">{item.stars} ستاره</div>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-primary-media">
                     <div
                       className="h-full rounded-full bg-amber-400 transition-all"
@@ -129,10 +129,10 @@ export function ProductReviewsSection({
 
         <div className="flex min-w-0 flex-1 flex-col gap-8">
           <div className="flex flex-col gap-4 rounded-xl border border-primary-border bg-primary-card p-5">
-            <div className="text-lg font-bold text-primary-text">Write a review</div>
+            <div className="text-lg font-bold text-primary-text">ثبت دیدگاه</div>
 
             <div className="flex flex-col gap-2">
-              <div className="text-sm font-medium text-primary-text">Your rating</div>
+              <div className="text-sm font-medium text-primary-text">امتیاز شما</div>
               <div className="flex flex-wrap items-center gap-3">
                 <StarRating
                   value={rating ?? 0}
@@ -142,47 +142,47 @@ export function ProductReviewsSection({
                   onChange={(value) => onRatingChange(value)}
                 />
                 {rating ? (
-                  <div className="text-sm font-semibold text-amber-500">{rating}.0 out of 5</div>
+                  <div className="text-sm font-semibold text-amber-500">{rating}.0 از ۵</div>
                 ) : hasRated ? (
-                  <div className="text-sm text-secondary-text">You already rated this product</div>
+                  <div className="text-sm text-secondary-text">شما قبلا به این محصول امتیاز داده‌اید</div>
                 ) : (
-                  <div className="text-sm text-secondary-text">Tap a star to rate</div>
+                  <div className="text-sm text-secondary-text">برای امتیاز دادن، یک ستاره را انتخاب کنید</div>
                 )}
               </div>
               {!isPurchased ? (
                 <div className="text-xs leading-5 text-secondary-text">
-                  Only verified buyers can leave a star rating. You can still post a comment below.
+                  فقط خریداران تاییدشده می‌توانند امتیاز ستاره‌ای ثبت کنند. همچنان می‌توانید دیدگاه متنی بنویسید.
                 </div>
               ) : hasRated ? (
                 <div className="flex items-center gap-1 text-xs font-medium text-secondary-text">
                   <IoCheckmarkCircle aria-hidden="true" />
-                  <span>Your star rating has already been recorded for this product.</span>
+                  <span>امتیاز شما برای این محصول قبلا ثبت شده است.</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-xs font-medium text-green-600">
                   <IoCheckmarkCircle aria-hidden="true" />
-                  <span>Verified purchase — you can rate this product</span>
+                  <span>خرید تایید شده است؛ می‌توانید به این محصول امتیاز بدهید</span>
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-2">
               <div className="text-sm font-medium text-primary-text">
-                Your review
+                دیدگاه شما
               </div>
               <textarea
                 id="review-text"
-                aria-label="Your review"
+                aria-label="دیدگاه شما"
                 value={text}
                 onChange={(event) => onTextChange(event.target.value)}
-                placeholder="What did you like or dislike? How was the quality and value?"
+                placeholder="از کیفیت، ارزش خرید یا تجربه استفاده از این محصول بنویسید."
                 className="min-h-28 w-full resize-y rounded-lg border border-primary-border bg-primary-soft p-3 text-sm text-primary-text outline-none focus:border-primary"
               />
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <CustomButton type="button" variant="primary" onClick={onSubmit}>
-                <span>Submit review</span>
+                <span>ثبت دیدگاه</span>
               </CustomButton>
             </div>
             {error ? (
@@ -194,16 +194,16 @@ export function ProductReviewsSection({
 
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-lg font-bold text-primary-text">All reviews</div>
-              <div className="text-xs text-secondary-text">Newest first</div>
+              <div className="text-lg font-bold text-primary-text">همه دیدگاه‌ها</div>
+              <div className="text-xs text-secondary-text">جدیدترین‌ها</div>
             </div>
 
             {reviews.length === 0 ? (
               <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-primary-border bg-primary-card py-12 text-center">
                 <IoChatbubbleEllipsesOutline className="text-4xl text-primary-border" aria-hidden="true" />
-                <div className="text-base font-semibold text-primary-text">No reviews yet</div>
+                <div className="text-base font-semibold text-primary-text">هنوز دیدگاهی ثبت نشده است</div>
                 <div className="max-w-sm text-sm text-secondary-text">
-                  Be the first to share your thoughts about this product.
+                  اولین نفری باشید که تجربه خود را درباره این محصول ثبت می‌کند.
                 </div>
               </div>
             ) : (
@@ -215,16 +215,16 @@ export function ProductReviewsSection({
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex flex-col gap-2">
-                        <div className="text-sm font-bold text-primary-text">Customer</div>
+                        <div className="text-sm font-bold text-primary-text">خریدار</div>
                         {review.rating ? (
                           <div className="flex flex-wrap items-center gap-2">
                             <StarRating value={review.rating} size="sm" />
                             <span className="text-xs font-medium text-secondary-text">
-                              {review.rating}.0 out of 5
+                              {review.rating}.0 از ۵
                             </span>
                           </div>
                         ) : (
-                          <div className="text-xs text-secondary-text">Comment only — no rating</div>
+                          <div className="text-xs text-secondary-text">فقط دیدگاه متنی؛ بدون امتیاز</div>
                         )}
                       </div>
                       <div className="text-xs text-secondary-text">{formatReviewDate(review.createdAt)}</div>

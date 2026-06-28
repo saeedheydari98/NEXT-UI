@@ -60,11 +60,11 @@ export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerC
         className="flex w-full items-center justify-center overflow-hidden rounded-xl border border-primary-border bg-primary-media"
         style={{ height: bannerHeight }}
         onClick={() => onPreview(activeImage)}
-        aria-label="Open banner image"
+        aria-label="باز کردن تصویر بنر"
       >
         <img
           src={activeImage}
-          alt={banner.title || "Banner"}
+          alt={banner.title || "بنر فروشگاه"}
           className="h-full w-full object-cover"
         />
       </button>
@@ -78,7 +78,7 @@ export function BannerCarousel({ banner, onPreview, isLoading = false }: BannerC
                 index === activeIndex ? "bg-primary w-4" : "bg-primary-border"
               }`}
               onClick={() => setActiveIndex(index)}
-              aria-label={`Show banner image ${index + 1}`}
+              aria-label={`نمایش تصویر بنر ${index + 1}`}
             >
               <span className="sr-only">{index + 1}</span>
             </button>

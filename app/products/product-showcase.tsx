@@ -50,7 +50,7 @@ function getFirstAvailableColor(product: Product) {
 function normalizeShowcase(item: Partial<Showcase>, index: number): Showcase {
   return {
     id: String(item.id ?? `showcase-${index + 1}`),
-    title: String(item.title ?? `Showcase ${index + 1}`),
+    title: String(item.title ?? `ویترین ${index + 1}`),
     active: item.active !== false,
     mode: item.mode === "auto" ? "auto" : "manual",
     autoSort: String(item.autoSort ?? "newest"),
@@ -72,7 +72,7 @@ function normalizeBanner(item: Partial<Banner> & { bannerUrl?: string; images?: 
 
   return {
     id: String(item.id ?? `banner-${index + 1}`),
-    title: String(item.title ?? `Banner ${index + 1}`),
+    title: String(item.title ?? `بنر ${index + 1}`),
     imageUrls,
     active: item.active !== false,
     intervalSeconds: Number.isFinite(Number(item.intervalSeconds)) ? Math.max(1, Math.round(Number(item.intervalSeconds))) : 5,
@@ -92,7 +92,7 @@ function ensureShowcases(products: Product[], savedShowcases: Showcase[]) {
     if (!byId.has(showcaseId)) {
       byId.set(showcaseId, {
         id: showcaseId,
-        title: "Untitled showcase",
+        title: "ویترین بدون عنوان",
         active: true,
         sortOrder: byId.size + 1,
       });
@@ -216,14 +216,14 @@ export function ProductShowcase() {
 
   const addToCart = async (product: Product) => {
     if (Number(product.stockQuantity ?? 0) <= 0) {
-      setCartMessage(`${product.title} is out of stock.`);
+      setCartMessage(`${product.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 1800);
       return;
     }
 
     const selectedColor = getFirstAvailableColor(product);
     await addProductToCart(product, 1, selectedColor);
-    setCartMessage(`${product.title} added to cart.`);
+    setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
     window.setTimeout(() => setCartMessage(""), 1800);
   };
 
@@ -231,7 +231,7 @@ export function ProductShowcase() {
     <main className="min-h-screen bg-bg-base text-primary-text">
       <section className="mx-auto flex w-full flex-col gap-6 px-4 py-8">
         <div className="flex flex-col gap-2 border-b border-primary-border pb-4">
-          <div className="text-3xl font-bold">Products</div>
+          <div className="text-3xl font-bold">محصولات</div>
         </div>
 
         {loading ? (
@@ -257,7 +257,7 @@ export function ProductShowcase() {
 
         {!loading && sortedProducts.length === 0 ? (
           <div className="rounded-lg border border-primary-border bg-primary-card p-6 text-sm text-secondary-text">
-            No active products are available.
+            در حال حاضر محصول فعالی وجود ندارد.
           </div>
         ) : null}
 
@@ -300,8 +300,8 @@ export function ProductShowcase() {
         <CustomModal
           open={Boolean(previewImage)}
           onClose={() => setPreviewImage("")}
-          title="Product image"
-          closeText="Close"
+          title="تصویر محصول"
+          closeText="بستن"
           rounded="lg"
           border="base"
           shadow="lg"
@@ -310,7 +310,7 @@ export function ProductShowcase() {
             {previewImage && (
               <img
                 src={previewImage}
-                alt="Product image preview"
+                alt="پیش‌نمایش تصویر محصول"
                 className="max-h-[75vh] w-full object-contain"
               />
             )}

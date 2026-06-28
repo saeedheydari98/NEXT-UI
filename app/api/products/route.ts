@@ -88,8 +88,12 @@ type BannerPayload = {
   imageUrls?: string[];
   images?: unknown;
   active?: boolean;
+  showOnHome?: boolean;
+  showOnShowcase?: boolean;
   intervalSeconds?: number | string;
   heightPercent?: number | string;
+  homeSortOrder?: number | string;
+  showcaseSortOrder?: number | string;
   sortOrder?: number | string;
   placement?: number | string;
 };
@@ -107,6 +111,7 @@ type CategoryPayload = {
   id?: string;
   title?: string;
   slug?: string;
+  imageUrl?: string | null;
   active?: boolean;
   sortOrder?: number | string;
 };
@@ -303,22 +308,31 @@ function dedupeProducts(products: ProductPayload[]) {
 }
 
 function toClientBanner(banner: BannerRecord) {
-  const imageUrls = Array.isArray(banner.images)
-    ? banner.images.map((item) => String(item)).filter(Boolean)
-    : [];
+  const meta = getBannerImageData(banner.images);
+  const imageUrls = meta.imageUrls;
+  const showcaseId = String(banner.showcaseId ?? meta.showcaseId ?? "").trim();
+  const hasExplicitTargets = typeof meta.showOnHome === "boolean" || typeof meta.showOnShowcase === "boolean";
+  const showOnHome = hasExplicitTargets ? meta.showOnHome !== false : !showcaseId;
+  const showOnShowcase = hasExplicitTargets ? meta.showOnShowcase === true : Boolean(showcaseId);
+  const homeSortOrder = Number.isFinite(Number(meta.homeSortOrder)) ? Number(meta.homeSortOrder) : banner.sortOrder;
+  const showcaseSortOrder = Number.isFinite(Number(meta.showcaseSortOrder)) ? Number(meta.showcaseSortOrder) : banner.sortOrder;
 
   return {
     type: "banner" as const,
     id: banner.id,
     title: banner.title ?? "",
-    showcaseId: banner.showcaseId,
+    showcaseId,
     images: imageUrls.map((url, index) => ({ url, placement: index + 1 })),
     imageUrls,
     active: banner.active,
+    showOnHome,
+    showOnShowcase,
     intervalSeconds: clampWholeNumber(banner.intervalSeconds, 1, 60, 5),
     heightPercent: clampWholeNumber(banner.heightPercent, 10, 100, 28),
-    sortOrder: banner.sortOrder,
-    placement: banner.sortOrder,
+    homeSortOrder,
+    showcaseSortOrder,
+    sortOrder: homeSortOrder,
+    placement: homeSortOrder,
   };
 }
 
@@ -421,6 +435,7 @@ function normalizeCategory(value: Partial<CategoryPayload>, index: number) {
     id,
     title: title || id,
     slug,
+    imageUrl: String(value.imageUrl ?? "").trim(),
     active: value.active !== false,
     sortOrder: Number.isFinite(Number(value.sortOrder)) ? Number(value.sortOrder) : index + 1,
   };
@@ -430,6 +445,7 @@ function toClientCategory(category: {
   id: string;
   title: string;
   slug: string;
+  imageUrl?: string | null;
   active: boolean;
   sortOrder: number;
 }) {
@@ -437,6 +453,7 @@ function toClientCategory(category: {
     id: category.id,
     title: category.title,
     slug: category.slug,
+    imageUrl: category.imageUrl ?? "",
     active: category.active,
     sortOrder: category.sortOrder,
   };
@@ -461,6 +478,7 @@ function buildCatalogTree(
     id: string;
     title: string;
     slug: string;
+    imageUrl?: string | null;
     active: boolean;
     sortOrder: number;
   }>,
@@ -477,7 +495,7 @@ function buildCatalogTree(
     ? banners
     : banners.filter((banner) => banner.active !== false);
 
-  const bannerSections = visibleBanners.map(toClientBanner);
+  const bannerSections = visibleBanners.map(toClientBanner).filter((banner) => banner.showOnHome !== false);
   const visibleCategories = categories.filter((category) => includeInactive || category.active !== false);
   const fallbackCategories = visibleCategories.length > 0
     ? visibleCategories
@@ -550,6 +568,11 @@ function getImageUrls(value: BannerPayload) {
     return value.imageUrls.map((item) => String(item)).filter(Boolean);
   }
 
+  if (value.images && typeof value.images === "object" && !Array.isArray(value.images)) {
+    const imageData = getBannerImageData(value.images);
+    if (imageData.imageUrls.length > 0) return imageData.imageUrls;
+  }
+
   if (!Array.isArray(value.images)) return [];
 
   return value.images
@@ -561,6 +584,38 @@ function getImageUrls(value: BannerPayload) {
       return "";
     })
     .filter(Boolean);
+}
+
+function getBannerImageData(value: unknown) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const record = value as {
+      urls?: unknown;
+      imageUrls?: unknown;
+      showcaseId?: unknown;
+      showOnHome?: unknown;
+      showOnShowcase?: unknown;
+      homeSortOrder?: unknown;
+      showcaseSortOrder?: unknown;
+    };
+    const urls = Array.isArray(record.urls) ? record.urls : record.imageUrls;
+    return {
+      imageUrls: Array.isArray(urls) ? urls.map((item) => String(item)).filter(Boolean) : [],
+      showcaseId: typeof record.showcaseId === "string" ? record.showcaseId : "",
+      showOnHome: typeof record.showOnHome === "boolean" ? record.showOnHome : undefined,
+      showOnShowcase: typeof record.showOnShowcase === "boolean" ? record.showOnShowcase : undefined,
+      homeSortOrder: Number.isFinite(Number(record.homeSortOrder)) ? Number(record.homeSortOrder) : undefined,
+      showcaseSortOrder: Number.isFinite(Number(record.showcaseSortOrder)) ? Number(record.showcaseSortOrder) : undefined,
+    };
+  }
+
+  return {
+    imageUrls: Array.isArray(value) ? value.map((item) => String(item)).filter(Boolean) : [],
+    showcaseId: "",
+    showOnHome: undefined,
+    showOnShowcase: undefined,
+    homeSortOrder: undefined,
+    showcaseSortOrder: undefined,
+  };
 }
 
 function splitTreePayload(tree: CatalogTreePayload | null) {
@@ -847,6 +902,7 @@ export async function POST(request: Request) {
             update: {
               title: category.title,
               slug: category.slug,
+              imageUrl: category.imageUrl,
               active: category.active,
               sortOrder: category.sortOrder,
             },
@@ -909,16 +965,28 @@ export async function POST(request: Request) {
         for (const item of sortByOrder(banners)) {
           const bannerId = String(item.id ?? "").trim();
           const imageUrls = getImageUrls(item);
+          const showcaseId = item.showOnShowcase && item.showcaseId ? String(item.showcaseId) : null;
+          const homeSortOrder = Number.isFinite(Number(item.homeSortOrder)) ? Number(item.homeSortOrder) : getPlacement(item, 0);
+          const showcaseSortOrder = Number.isFinite(Number(item.showcaseSortOrder)) ? Number(item.showcaseSortOrder) : getPlacement(item, 0);
           await (tx as any).banner.create({
             data: {
               id: bannerId || undefined,
               title: item.title ?? null,
-              showcaseId: item.showcaseId ? String(item.showcaseId) : null,
-              images: imageUrls.length > 0 ? imageUrls : Prisma.JsonNull,
+              showcaseId,
+              images: imageUrls.length > 0
+                ? {
+                    urls: imageUrls,
+                    showOnHome: item.showOnHome !== false,
+                    showOnShowcase: Boolean(showcaseId),
+                    showcaseId: showcaseId ?? "",
+                    homeSortOrder,
+                    showcaseSortOrder,
+                  }
+                : Prisma.JsonNull,
               active: item.active ?? true,
               intervalSeconds: clampWholeNumber(item.intervalSeconds, 1, 60, 5),
               heightPercent: clampWholeNumber(item.heightPercent, 10, 100, 28),
-              sortOrder: getPlacement(item, 0),
+              sortOrder: homeSortOrder,
             },
           });
         }

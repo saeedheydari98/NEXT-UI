@@ -56,13 +56,13 @@ export default function AdminPanelPage() {
 
   const isSuperadmin = authUser?.role === "superadmin" && authUser?.username === "saeedheydari98";
   const tabs = [
-    { id: "theme", label: "Theme" },
-    ...(isSuperadmin ? [{ id: "security", label: "Security" }] : []),
-    { id: "products", label: "Products" },
-    { id: "banners", label: "Banners" },
-    { id: "showcases", label: "Showcases" },
-    { id: "categories", label: "Categories" },
-    { id: "storefront", label: "Storefront" },
+    { id: "theme", label: "ظاهر" },
+    ...(isSuperadmin ? [{ id: "security", label: "امنیت" }] : []),
+    { id: "products", label: "محصولات" },
+    { id: "banners", label: "بنرها" },
+    { id: "showcases", label: "ویترین‌ها" },
+    { id: "categories", label: "دسته‌بندی‌ها" },
+    { id: "storefront", label: "چیدمان فروشگاه" },
   ];
 
   return (
@@ -70,13 +70,13 @@ export default function AdminPanelPage() {
       {hasAdminAccess === null ? (
         <div className="flex min-h-[50vh] items-center justify-center">
           <div className="rounded-lg border border-primary-border bg-primary-card p-6 text-sm font-semibold text-primary-text">
-            Checking admin access...
+            در حال بررسی دسترسی مدیریت...
           </div>
         </div>
       ) : hasAdminAccess ? (
         <div className="flex w-full flex-col gap-6">
           <section className="flex flex-col gap-4">
-            <div className="text-admin-admin-admin text-2xl font-bold">Admin Control</div>
+            <div className="text-admin-admin-admin text-2xl font-bold">پنل مدیریت</div>
             <div className="flex flex-wrap gap-2 rounded-lg border border-primary-border bg-primary-soft p-2">
               {tabs.map((tab) => (
                 <button

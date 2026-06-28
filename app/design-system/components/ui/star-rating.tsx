@@ -76,7 +76,7 @@ export function StarRating({
         onMouseEnter={() => !disabled && setHoverValue(starNumber)}
         onMouseLeave={() => setHoverValue(null)}
         onClick={() => !disabled && onChange?.(starNumber)}
-        aria-label={`Rate ${starNumber} out of ${max} stars`}
+        aria-label={`امتیاز ${starNumber} از ${max} ستاره`}
       >
         {icon}
       </button>

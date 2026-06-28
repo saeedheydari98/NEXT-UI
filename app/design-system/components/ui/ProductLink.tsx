@@ -29,7 +29,7 @@ export default function ProductLink({
   if (externalHref && externalHref !== "#") {
     return (
       <CustomLink href={externalHref} className={className} size={size} rounded="md" external>
-        {children ?? "View"}
+        {children ?? "مشاهده"}
       </CustomLink>
     );
   }
@@ -43,7 +43,7 @@ export default function ProductLink({
       size={size}
       rounded="md"
     >
-      {children ?? "View"}
+      {children ?? "مشاهده"}
     </CustomLink>
   );
 }

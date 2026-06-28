@@ -50,15 +50,15 @@ export function AdminThemePanel() {
         className="flex flex-col gap-3 rounded-xl border border-primary-border bg-primary-card p-3"
       >
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-bold text-admin-admin-admin">User color panel</span>
+          <span className="text-sm font-bold text-admin-admin-admin">پنل رنگ کاربر</span>
           <span className="text-xs font-semibold text-primary-text">
-            Lock user palette controls from the admin panel.
+            کنترل‌های انتخاب رنگ کاربر را از پنل مدیریت قفل کنید.
           </span>
         </div>
         <CustomSwitch
           checked={userTheme.isColorPanelLocked}
           customColor={adminColor}
-          label={userTheme.isColorPanelLocked ? "Locked" : "Unlocked"}
+          label={userTheme.isColorPanelLocked ? "قفل" : "باز"}
           onChange={(isColorPanelLocked) => updateUserTheme({ isColorPanelLocked })}
         />
       </div>

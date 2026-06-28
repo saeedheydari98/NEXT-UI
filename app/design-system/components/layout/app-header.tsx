@@ -41,10 +41,10 @@ type HeaderUser = {
 };
 
 const navItems = [
-  { href: "/", label: "home" },
-  { href: "/products", label: "products" },
-  { href: "/panel/admin", label: "admin panel", adminOnly: true },
-  { href: "/panel/user", label: "user panel" },
+  { href: "/", label: "خانه" },
+  { href: "/products", label: "محصولات" },
+  { href: "/panel/admin", label: "پنل مدیریت", adminOnly: true },
+  { href: "/panel/user", label: "حساب کاربری" },
 ];
 
 function CartLink({ count, onClick }: { count: number; onClick?: () => void }) {
@@ -53,7 +53,7 @@ function CartLink({ count, onClick }: { count: number; onClick?: () => void }) {
       href="/cart"
       onClick={onClick}
       className="relative inline-flex items-center justify-center p-1 text-secondary-border-nomode transition-all hover:scale-110"
-      aria-label="cart"
+      aria-label="سبد خرید"
     >
       <RiShoppingCartFill size={24}/>
       {count > 0 && (
@@ -122,7 +122,7 @@ export function AppHeader() {
 
   const submitAuth = async () => {
     if (!authUsername.trim() || !authPassword.trim()) {
-      setAuthStatus("Username and password are required.");
+      setAuthStatus("نام کاربری و رمز عبور الزامی است.");
       return;
     }
 
@@ -135,7 +135,7 @@ export function AppHeader() {
         body: JSON.stringify({ username: authUsername.trim().toLowerCase(), password: authPassword }),
       });
       const data = await res.json();
-      if (!res.ok || data?.ok === false) throw new Error(data?.error || data?.message || "Auth failed.");
+      if (!res.ok || data?.ok === false) throw new Error(data?.error || data?.message || "ورود ناموفق بود.");
       const user = data?.data?.user ?? null;
       setCachedAuthUser(user);
       setAuthUser(user);
@@ -147,7 +147,7 @@ export function AppHeader() {
       setCartCount(getCartCount(snapshot.items));
       router.refresh();
     } catch (error) {
-      setAuthStatus(error instanceof Error ? error.message : "Auth failed.");
+      setAuthStatus(error instanceof Error ? error.message : "ورود ناموفق بود.");
     } finally {
       setAuthLoading(false);
     }
@@ -177,7 +177,7 @@ export function AppHeader() {
             <button
               type="button"
               onClick={() => router.back()}
-              aria-label="go back"
+              aria-label="بازگشت"
               className="flex shrink-0 items-center justify-center p-1 text-xl text-primary-text transition-colors hover:text-primary"
             >
               <IoArrowBack />
@@ -209,9 +209,9 @@ export function AppHeader() {
         <div className="flex shrink-0 items-center gap-3">
           {authUser && !isMobile ? (
             <div className="flex items-center gap-2">
-              <span className="hidden text-xs font-semibold text-primary-text sm:inline">{authUser.username || authUser.name || "account"}</span>
+              <span className="hidden text-xs font-semibold text-primary-text sm:inline">{authUser.username || authUser.name || "حساب کاربری"}</span>
               <CustomButton size="sm" variant="neutral" border="base" onClick={logout}>
-                Sign out
+                خروج
               </CustomButton>
             </div>
           ) : !authUser ? (
@@ -224,7 +224,7 @@ export function AppHeader() {
                 setAuthOpen(true);
               }}
             >
-              acount
+              حساب کاربری
             </CustomButton>
           ) : null}
           <CartLink count={cartCount} />
@@ -232,7 +232,7 @@ export function AppHeader() {
             <button
               onClick={toggleMenu}
               className="text-2xl text-primary-text p-1 rounded-md hover:bg-primary-bg transition-colors"
-              aria-label={isMenuOpen ? "close menu" : "open menu"}
+              aria-label={isMenuOpen ? "بستن منو" : "باز کردن منو"}
             >
               {isMenuOpen ? <IoClose /> : <IoMenu />}
             </button>
@@ -272,7 +272,7 @@ export function AppHeader() {
                   void logout();
                 }}
               >
-                Sign out
+                خروج
               </CustomButton>
             ) : null}
           </div>
@@ -281,8 +281,8 @@ export function AppHeader() {
       <CustomModal
         open={authOpen}
         onClose={() => setAuthOpen(false)}
-        title={authMode === "choice" ? "Account" : "Sign in"}
-        closeText="Close"
+        title={authMode === "choice" ? "حساب کاربری" : "ورود به حساب"}
+        closeText="بستن"
         rounded="lg"
         border="base"
         shadow="lg"
@@ -298,7 +298,7 @@ export function AppHeader() {
                   setAuthStatus("");
                 }}
               >
-                Sign in to account
+                ورود به حساب
               </CustomButton>
               <CustomButton
                 border="base"
@@ -309,7 +309,7 @@ export function AppHeader() {
                   router.push("/panel/user?auth=register");
                 }}
               >
-                Create account
+                ساخت حساب کاربری
               </CustomButton>
             </div>
           ) : (
@@ -317,18 +317,18 @@ export function AppHeader() {
               <CustomInput
                 name="login-username"
                 value={authUsername}
-                placeholder="Username"
+                placeholder="نام کاربری"
                 autoComplete="username"
-                aria-label="Username"
+                aria-label="نام کاربری"
                 onChange={(event) => setAuthUsername(event.target.value)}
               />
               <CustomInput
                 name="login-password"
                 value={authPassword}
                 type="password"
-                placeholder="Password"
+                placeholder="رمز عبور"
                 autoComplete="current-password"
-                aria-label="Password"
+                aria-label="رمز عبور"
                 onChange={(event) => setAuthPassword(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") void submitAuth();
@@ -339,10 +339,10 @@ export function AppHeader() {
               ) : null}
               <div className="flex gap-2">
                 <CustomButton border="base" variant="neutral" fullWidth onClick={() => setAuthMode("choice")}>
-                  Back
+                  بازگشت
                 </CustomButton>
                 <CustomButton border="base" fullWidth isLoading={authLoading} onClick={submitAuth}>
-                  Sign in
+                  ورود
                 </CustomButton>
               </div>
             </>

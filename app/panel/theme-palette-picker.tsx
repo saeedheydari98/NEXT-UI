@@ -20,19 +20,19 @@ const toneOptions = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as co
 const previewTones: ThemeTone[] = [100, 300, 500, 700, 900];
 
 const colorLabels: Record<ThemeColorKey, string> = {
-  green: "Green",
-  blue: "Blue",
-  purple: "Purple",
-  orange: "Orange",
-  red: "Red",
-  yellow: "Yellow",
-  gray: "Gray",
+  green: "سبز",
+  blue: "آبی",
+  purple: "بنفش",
+  orange: "نارنجی",
+  red: "قرمز",
+  yellow: "زرد",
+  gray: "خاکستری",
 };
 
 const styleLabels: Record<ThemeStyle, string> = {
-  light: "Light",
-  dark: "Dark",
-  fantasy: "Fantasy",
+  light: "روشن",
+  dark: "تیره",
+  fantasy: "فانتزی",
 };
 
 type PaletteSection = "colors" | "styles" | "tones";
@@ -190,7 +190,7 @@ export function ThemePalettePicker({
         className={`flex items-center justify-between gap-3 rounded-xl border p-3 ${scopeClasses.border} ${scopeClasses.surface} ${disabled ? "opacity-70" : "opacity-100"}`}
       >
         <span className="flex min-w-0 flex-col gap-1">
-          <span className="text-xs font-semibold uppercase text-secondary-text">Palette</span>
+          <span className="text-xs font-semibold uppercase text-secondary-text">پالت رنگ</span>
           <span className={`truncate text-sm font-bold ${selectionClassName}`}>{selectedThemeLabel}</span>
         </span>
         <span className="flex shrink-0 items-center gap-1.5" aria-hidden="true">
@@ -211,7 +211,7 @@ export function ThemePalettePicker({
           id={`${paletteId}-colors`}
           open={openSections.colors}
           scopeClasses={scopeClasses}
-          title="Colors"
+          title="رنگ‌ها"
           value={colorLabels[selectedColor]}
           valueClassName={selectionClassName}
           onToggle={() => toggleSection("colors")}
@@ -255,7 +255,7 @@ export function ThemePalettePicker({
           id={`${paletteId}-styles`}
           open={openSections.styles}
           scopeClasses={scopeClasses}
-          title="Styles"
+          title="سبک‌ها"
           value={styleLabels[selectedStyle]}
           valueClassName={selectionClassName}
           onToggle={() => toggleSection("styles")}
@@ -304,7 +304,7 @@ export function ThemePalettePicker({
           id={`${paletteId}-tones`}
           open={openSections.tones}
           scopeClasses={scopeClasses}
-          title="Tones"
+          title="شدت رنگ"
           value={String(selectedTone)}
           valueClassName={selectionClassName}
           onToggle={() => toggleSection("tones")}

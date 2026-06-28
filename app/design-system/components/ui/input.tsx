@@ -75,7 +75,7 @@ export function CustomInput({
   const resolvedIconAfter = iconAfter ?? (isPassword ? (
     <button
       type="button"
-      aria-label={showPassword ? "Hide password" : "Show password"}
+      aria-label={showPassword ? "پنهان کردن رمز عبور" : "نمایش رمز عبور"}
       className="flex items-center justify-center text-lg text-secondary-text transition-colors hover:text-primary-text"
       onClick={() => setShowPassword((current) => !current)}
       disabled={isDisabled}
