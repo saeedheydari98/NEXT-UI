@@ -32,7 +32,7 @@ export const CustomTag: React.FC<CustomTagProps> = ({
   variant = "primary",
   size = "md",
   rounded = "md",
-  border = "none",
+  border = "base",
   shadow = "none",
   fullWidth = false,
   icon,

@@ -10,6 +10,7 @@ import ProductLink from "../../design-system/components/ui/ProductLink";
 import { FiExternalLink } from "react-icons/fi";
 import Loading from "@/app/design-system/components/loading/loading";
 import ProductRatingSummary from "@/app/design-system/components/ui/product-rating-summary";
+import { isProductAvailable } from "@/lib/products-client";
 
 type ShowcaseSectionProps = {
   showcase: Showcase;
@@ -23,6 +24,7 @@ type ShowcaseSectionProps = {
   getFinalPrice: (product: Product) => string;
   getDiscountPercent: (product: Product) => number;
   isLoading?: boolean;
+  hideShowcaseLink?: boolean;
 };
 
 export function ShowcaseSection({
@@ -37,6 +39,7 @@ export function ShowcaseSection({
   getFinalPrice,
   getDiscountPercent,
   isLoading = false,
+  hideShowcaseLink = false,
 }: ShowcaseSectionProps) {
   return (
     <section
@@ -54,9 +57,11 @@ export function ShowcaseSection({
           <Loading loading="skeleton-item" isLoading={isLoading}>
             <span className="text-xs font-semibold text-secondary-text">{products.length} محصول</span>
           </Loading>
-          <Loading loading="skeleton-item" isLoading={isLoading}>
-            <ShowcaseLink showcaseId={showcase.id} showcaseTitle={showcase.title}>مشاهده همه</ShowcaseLink>
-          </Loading>
+          {!hideShowcaseLink ? (
+            <Loading loading="skeleton-item" isLoading={isLoading}>
+              <ShowcaseLink showcaseId={showcase.id} showcaseTitle={showcase.title}>مشاهده همه</ShowcaseLink>
+            </Loading>
+          ) : null}
         </div>
       </div>
 
@@ -67,7 +72,9 @@ export function ShowcaseSection({
         onMouseUp={onDragStop}
         onMouseLeave={onDragStop}
       >
-        {products.map((product, index) => (
+        {products.map((product, index) => {
+          const available = isProductAvailable(product);
+          return (
           <article
             key={product.id ?? `${product.title}-${index}`}
             className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border bg-primary-card shadow-sm ${
@@ -150,21 +157,23 @@ export function ShowcaseSection({
                   className="flex-1"
                   fullWidth
                   icon={<IoBagAddOutline />}
+                  disabled={isLoading || !available}
                   onClick={() => onAddToCart(product)}
                 >
-                  افزودن به سبد
+                  {available ? "افزودن به سبد" : "ناموجود"}
                 </CustomButton>
               </Loading>
               <Loading loading="skeleton-item" isLoading={isLoading} className="flex-1">
                 <div className="flex flex-1 gap-2 w-full">
                   <ProductLink iconAfter={<FiExternalLink />} className="w-full flex justify-center items-center gap-1" productId={product.id ?? String(product.id)} productTitle={product.title}>
-                    {product.ctaLabel || "مشاهده"}  
+                    مشاهده محصول
                   </ProductLink>
                 </div>
               </Loading>
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

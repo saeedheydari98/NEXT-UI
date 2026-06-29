@@ -242,7 +242,7 @@ export function AppHeader() {
       {/* Mobile Menu Dropdown - Glassmorphic Background */}
       {isMobile && (
         <div
-          className={`absolute right-0 top-20 z-20 w-1/2 origin-top border border-primary-border/70 bg-primary-card/70 shadow-lg backdrop-blur-xl transition-all duration-300 ease-out ${
+          className={`absolute left-0 top-20 z-20 w-1/2 origin-top border border-primary-border/70 bg-primary-card/70 shadow-lg backdrop-blur-xl transition-all duration-300 ease-out ${
             isMenuOpen
               ? "translate-y-0 scale-y-100 opacity-100"
               : "pointer-events-none -translate-y-2 scale-y-0 opacity-0"
@@ -280,7 +280,6 @@ export function AppHeader() {
         open={authOpen}
         onClose={() => setAuthOpen(false)}
         title={authMode === "choice" ? "حساب کاربری" : "ورود به حساب"}
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >

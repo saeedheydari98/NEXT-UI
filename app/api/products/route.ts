@@ -174,7 +174,7 @@ function normalizeProduct(value: Partial<ProductPayload>, index: number): Produc
     images: Array.isArray(value.images) ? value.images.map((item) => String(item)).filter(Boolean) : [],
     videoUrl: String(value.videoUrl ?? "").trim(),
     badge: String(value.badge ?? "").trim(),
-    ctaLabel: String(value.ctaLabel ?? "").trim(),
+    ctaLabel: "مشاهده محصول",
     ctaHref: String(value.ctaHref ?? "").trim(),
     active: value.active !== false && value.isActive !== false,
     isActive: value.isActive !== false && value.active !== false,

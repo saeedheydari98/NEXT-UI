@@ -35,7 +35,7 @@ export function FloatButton({
   variant = "primary",
   size = "md",
   rounded = "full",
-  border = "base",
+  border = "strong",
   shadow = "lg",
   hover = "lift",
   cursor = "pointer",

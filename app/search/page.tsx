@@ -6,7 +6,7 @@ import { IoBagAddOutline } from "react-icons/io5";
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { fetchJsonDeduped } from "@/lib/fetch-json";
 import { addProductToCart } from "@/lib/cart-client";
-import { normalizeColorStock, type ProductRecord } from "@/lib/products-client";
+import { isProductAvailable, normalizeColorStock, type ProductRecord } from "@/lib/products-client";
 import ProductLink from "@/app/design-system/components/ui/ProductLink";
 import ProductRatingSummary from "@/app/design-system/components/ui/product-rating-summary";
 
@@ -42,15 +42,19 @@ export default function SearchPage() {
   }, [q]);
 
   const addToCart = async (product: ProductRecord) => {
-    if (Number(product.stockQuantity ?? 0) <= 0) {
+    if (!isProductAvailable(product)) {
       setCartMessage(`${product.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 1800);
       return;
     }
     const colorStock = normalizeColorStock(product.colorStock);
     const selectedColor = Object.entries(colorStock).find(([, count]) => count > 0)?.[0] ?? "";
-    await addProductToCart(product, 1, selectedColor);
-    setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
+    try {
+      await addProductToCart(product, 1, selectedColor);
+      setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
+    } catch (error) {
+      setCartMessage(error instanceof Error ? error.message : "افزودن به سبد خرید ناموفق بود.");
+    }
     window.setTimeout(() => setCartMessage(""), 1800);
   };
 
@@ -75,7 +79,9 @@ export default function SearchPage() {
 
         {!loading && results && results.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((product) => (
+            {results.map((product) => {
+              const available = isProductAvailable(product);
+              return (
               <div key={product.id} className="rounded-md border border-primary-border p-3 bg-primary-card">
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-3">
@@ -100,15 +106,17 @@ export default function SearchPage() {
                       fullWidth
                       className="flex-1"
                       icon={<IoBagAddOutline />}
+                      disabled={!available}
                       onClick={() => void addToCart(product)}
                     >
-                      افزودن
+                      {available ? "افزودن" : "ناموجود"}
                     </CustomButton>
                     <ProductLink productId={product.id} productTitle={product.title} className="flex-1">مشاهده</ProductLink>
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

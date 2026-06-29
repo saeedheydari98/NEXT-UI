@@ -1,12 +1,24 @@
 import React from "react";
-import CustomLink from "./custom-link";
 import { slugifyCatalogValue } from "@/lib/products-client";
+import { CustomButton } from "./button";
+import type { UICommonVariant } from "../../variants/ui.variant";
+import {
+  borderVariants,
+  radiusVariants,
+  shadowVariants,
+  sizeVariants,
+} from "../../variants/shared.variant";
 
 type Props = {
   showcaseId: string | number;
   showcaseTitle?: string;
   children?: React.ReactNode;
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  variant?: UICommonVariant;
+  size?: keyof typeof sizeVariants;
+  rounded?: keyof typeof radiusVariants;
+  border?: keyof typeof borderVariants;
+  shadow?: keyof typeof shadowVariants;
+  fullWidth?: boolean;
   className?: string;
 };
 
@@ -14,20 +26,29 @@ export default function ShowcaseLink({
   showcaseId,
   showcaseTitle,
   children,
+  variant = "primary",
   size = "sm",
+  rounded = "full",
+  border,
+  shadow,
+  fullWidth,
   className,
 }: Props) {
   const slug = slugifyCatalogValue(showcaseTitle || showcaseId);
-  const href = `/products/showcase/${slug || showcaseId}`;
+  const href = `/showcase/${slug || showcaseId}`;
 
   return (
-    <CustomLink
+    <CustomButton
       href={href}
-      className={className}
+      variant={variant}
       size={size}
-      rounded="full"
+      rounded={rounded}
+      border={border}
+      shadow={shadow}
+      fullWidth={fullWidth}
+      className={className}
     >
       {children ?? "مشاهده همه"}
-    </CustomLink>
+    </CustomButton>
   );
 }

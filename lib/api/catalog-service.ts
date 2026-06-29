@@ -51,7 +51,7 @@ export function normalizeProductData(data: any) {
     images: Array.isArray(data.images) && data.images.length > 0 ? data.images : Prisma.JsonNull,
     videoUrl: data.videoUrl || null,
     badge: data.badge || null,
-    ctaLabel: data.ctaLabel || null,
+    ctaLabel: "مشاهده محصول",
     ctaHref: data.ctaHref || null,
     active: data.active ?? data.isActive ?? true,
     isActive: data.isActive ?? data.active ?? true,

@@ -113,7 +113,7 @@ export function GlobalSearch() {
             type="text"
             value={value}
             onChange={(e) => updateSearchValue(e.target.value)}
-            placeholder="جست‌وجوی محصول..."
+            placeholder="جستجو محصول ..."
             autoComplete="new-password"
             autoCorrect="off"
             autoCapitalize="none"

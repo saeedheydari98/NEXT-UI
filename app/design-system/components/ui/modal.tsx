@@ -43,7 +43,7 @@ export function CustomModal({
   rounded = "lg",
   border = "dashed",
   shadow = "lg",
-  closeText = "بستن",
+  closeText = "X",
   loading = "spinner",
   isLoading = false,
   loadingText,
@@ -82,7 +82,7 @@ export function CustomModal({
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <div className="text-xl font-bold">{title}</div>
-            <CustomButton variant={variant} size="sm" onClick={onClose} disabled={isLoading}>
+            <CustomButton variant="danger" size="sm" onClick={onClose} disabled={isLoading}>
               {closeText}
             </CustomButton>
           </div>

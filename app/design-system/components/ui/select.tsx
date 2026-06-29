@@ -22,7 +22,7 @@ export function CustomSelect({
   variant = "primary",
   size = "md",
   rounded = "md",
-  border = "base",
+  border = "borderB",
   shadow = "none",
   fullWidth = true,
   className,

@@ -361,7 +361,7 @@ function normalizeProduct(item: Partial<ProductForm>, index: number): ProductFor
     images: Array.isArray(item.images) ? item.images.map((value) => String(value)).filter(Boolean) : [],
     videoUrl: String(item.videoUrl ?? ""),
     badge: String(item.badge ?? ""),
-    ctaLabel: String(item.ctaLabel ?? "مشاهده محصول"),
+    ctaLabel: "مشاهده محصول",
     ctaHref: String(item.ctaHref ?? "#"),
     active: item.active !== false && item.isActive !== false,
     isActive: item.isActive !== false && item.active !== false,
@@ -1846,7 +1846,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               <CustomInput
                 type="number"
                 value={entry.item.sortOrder}
-                placeholder="Placement"
+                placeholder="ترتیب"
                 onChange={(event) => {
                   const sortOrder = Number(event.target.value);
                   if (entry.type === "banner") updateBannerPlacement(entry.item, sortOrder);
@@ -1871,7 +1871,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={isCategoryOpen}
         onClose={() => setIsCategoryOpen(false)}
         title="ثبت دسته‌بندی"
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -1929,7 +1928,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setEditingCategory(null);
         }}
         title={editingCategory?.title || "ویرایش دسته‌بندی"}
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -1991,7 +1989,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={isBannerOpen}
         onClose={() => setIsBannerOpen(false)}
         title="Register banner"
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2010,21 +2007,30 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-soft p-3">
             <div className="text-sm font-bold text-primary-text">محل نمایش بنر</div>
             <div className="flex flex-wrap gap-2">
-              <CustomSwitch
-                checked={draftBanner.showOnHome}
-                onChange={(showOnHome) => updateDraftBanner({ showOnHome })}
-                label={draftBanner.showOnHome ? "خانه فعال" : "خانه غیرفعال"}
-                size="sm"
-              />
-              <CustomSwitch
-                checked={draftBanner.showOnShowcase}
-                onChange={(showOnShowcase) => updateDraftBanner({
-                  showOnShowcase,
-                  showcaseId: showOnShowcase ? draftBanner.showcaseId || sortedShowcases[0]?.id || "" : draftBanner.showcaseId,
-                })}
-                label={draftBanner.showOnShowcase ? "ویترین فعال" : "ویترین غیرفعال"}
-                size="sm"
-              />
+              <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                <input
+                  type="checkbox"
+                  checked={draftBanner.showOnHome}
+                  onChange={(event) => updateDraftBanner({ showOnHome: event.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                <span>خانه</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                <input
+                  type="checkbox"
+                  checked={draftBanner.showOnShowcase}
+                  onChange={(event) => {
+                    const showOnShowcase = event.target.checked;
+                    updateDraftBanner({
+                      showOnShowcase,
+                      showcaseId: showOnShowcase ? draftBanner.showcaseId || sortedShowcases[0]?.id || "" : draftBanner.showcaseId,
+                    });
+                  }}
+                  className="h-4 w-4 accent-primary"
+                />
+                <span>ویترین</span>
+              </label>
             </div>
             {draftBanner.showOnShowcase ? (
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -2147,7 +2153,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setEditingBanner(null);
         }}
         title={editingBanner?.title || "ویرایش بنر"}
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2167,21 +2172,30 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-soft p-3">
               <div className="text-sm font-bold text-primary-text">محل نمایش بنر</div>
               <div className="flex flex-wrap gap-2">
-                <CustomSwitch
-                  checked={editingBanner.showOnHome}
-                  onChange={(showOnHome) => updateEditingBanner({ showOnHome })}
-                  label={editingBanner.showOnHome ? "خانه فعال" : "خانه غیرفعال"}
-                  size="sm"
-                />
-                <CustomSwitch
-                  checked={editingBanner.showOnShowcase}
-                  onChange={(showOnShowcase) => updateEditingBanner({
-                    showOnShowcase,
-                    showcaseId: showOnShowcase ? editingBanner.showcaseId || sortedShowcases[0]?.id || "" : editingBanner.showcaseId,
-                  })}
-                  label={editingBanner.showOnShowcase ? "ویترین فعال" : "ویترین غیرفعال"}
-                  size="sm"
-                />
+                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                  <input
+                    type="checkbox"
+                    checked={editingBanner.showOnHome}
+                    onChange={(event) => updateEditingBanner({ showOnHome: event.target.checked })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span>خانه</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                  <input
+                    type="checkbox"
+                    checked={editingBanner.showOnShowcase}
+                    onChange={(event) => {
+                      const showOnShowcase = event.target.checked;
+                      updateEditingBanner({
+                        showOnShowcase,
+                        showcaseId: showOnShowcase ? editingBanner.showcaseId || sortedShowcases[0]?.id || "" : editingBanner.showcaseId,
+                      });
+                    }}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span>ویترین</span>
+                </label>
               </div>
               {editingBanner.showOnShowcase ? (
                 <div className="flex flex-col gap-2 sm:flex-row">
@@ -2309,7 +2323,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={isShowcaseOpen}
         onClose={() => setIsShowcaseOpen(false)}
         title="Register showcase"
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2407,7 +2420,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setEditingShowcase(null);
         }}
         title={editingShowcase?.title || "ویرایش ویترین"}
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2514,7 +2526,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         title="ثبت محصول"
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2573,11 +2584,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               value={draftProduct.sortOrder}
               placeholder="ترتیب نمایش"
               onChange={(event) => updateDraftProduct({ sortOrder: Number(event.target.value) })}
-            />
-            <CustomInput
-              value={draftProduct.ctaLabel}
-              placeholder="متن دکمه"
-              onChange={(event) => updateDraftProduct({ ctaLabel: event.target.value })}
             />
             <CustomInput
               value={draftProduct.ctaHref}
@@ -2666,7 +2672,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           setEditingProduct(null);
         }}
         title={editingProduct?.title || "ویرایش محصول"}
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2726,11 +2731,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 value={editingProduct.sortOrder}
                 placeholder="ترتیب نمایش"
                 onChange={(event) => updateEditingProduct({ sortOrder: Number(event.target.value) })}
-              />
-              <CustomInput
-                value={editingProduct.ctaLabel}
-                placeholder="متن دکمه"
-                onChange={(event) => updateEditingProduct({ ctaLabel: event.target.value })}
               />
               <CustomInput
                 value={editingProduct.ctaHref}
@@ -2827,7 +2827,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={Boolean(relationProduct)}
         onClose={() => setRelationProduct(null)}
         title={relationMode === "category" ? "دسته‌بندی‌های محصول" : "ویترین‌های محصول"}
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2899,7 +2898,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={false}
         onClose={() => setRelationProduct(null)}
         title={relationMode === "category" ? "دسته‌بندی‌های محصول" : "ویترین‌های محصول"}
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >
@@ -2959,7 +2957,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         open={Boolean(previewImage)}
         onClose={() => setPreviewImage("")}
         title="تصویر محصول"
-        closeText="بستن"
         rounded="lg"
         shadow="lg"
       >

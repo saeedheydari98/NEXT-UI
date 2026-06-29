@@ -28,7 +28,7 @@ export function CustomInput({
   variant = "primary",
   size = "md",
   rounded = "md",
-  border = "base",
+  border = "borderB",
   shadow = "none",
   fullWidth = true,
   className,

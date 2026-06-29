@@ -269,85 +269,98 @@ export default function CartPage() {
           <div className="grid gap-4">
             {items.map((item, index) => {
               const product = products.find((entry) => String(entry.id) === String(item.productId ?? item.id));
+              const stockValue = product?.stockQuantity ?? item.stockQuantity;
+              const stockLimit = Number(stockValue);
+              const hasStockLimit = Number.isFinite(stockLimit);
+              const isAvailable = (product?.isAvailable ?? item.isAvailable) !== false
+                && (!hasStockLimit || stockLimit > 0);
+              const syncedItem = {
+                ...item,
+                isAvailable,
+                stockQuantity: hasStockLimit ? stockLimit : item.stockQuantity,
+              };
+              const canIncrease = !isCheckoutLoading
+                && isAvailable
+                && (!hasStockLimit || item.quantity < stockLimit);
               return (
-              <article
-                key={String(item.id ?? `${item.title}-${index}-${item.selectedColor ?? ""}`)}
-                className="grid gap-4 rounded-lg border border-primary-border bg-primary-card p-4 sm:grid-cols-[120px_1fr_auto]"
-              >
-                <button
-                  type="button"
-                  className="flex h-28 items-center justify-center overflow-hidden rounded-md bg-primary-media"
-                  onClick={() => openImagePreview(item.imageUrl || undefined)}
-                  disabled={!item.imageUrl}
-                  aria-label="باز کردن تصویر محصول"
+                <article
+                  key={String(item.id ?? `${item.title}-${index}-${item.selectedColor ?? ""}`)}
+                  className="grid gap-4 rounded-lg border border-primary-border bg-primary-card p-4 sm:grid-cols-[120px_1fr_auto]"
                 >
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
-                  ) : (
-                    <IoBagHandleOutline className="text-4xl text-primary" aria-hidden="true" />
-                  )}
-                </button>
-                <div className="grid gap-2">
-                  <div className="text-lg font-bold">{item.title}</div>
-                  <div className="text-sm text-secondary-text">{item.description}</div>
-                  {item.selectedColor ? (
-                    <span className="text-xs font-semibold text-secondary-text">
-                      رنگ: {item.selectedColor}
-                    </span>
-                  ) : null}
-                  {product?.colorStock ? (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-secondary-text">انتخاب رنگ</span>
-                      <ColorStockDots
-                        value={product.colorStock}
-                        selectedColor={item.selectedColor ?? ""}
-                        onSelect={(color) => void updateItemColor(index, color)}
-                        disabledUnavailable
-                        size="sm"
-                      />
-                    </div>
-                  ) : null}
-                  <div className="text-sm font-semibold text-primary">
-                    {item.originalPrice && getDiscountPercent(item) > 0 && (
-                      <span className="mr-2 text-danger-text-nomode line-through">
-                        {formatPrice(item.originalPrice)}
-                      </span>
-                    )}
-                    {formatPrice(getFinalPrice(item))} × {item.quantity}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <CustomButton
-                      variant="neutral"
-                      size="sm"
-                      disabled={isCheckoutLoading}
-                      onClick={() => updateQuantity(item, item.quantity - 1)}
-                    >
-                      -
-                    </CustomButton>
-                    <span className="min-w-8 text-center text-sm font-bold">{item.quantity}</span>
-                    <CustomButton
-                      variant="neutral"
-                      size="sm"
-                      disabled={isCheckoutLoading}
-                      onClick={() => updateQuantity(item, item.quantity + 1)}
-                    >
-                      +
-                    </CustomButton>
-                  </div>
-                  <CustomButton
-                    variant="danger"
-                    size="sm"
-                    icon={<IoTrashOutline />}
-                    disabled={isCheckoutLoading}
-                    onClick={() => removeItem(item)}
+                  <button
+                    type="button"
+                    className="flex h-28 items-center justify-center overflow-hidden rounded-md bg-primary-media"
+                    onClick={() => openImagePreview(item.imageUrl || undefined)}
+                    disabled={!item.imageUrl}
+                    aria-label="باز کردن تصویر محصول"
                   >
-                    حذف
-                  </CustomButton>
-                </div>
-              </article>
-            );
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <IoBagHandleOutline className="text-4xl text-primary" aria-hidden="true" />
+                    )}
+                  </button>
+                  <div className="grid gap-2">
+                    <div className="text-lg font-bold">{item.title}</div>
+                    <div className="text-sm text-secondary-text">{item.description}</div>
+                    {item.selectedColor ? (
+                      <span className="text-xs font-semibold text-secondary-text">
+                        رنگ: {item.selectedColor}
+                      </span>
+                    ) : null}
+                    {product?.colorStock ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-semibold text-secondary-text">انتخاب رنگ</span>
+                        <ColorStockDots
+                          value={product.colorStock}
+                          selectedColor={item.selectedColor ?? ""}
+                          onSelect={(color) => void updateItemColor(index, color)}
+                          disabledUnavailable
+                          size="sm"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="text-sm font-semibold text-primary">
+                      {item.originalPrice && getDiscountPercent(item) > 0 && (
+                        <span className="mr-2 text-danger-text-nomode line-through">
+                          {formatPrice(item.originalPrice)}
+                        </span>
+                      )}
+                      {formatPrice(getFinalPrice(item))} × {item.quantity}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <CustomButton
+                        variant="neutral"
+                        size="sm"
+                        disabled={!canIncrease}
+                        onClick={() => updateQuantity(syncedItem, item.quantity + 1)}
+                      >
+                        +
+                      </CustomButton>
+                      <span className="min-w-8 text-center text-sm font-bold">{item.quantity}</span>
+                      <CustomButton
+                        variant="neutral"
+                        size="sm"
+                        disabled={isCheckoutLoading}
+                        onClick={() => updateQuantity(syncedItem, item.quantity - 1)}
+                      >
+                        -
+                      </CustomButton>
+                    </div>
+                    <CustomButton
+                      variant="danger"
+                      size="sm"
+                      icon={<IoTrashOutline />}
+                      disabled={isCheckoutLoading}
+                      onClick={() => removeItem(item)}
+                    >
+                      حذف
+                    </CustomButton>
+                  </div>
+                </article>
+              );
             })}
           </div>
         )}
@@ -356,7 +369,6 @@ export default function CartPage() {
           open={Boolean(previewImage)}
           onClose={() => setPreviewImage("")}
           title="تصویر محصول"
-          closeText="بستن"
           rounded="lg"
           shadow="lg"
         >
@@ -375,7 +387,6 @@ export default function CartPage() {
           open={isProfileModalOpen}
           onClose={() => setIsProfileModalOpen(false)}
           title="اطلاعات تحویل سفارش"
-          closeText="بستن"
           rounded="lg"
           shadow="lg"
         >
@@ -384,89 +395,89 @@ export default function CartPage() {
               برای تکمیل خرید، اطلاعات ضروری حساب و ارسال سفارش را وارد کنید.
             </div>
             <div ref={profileFormRef} className="flex flex-col gap-3">
-            <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">نام</RequiredLabel>
-              <CustomInput
-                value={profileDraft.firstName}
-                pattern="[\p{L}][\p{L}\s'-]{1,49}"
-                placeholder="نام"
-                required
-                invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.firstName.trim())}
-                showLabel={false}
-                aria-label="نام"
-                onChange={(event) => updateProfileDraft({ firstName: event.target.value })}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">نام خانوادگی</RequiredLabel>
-              <CustomInput
-                value={profileDraft.lastName}
-                pattern="[\p{L}][\p{L}\s'-]{1,49}"
-                placeholder="نام خانوادگی"
-                required
-                invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.lastName.trim())}
-                showLabel={false}
-                aria-label="نام خانوادگی"
-                onChange={(event) => updateProfileDraft({ lastName: event.target.value })}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">کد ملی</RequiredLabel>
-              <CustomInput
-                value={profileDraft.nationalId}
-                pattern="\d{10}"
-                maxLength={10}
-                placeholder="کد ملی"
-                required
-                invalid={showProfileRequiredErrors && !NATIONAL_ID_PATTERN.test(profileDraft.nationalId.trim())}
-                showLabel={false}
-                inputMode="numeric"
-                aria-label="کد ملی"
-                onChange={(event) => updateProfileDraft({ nationalId: event.target.value })}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">تاریخ تولد</RequiredLabel>
-              <CustomInput
-                value={profileDraft.birthDate}
-                type="date"
-                max={new Date().toISOString().slice(0, 10)}
-                required
-                invalid={showProfileRequiredErrors && (!profileDraft.birthDate.trim() || new Date(profileDraft.birthDate).getTime() > Date.now())}
-                showLabel={false}
-                aria-label="تاریخ تولد"
-                onChange={(event) => updateProfileDraft({ birthDate: event.target.value })}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">شماره تماس</RequiredLabel>
-              <CustomInput
-                value={profileDraft.phone}
-                pattern="09\d{9}"
-                maxLength={11}
-                placeholder="شماره تماس"
-                required
-                invalid={showProfileRequiredErrors && !PHONE_PATTERN.test(profileDraft.phone.trim())}
-                showLabel={false}
-                inputMode="tel"
-                aria-label="شماره تماس"
-                onChange={(event) => updateProfileDraft({ phone: event.target.value })}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <RequiredLabel required className="text-primary-text">آدرس</RequiredLabel>
-              <CustomInput
-                value={profileDraft.address}
-                placeholder="آدرس کامل"
-                minLength={5}
-                maxLength={200}
-                required
-                invalid={showProfileRequiredErrors && (profileDraft.address.trim().length < 5 || profileDraft.address.trim().length > 200)}
-                showLabel={false}
-                aria-label="آدرس"
-                onChange={(event) => updateProfileDraft({ address: event.target.value })}
-              />
-            </div>
+              <div className="flex flex-col gap-2">
+                <RequiredLabel required className="text-primary-text">نام</RequiredLabel>
+                <CustomInput
+                  value={profileDraft.firstName}
+                  pattern="[\p{L}][\p{L}\s'-]{1,49}"
+                  placeholder="نام"
+                  required
+                  invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.firstName.trim())}
+                  showLabel={false}
+                  aria-label="نام"
+                  onChange={(event) => updateProfileDraft({ firstName: event.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <RequiredLabel required className="text-primary-text">نام خانوادگی</RequiredLabel>
+                <CustomInput
+                  value={profileDraft.lastName}
+                  pattern="[\p{L}][\p{L}\s'-]{1,49}"
+                  placeholder="نام خانوادگی"
+                  required
+                  invalid={showProfileRequiredErrors && !NAME_PATTERN.test(profileDraft.lastName.trim())}
+                  showLabel={false}
+                  aria-label="نام خانوادگی"
+                  onChange={(event) => updateProfileDraft({ lastName: event.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <RequiredLabel required className="text-primary-text">کد ملی</RequiredLabel>
+                <CustomInput
+                  value={profileDraft.nationalId}
+                  pattern="\d{10}"
+                  maxLength={10}
+                  placeholder="کد ملی"
+                  required
+                  invalid={showProfileRequiredErrors && !NATIONAL_ID_PATTERN.test(profileDraft.nationalId.trim())}
+                  showLabel={false}
+                  inputMode="numeric"
+                  aria-label="کد ملی"
+                  onChange={(event) => updateProfileDraft({ nationalId: event.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <RequiredLabel required className="text-primary-text">تاریخ تولد</RequiredLabel>
+                <CustomInput
+                  value={profileDraft.birthDate}
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  required
+                  invalid={showProfileRequiredErrors && (!profileDraft.birthDate.trim() || new Date(profileDraft.birthDate).getTime() > Date.now())}
+                  showLabel={false}
+                  aria-label="تاریخ تولد"
+                  onChange={(event) => updateProfileDraft({ birthDate: event.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <RequiredLabel required className="text-primary-text">شماره تماس</RequiredLabel>
+                <CustomInput
+                  value={profileDraft.phone}
+                  pattern="09\d{9}"
+                  maxLength={11}
+                  placeholder="شماره تماس"
+                  required
+                  invalid={showProfileRequiredErrors && !PHONE_PATTERN.test(profileDraft.phone.trim())}
+                  showLabel={false}
+                  inputMode="tel"
+                  aria-label="شماره تماس"
+                  onChange={(event) => updateProfileDraft({ phone: event.target.value })}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <RequiredLabel required className="text-primary-text">آدرس</RequiredLabel>
+                <CustomInput
+                  value={profileDraft.address}
+                  placeholder="آدرس کامل"
+                  minLength={5}
+                  maxLength={200}
+                  required
+                  invalid={showProfileRequiredErrors && (profileDraft.address.trim().length < 5 || profileDraft.address.trim().length > 200)}
+                  showLabel={false}
+                  aria-label="آدرس"
+                  onChange={(event) => updateProfileDraft({ address: event.target.value })}
+                />
+              </div>
             </div>
             {profileError ? (
               <div className="rounded-md border border-danger-border-nomode bg-primary-base px-3 py-2 text-sm font-semibold text-danger-text-nomode">
@@ -483,7 +494,6 @@ export default function CartPage() {
           open={isCheckoutSuccessOpen}
           onClose={() => setIsCheckoutSuccessOpen(false)}
           title="خرید تکمیل شد"
-          closeText="بستن"
           rounded="lg"
           shadow="lg"
         >

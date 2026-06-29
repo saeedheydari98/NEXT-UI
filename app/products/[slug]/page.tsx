@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { IoBagAddOutline, IoBagHandleOutline } from "react-icons/io5";
 import { useProductsCatalog } from "@/lib/products-catalog-context";
-import type { ProductRecord } from "@/lib/products-client";
+import { getStockStatusLabel, isProductAvailable, type ProductRecord } from "@/lib/products-client";
 import { addProductToCart } from "@/lib/cart-client";
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { CustomTag } from "@/app/design-system/components/ui/tag";
@@ -182,7 +182,7 @@ export default function ProductPage() {
   };
 
   const addToCart = async (item: ProductRecord) => {
-    if (Number(item.stockQuantity ?? 0) <= 0) {
+    if (!isProductAvailable(item)) {
       setCartMessage(`${item.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 2000);
       return;
@@ -193,8 +193,12 @@ export default function ProductPage() {
       setSelectedColor(cartColor);
     }
 
-    await addProductToCart(item, 1, cartColor);
-    setCartMessage(`${item.title} به سبد خرید اضافه شد.`);
+    try {
+      await addProductToCart(item, 1, cartColor);
+      setCartMessage(`${item.title} به سبد خرید اضافه شد.`);
+    } catch (error) {
+      setCartMessage(error instanceof Error ? error.message : "افزودن به سبد خرید ناموفق بود.");
+    }
     window.setTimeout(() => setCartMessage(""), 2000);
   };
 
@@ -321,6 +325,7 @@ export default function ProductPage() {
   }
 
   const discountPercent = getDiscountPercent(product);
+  const available = isProductAvailable(product);
   const finalPrice = formatPrice(getFinalPrice(product));
   const originalPrice = formatPrice(product.originalPrice);
   const detailRows = [
@@ -330,9 +335,7 @@ export default function ProductPage() {
     ["Barcode", product.barcode],
     ["سال تولید", product.manufactureYear],
     ["دسته‌بندی", product.categoryId],
-    ["وضعیت موجودی", product.stockStatus],
-    ["حداقل سفارش", product.minOrder],
-    ["حداکثر سفارش", product.maxOrder],
+    ["وضعیت موجودی", getStockStatusLabel(product.stockStatus)],
     ["وزن", product.weight],
     ["طول", product.length],
     ["عرض", product.width],
@@ -420,9 +423,10 @@ export default function ProductPage() {
                 type="button"
                 variant="success"
                 icon={<IoBagAddOutline />}
+                disabled={!available}
                 onClick={() => addToCart(product)}
               >
-                افزودن به سبد
+                {available ? "افزودن به سبد" : "ناموجود"}
               </CustomButton>
             </div>
             </div>

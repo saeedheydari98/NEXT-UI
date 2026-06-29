@@ -7,7 +7,15 @@ import { IoBagAddOutline } from "react-icons/io5";
 import { CustomButton } from "@/app/design-system/components/ui/button";
 import { CustomSelect } from "@/app/design-system/components/ui/select";
 import { useProductsCatalog } from "@/lib/products-catalog-context";
-import { normalizeColorStock, slugifyCatalogValue, sortProductsBy, type ProductRecord } from "@/lib/products-client";
+import {
+  decodeCatalogSegment,
+  isProductAvailable,
+  normalizeColorStock,
+  normalizeStringList,
+  slugifyCatalogValue,
+  sortProductsBy,
+  type ProductRecord,
+} from "@/lib/products-client";
 import { addProductToCart } from "@/lib/cart-client";
 import ProductLink from "@/app/design-system/components/ui/ProductLink";
 import ProductRatingSummary from "@/app/design-system/components/ui/product-rating-summary";
@@ -24,7 +32,7 @@ const SORT_OPTIONS = [
 export default function CategoryProductsPage() {
   const params = useParams();
   const rawSlug = params?.slug ?? "";
-  const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+  const slug = decodeCatalogSegment(Array.isArray(rawSlug) ? rawSlug[0] : rawSlug);
   const { products, categories, loading } = useProductsCatalog();
   const [sort, setSort] = useState("newest");
   const [cartMessage, setCartMessage] = useState("");
@@ -32,32 +40,39 @@ export default function CategoryProductsPage() {
   const category = useMemo(
     () =>
       categories.find((item) =>
-        item.id === slug || slugifyCatalogValue(item.slug || item.title || item.id) === slug
+        item.id === slug
+        || slugifyCatalogValue(item.slug || item.title || item.id) === slugifyCatalogValue(slug)
       ),
     [categories, slug]
   );
 
   const categoryProducts = useMemo(() => {
     const categoryId = category?.id ?? slug;
-    const filtered = products.filter(
-      (product) =>
-        product.active !== false &&
-        product.isActive !== false &&
-        String(product.categoryId ?? "") === String(categoryId)
-    );
+    const filtered = products.filter((product) => {
+      const categoryIds = normalizeStringList(product.categoryIds, [String(product.categoryId ?? "")]);
+      return product.active !== false
+        && product.isActive !== false
+        && categoryIds.includes(String(categoryId));
+    });
     return sortProductsBy(filtered, sort);
   }, [category?.id, products, slug, sort]);
 
   const addToCart = async (product: ProductRecord) => {
-    if (Number(product.stockQuantity ?? 0) <= 0) {
+    if (!isProductAvailable(product)) {
       setCartMessage(`${product.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 1800);
       return;
     }
+
     const colorStock = normalizeColorStock(product.colorStock);
     const selectedColor = Object.entries(colorStock).find(([, count]) => count > 0)?.[0] ?? "";
-    await addProductToCart(product, 1, selectedColor);
-    setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
+
+    try {
+      await addProductToCart(product, 1, selectedColor);
+      setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
+    } catch (error) {
+      setCartMessage(error instanceof Error ? error.message : "افزودن به سبد خرید ناموفق بود.");
+    }
     window.setTimeout(() => setCartMessage(""), 1800);
   };
 
@@ -94,6 +109,7 @@ export default function CategoryProductsPage() {
 
         <div className="flex flex-wrap gap-3">
           {categoryProducts.map((product) => {
+            const available = isProductAvailable(product);
             return (
               <div key={product.id} className="flex w-full max-w-72 flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
                 <div className="flex gap-3">
@@ -122,9 +138,10 @@ export default function CategoryProductsPage() {
                     fullWidth
                     className="flex-1"
                     icon={<IoBagAddOutline />}
+                    disabled={!available}
                     onClick={() => void addToCart(product)}
                   >
-                    افزودن
+                    {available ? "افزودن" : "ناموجود"}
                   </CustomButton>
                   <ProductLink productId={product.id ?? ""} productTitle={product.slug || product.title} className="flex-1" iconAfter={<FiExternalLink />}>
                     مشاهده

@@ -155,12 +155,43 @@ export function slugifyCatalogValue(value: string | number | null | undefined) {
     .replace(/^-|-$/g, "");
 }
 
+export function decodeCatalogSegment(value: string | number | null | undefined) {
+  const text = String(value ?? "");
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+}
+
+function catalogMatchCandidates(value: string | number | null | undefined) {
+  const raw = String(value ?? "");
+  const decoded = decodeCatalogSegment(raw);
+  return new Set([
+    raw,
+    decoded,
+    slugifyCatalogValue(raw),
+    slugifyCatalogValue(decoded),
+  ].filter(Boolean));
+}
+
 export function productSlug(product: Partial<ProductRecord>) {
   return slugifyCatalogValue(product.slug || product.title || product.id || "");
 }
 
 export function showcaseSlug(showcase: Partial<ShowcaseRecord>) {
   return slugifyCatalogValue(showcase.title || showcase.id || "");
+}
+
+export function isProductAvailable(product: Partial<ProductRecord>) {
+  return product.isAvailable !== false && Number(product.stockQuantity ?? 0) > 0;
+}
+
+export function getStockStatusLabel(value?: string | null) {
+  const status = String(value ?? "").trim();
+  if (status === "in_stock") return "موجود";
+  if (status === "out_of_stock") return "ناموجود";
+  return status;
 }
 
 export type GetProductsOptions = {
@@ -288,6 +319,7 @@ function normalizeProductRecord(product: ProductRecord, fallbackOrder: number): 
   return {
     ...product,
     slug: String(product.slug ?? productSlug(product)),
+    ctaLabel: "مشاهده محصول",
     images: imageList,
     active: product.active !== false && product.isActive !== false,
     isActive: product.isActive !== false && product.active !== false,
@@ -607,10 +639,12 @@ export function findProductById(
   products: ProductRecord[],
   id: string | number
 ): ProductRecord | null {
-  const target = String(id);
-  const targetSlug = slugifyCatalogValue(id);
+  const candidates = catalogMatchCandidates(id);
   return products.find((product) =>
-    String(product.id) === target || productSlug(product) === targetSlug
+    candidates.has(String(product.id))
+    || candidates.has(productSlug(product))
+    || candidates.has(slugifyCatalogValue(product.slug || ""))
+    || candidates.has(slugifyCatalogValue(product.title || ""))
   ) ?? null;
 }
 
@@ -619,10 +653,11 @@ export function findShowcaseById(
   showcases: ShowcaseRecord[],
   id: string | number
 ): ShowcaseRecord | null {
-  const target = String(id);
-  const targetSlug = slugifyCatalogValue(id);
+  const candidates = catalogMatchCandidates(id);
   const showcase = showcases.find((item) =>
-    String(item.id) === target || showcaseSlug(item) === targetSlug
+    candidates.has(String(item.id))
+    || candidates.has(showcaseSlug(item))
+    || candidates.has(slugifyCatalogValue(item.title || ""))
   );
   if (!showcase) return null;
 

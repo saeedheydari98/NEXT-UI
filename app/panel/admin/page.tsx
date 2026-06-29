@@ -32,11 +32,14 @@ export default function AdminPanelPage() {
     void syncAccessFromApi()
       .catch((error) => {
         console.error("Admin access profile load error:", error);
-        setHasAdminAccess(false);
+        setHasAdminAccess((current) => current ?? false);
       });
 
     const unsubscribeAdminAccess = subscribeAdminAccess(() => {
-      void syncAccessFromApi().catch(() => setHasAdminAccess(false));
+      void syncAccessFromApi().catch((error) => {
+        console.error("Admin access profile refresh error:", error);
+        setHasAdminAccess((current) => current ?? false);
+      });
     });
     const unsubscribeAuthUser = subscribeAuthUser(() => {
       void fetchCurrentUser().then(setAuthUser);

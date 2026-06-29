@@ -21,6 +21,9 @@ export type CartItemRecord = {
   discountPercent?: number | string | null;
   imageUrl?: string | null;
   selectedColor?: string | null;
+  isAvailable?: boolean;
+  stockQuantity?: number | string;
+  colorStock?: unknown;
   quantity: number;
 };
 
@@ -48,6 +51,9 @@ function getItemKey(item: Partial<CartItemRecord>) {
 }
 
 function normalizeCartItem(item: Partial<CartItemRecord>, index: number): CartItemRecord {
+  const stockQuantity = Number.isFinite(Number(item.stockQuantity))
+    ? Math.max(0, Math.round(Number(item.stockQuantity)))
+    : undefined;
   return {
     id: item.id,
     productId: item.productId ?? item.id ?? null,
@@ -59,8 +65,25 @@ function normalizeCartItem(item: Partial<CartItemRecord>, index: number): CartIt
     discountPercent: item.discountPercent ?? "",
     imageUrl: item.imageUrl ? String(item.imageUrl) : "",
     selectedColor: item.selectedColor ? String(item.selectedColor) : "",
+    isAvailable: item.isAvailable !== false,
+    stockQuantity,
+    colorStock: item.colorStock,
     quantity: Math.max(1, Math.round(Number(item.quantity ?? index + 1))),
   };
+}
+
+function getStockLimit(item: Partial<CartItemRecord> | Partial<ProductRecord>) {
+  const stockQuantity = Number(item.stockQuantity);
+  return Number.isFinite(stockQuantity)
+    ? Math.max(0, Math.round(stockQuantity))
+    : Number.POSITIVE_INFINITY;
+}
+
+function clampCartQuantity(item: Partial<CartItemRecord> | Partial<ProductRecord>, quantity: number) {
+  const requested = Math.max(1, Math.round(Number(quantity) || 1));
+  const stockLimit = getStockLimit(item);
+  if (item.isAvailable === false || stockLimit <= 0) return 0;
+  return Math.min(requested, stockLimit);
 }
 
 function dedupeCartItems(items: CartItemRecord[]) {
@@ -177,14 +200,23 @@ export async function persistCart(items: CartItemRecord[], profile = readUserPro
 }
 
 export async function addProductToCart(product: ProductRecord, quantity = 1, selectedColor = "") {
+  const stockLimit = getStockLimit(product);
+  if (product.isAvailable === false || stockLimit <= 0) {
+    throw new Error("محصول ناموجود است.");
+  }
+
   const productId = product.id ?? null;
   const key = `${String(productId ?? `${product.title}-${product.description}-${product.price}`)}|${selectedColor}`;
   const currentCart = readLocalCart();
   const existing = currentCart.find((item) => getItemKey(item) === key);
+  const nextQuantity = clampCartQuantity(product, (existing?.quantity ?? 0) + quantity);
+  if (nextQuantity <= 0) {
+    throw new Error("محصول ناموجود است.");
+  }
   const nextCart = existing
     ? currentCart.map((item) =>
         getItemKey(item) === key
-          ? { ...item, quantity: item.quantity + quantity }
+          ? { ...item, quantity: nextQuantity, stockQuantity: product.stockQuantity, isAvailable: product.isAvailable }
           : item
       )
     : [
@@ -194,7 +226,7 @@ export async function addProductToCart(product: ProductRecord, quantity = 1, sel
             ...product,
             productId,
             selectedColor,
-            quantity,
+            quantity: nextQuantity,
           },
           currentCart.length
         ),
@@ -206,11 +238,12 @@ export async function addProductToCart(product: ProductRecord, quantity = 1, sel
 export async function updateCartQuantity(target: CartItemRecord, quantity: number) {
   const key = getItemKey(target);
   const currentCart = readLocalCart();
+  const nextQuantity = clampCartQuantity(target, quantity);
   const nextCart =
-    quantity <= 0
+    quantity <= 0 || nextQuantity <= 0
       ? currentCart.filter((item) => getItemKey(item) !== key)
       : currentCart.map((item) =>
-          getItemKey(item) === key ? { ...item, quantity } : item
+          getItemKey(item) === key ? { ...item, quantity: nextQuantity } : item
         );
 
   return persistCart(nextCart);

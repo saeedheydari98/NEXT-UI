@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useProductsCatalog } from "@/lib/products-catalog-context";
 import { addProductToCart } from "@/lib/cart-client";
+import { isProductAvailable, normalizeStringList } from "@/lib/products-client";
 import { CustomModal } from "../design-system/components/ui/modal";
 import { BannerCarousel } from "./product-showcase/banner-carousel";
 import { ShowcaseSection } from "./product-showcase/showcase-section";
@@ -102,7 +103,12 @@ function ensureShowcases(products: Product[], savedShowcases: Showcase[]) {
   return Array.from(byId.values()).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-export function ProductShowcase() {
+type ProductShowcaseProps = {
+  mode?: "storefront" | "products";
+  root?: "main" | "div";
+};
+
+export function ProductShowcase({ mode = "storefront", root = "main" }: ProductShowcaseProps) {
   // header search is handled on the separate `/search` route
   const { products: catalogProducts, showcases: catalogShowcases, tree, loading } = useProductsCatalog();
   const [cartMessage, setCartMessage] = useState("");
@@ -127,6 +133,22 @@ export function ProductShowcase() {
   );
 
   const displaySections = useMemo(() => {
+    if (mode === "products") {
+      return sortedProducts.length > 0
+        ? [{
+            type: "showcase" as const,
+            item: {
+              id: "all-products",
+              title: "محصولات",
+              active: true,
+              sortOrder: 1,
+            },
+            products: sortedProducts,
+            sortOrder: 1,
+          }]
+        : [];
+    }
+
     if (tree.sections.length > 0) {
       return tree.sections
         .map((section) =>
@@ -143,12 +165,22 @@ export function ProductShowcase() {
                 sortOrder: section.sortOrder,
               }
         )
-        .filter((section) => section.type === "banner" || section.products.length > 0);
+        .filter((section) =>
+          section.type === "banner"
+            ? section.item.active !== false && section.item.showOnHome !== false
+            : section.products.length > 0
+        );
     }
 
     const showcaseSections = sortedShowcases
       .map((showcase) => {
-        const allProducts = sortedProducts.filter((product) => (product.showcaseId ?? "") === showcase.id);
+        const allProducts = sortedProducts.filter((product) => {
+          const showcaseIds = normalizeStringList(
+            (product as { showcaseIds?: unknown }).showcaseIds,
+            product.showcaseId ? [String(product.showcaseId)] : []
+          );
+          return showcaseIds.includes(showcase.id);
+        });
 
         return {
           type: "showcase" as const,
@@ -160,7 +192,7 @@ export function ProductShowcase() {
       .filter((section) => section.products.length > 0);
 
     return showcaseSections.sort((a, b) => a.sortOrder - b.sortOrder);
-  }, [sortedProducts, sortedShowcases, tree]);
+  }, [mode, sortedProducts, sortedShowcases, tree]);
 
   
 
@@ -177,7 +209,13 @@ export function ProductShowcase() {
       .map((showcase) => ({
         type: "showcase" as const,
         item: showcase,
-        products: activeProducts.filter((product) => (product.showcaseId ?? "") === showcase.id),
+        products: activeProducts.filter((product) => {
+          const showcaseIds = normalizeStringList(
+            (product as { showcaseIds?: unknown }).showcaseIds,
+            product.showcaseId ? [String(product.showcaseId)] : []
+          );
+          return showcaseIds.includes(showcase.id);
+        }),
         sortOrder: showcase.sortOrder,
       }))
       .filter((section) => section.products.length > 0);
@@ -215,20 +253,26 @@ export function ProductShowcase() {
   };
 
   const addToCart = async (product: Product) => {
-    if (Number(product.stockQuantity ?? 0) <= 0) {
+    if (!isProductAvailable(product)) {
       setCartMessage(`${product.title} ناموجود است.`);
       window.setTimeout(() => setCartMessage(""), 1800);
       return;
     }
 
     const selectedColor = getFirstAvailableColor(product);
-    await addProductToCart(product, 1, selectedColor);
-    setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
+    try {
+      await addProductToCart(product, 1, selectedColor);
+      setCartMessage(`${product.title} به سبد خرید اضافه شد.`);
+    } catch (error) {
+      setCartMessage(error instanceof Error ? error.message : "افزودن به سبد خرید ناموفق بود.");
+    }
     window.setTimeout(() => setCartMessage(""), 1800);
   };
 
+  const Root = root;
+
   return (
-    <main className="min-h-screen bg-primary-base text-primary-text">
+    <Root className="min-h-screen bg-primary-base text-primary-text">
       <section className="mx-auto flex w-full flex-col gap-6 px-4 py-8">
         <div className="flex flex-col gap-2 border-b border-primary-border pb-4">
           <div className="text-3xl font-bold">محصولات</div>
@@ -291,6 +335,7 @@ export function ProductShowcase() {
                 formatPrice={formatPrice}
                 getFinalPrice={getFinalPrice}
                 getDiscountPercent={getDiscountPercent}
+                hideShowcaseLink={mode === "products"}
               />
             )
           )}
@@ -301,7 +346,6 @@ export function ProductShowcase() {
           open={Boolean(previewImage)}
           onClose={() => setPreviewImage("")}
           title="تصویر محصول"
-          closeText="بستن"
           rounded="lg"
           shadow="lg"
         >
@@ -316,6 +360,6 @@ export function ProductShowcase() {
           </div>
         </CustomModal>
       </section>
-    </main>
+    </Root>
   );
 }
