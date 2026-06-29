@@ -118,7 +118,6 @@ export default function CategoryProductsPage() {
                   <CustomButton
                     type="button"
                     variant="success"
-                    border="base"
                     size="sm"
                     fullWidth
                     className="flex-1"

@@ -263,7 +263,6 @@ export function AdminSecurityPanel() {
         />
         </div>
         <CustomButton
-          border="base"
           fullWidth
           isLoading={savingCode}
           loading="dots"
@@ -296,10 +295,10 @@ export function AdminSecurityPanel() {
                     <span className="text-xs text-secondary-text">{request.status}</span>
                   </div>
                   <div className="flex gap-2">
-                    <CustomButton size="sm" border="base" onClick={() => void reviewAdminRequest(request.id, true)}>
+                    <CustomButton size="sm" onClick={() => void reviewAdminRequest(request.id, true)}>
                       تایید
                     </CustomButton>
-                    <CustomButton size="sm" variant="danger" border="base" onClick={() => void reviewAdminRequest(request.id, false)}>
+                    <CustomButton size="sm" variant="danger" onClick={() => void reviewAdminRequest(request.id, false)}>
                       رد
                     </CustomButton>
                   </div>

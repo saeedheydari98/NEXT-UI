@@ -239,8 +239,8 @@ export default function CartPage() {
           {items.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <CustomButton
-                border="base"
                 size="sm"
+                variant="info"
                 icon={<IoCardOutline />}
                 isLoading={isCheckoutLoading}
                 loadingText="در حال پرداخت"
@@ -248,7 +248,7 @@ export default function CartPage() {
               >
                 پرداخت
               </CustomButton>
-              <CustomButton variant="danger" border="base" size="sm" disabled={isCheckoutLoading} onClick={clearCart}>
+              <CustomButton variant="danger" size="sm" disabled={isCheckoutLoading} onClick={clearCart}>
                 خالی کردن سبد
               </CustomButton>
             </div>
@@ -320,7 +320,6 @@ export default function CartPage() {
                   <div className="flex items-center gap-2">
                     <CustomButton
                       variant="neutral"
-                      border="base"
                       size="sm"
                       disabled={isCheckoutLoading}
                       onClick={() => updateQuantity(item, item.quantity - 1)}
@@ -330,7 +329,6 @@ export default function CartPage() {
                     <span className="min-w-8 text-center text-sm font-bold">{item.quantity}</span>
                     <CustomButton
                       variant="neutral"
-                      border="base"
                       size="sm"
                       disabled={isCheckoutLoading}
                       onClick={() => updateQuantity(item, item.quantity + 1)}
@@ -340,7 +338,6 @@ export default function CartPage() {
                   </div>
                   <CustomButton
                     variant="danger"
-                    border="base"
                     size="sm"
                     icon={<IoTrashOutline />}
                     disabled={isCheckoutLoading}
@@ -361,7 +358,6 @@ export default function CartPage() {
           title="تصویر محصول"
           closeText="بستن"
           rounded="lg"
-          border="base"
           shadow="lg"
         >
           <div className="flex max-h-[75vh] items-center justify-center overflow-hidden rounded-md bg-primary-base">
@@ -381,7 +377,6 @@ export default function CartPage() {
           title="اطلاعات تحویل سفارش"
           closeText="بستن"
           rounded="lg"
-          border="base"
           shadow="lg"
         >
           <div className="flex flex-col gap-3">
@@ -478,7 +473,7 @@ export default function CartPage() {
                 {profileError}
               </div>
             ) : null}
-            <CustomButton border="base" fullWidth icon={<IoCardOutline />} onClick={saveProfileDraft}>
+            <CustomButton fullWidth icon={<IoCardOutline />} onClick={saveProfileDraft}>
               ذخیره و ادامه
             </CustomButton>
           </div>
@@ -490,7 +485,6 @@ export default function CartPage() {
           title="خرید تکمیل شد"
           closeText="بستن"
           rounded="lg"
-          border="base"
           shadow="lg"
         >
           <div className="flex flex-col gap-3">

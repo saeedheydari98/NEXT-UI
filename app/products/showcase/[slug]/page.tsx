@@ -245,7 +245,6 @@ export default function ShowcasePage() {
               placeholder="جست‌وجو بین محصولات..."
               size="sm"
               rounded="full"
-              border="base"
               icon={<FiSearch />}
               className="bg-primary-media text-sm"
               style={{ backgroundColor: "var(--primary-media)" }}
@@ -265,7 +264,6 @@ export default function ShowcasePage() {
                 placeholder="جست‌وجو..."
                 size="sm"
                 rounded="full"
-                border="base"
                 icon={<FiSearch />}
                 className="bg-primary-media text-sm"
                 style={{ backgroundColor: "var(--primary-media)" }}
@@ -365,7 +363,6 @@ export default function ShowcasePage() {
                           <CustomButton
                             type="button"
                             variant="success"
-                            border="base"
                             size="sm"
                             fullWidth
                             className="flex-1"

@@ -34,7 +34,6 @@ export function AdminBannerList({ banner, onEdit, onPreview, isLoading = false }
               variant="neutral"
               rounded="full"
               size="sm"
-              border="base"
               icon={<IoCreateOutline />}
               onClick={() => onEdit(banner)}
             >

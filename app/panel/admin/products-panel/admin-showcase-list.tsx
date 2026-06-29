@@ -95,7 +95,6 @@ export function AdminShowcaseList({
                     variant="neutral"
                     rounded="full"
                     size="sm"
-                    border="base"
                     icon={<IoCreateOutline />}
                     onClick={() => onEditShowcase(showcase)}
                   >
@@ -107,7 +106,6 @@ export function AdminShowcaseList({
                     variant="danger"
                     rounded="full"
                     size="sm"
-                    border="base"
                     icon={<IoTrashOutline />}
                     onClick={() => onDeleteShowcase(showcase)}
                   >

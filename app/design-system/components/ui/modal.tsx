@@ -41,7 +41,7 @@ export function CustomModal({
   variant = "primary",
   size = "md",
   rounded = "lg",
-  border = "base",
+  border = "dashed",
   shadow = "lg",
   closeText = "بستن",
   loading = "spinner",

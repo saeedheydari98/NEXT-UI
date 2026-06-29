@@ -183,7 +183,7 @@ export function AppHeader() {
               <IoArrowBack />
             </button>
           ) : null}
-          <div className="shrink-0 text-blue-dark-700"><GiSpermWhale size={40}/></div>
+          <div className="shrink-0 text-primary-base-nomode"><GiSpermWhale size={40}/></div>
           <div className="shrink-0">
             <Toggle checked={mode === "dark"} onChange={(isDark: boolean) => setMode(isDark ? "dark" : "light")} />
           </div>
@@ -210,14 +210,13 @@ export function AppHeader() {
           {authUser && !isMobile ? (
             <div className="flex items-center gap-2">
               <span className="hidden text-xs font-semibold text-primary-text sm:inline">{authUser.username || authUser.name || "حساب کاربری"}</span>
-              <CustomButton size="sm" variant="neutral" border="base" onClick={logout}>
+              <CustomButton size="sm" variant="neutral" onClick={logout}>
                 خروج
               </CustomButton>
             </div>
           ) : !authUser ? (
             <CustomButton
               size="sm"
-              border="base"
               onClick={() => {
                 setAuthMode("choice");
                 setAuthStatus("");
@@ -265,7 +264,6 @@ export function AppHeader() {
               <CustomButton
                 size="sm"
                 variant="neutral"
-                border="base"
                 fullWidth
                 onClick={() => {
                   closeMenu();
@@ -284,14 +282,12 @@ export function AppHeader() {
         title={authMode === "choice" ? "حساب کاربری" : "ورود به حساب"}
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         <div className="flex flex-col gap-3">
           {authMode === "choice" ? (
             <div className="flex flex-col gap-2">
               <CustomButton
-                border="base"
                 fullWidth
                 onClick={() => {
                   setAuthMode("login");
@@ -301,7 +297,6 @@ export function AppHeader() {
                 ورود به حساب
               </CustomButton>
               <CustomButton
-                border="base"
                 variant="neutral"
                 fullWidth
                 onClick={() => {
@@ -338,10 +333,10 @@ export function AppHeader() {
                 <div className="rounded-md border border-primary-border bg-primary-bg px-3 py-2 text-sm font-semibold text-primary-text">{authStatus}</div>
               ) : null}
               <div className="flex gap-2">
-                <CustomButton border="base" variant="neutral" fullWidth onClick={() => setAuthMode("choice")}>
+                <CustomButton variant="neutral" fullWidth onClick={() => setAuthMode("choice")}>
                   بازگشت
                 </CustomButton>
-                <CustomButton border="base" fullWidth isLoading={authLoading} onClick={submitAuth}>
+                <CustomButton fullWidth isLoading={authLoading} onClick={submitAuth}>
                   ورود
                 </CustomButton>
               </div>

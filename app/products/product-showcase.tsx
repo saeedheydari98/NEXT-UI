@@ -303,7 +303,6 @@ export function ProductShowcase() {
           title="تصویر محصول"
           closeText="بستن"
           rounded="lg"
-          border="base"
           shadow="lg"
         >
           <div className="flex max-h-[75vh] items-center justify-center overflow-hidden rounded-md bg-primary-base">

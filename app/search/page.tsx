@@ -96,7 +96,6 @@ export default function SearchPage() {
                     <CustomButton
                       type="button"
                       variant="success"
-                      border="base"
                       size="sm"
                       fullWidth
                       className="flex-1"

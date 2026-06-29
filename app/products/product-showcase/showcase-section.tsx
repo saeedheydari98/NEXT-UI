@@ -97,7 +97,7 @@ export function ShowcaseSection({
                 </Loading>
                 {product.badge && !isLoading ? (
                   <div className="absolute left-2 top-2">
-                    <CustomTag size="xs" rounded="full" border="base">
+                    <CustomTag size="xs" rounded="full" >
                       {product.badge}
                     </CustomTag>
                   </div>
@@ -125,7 +125,7 @@ export function ShowcaseSection({
                     </Loading>
                   </div>
                   {getDiscountPercent(product) > 0 && !isLoading ? (
-                    <CustomTag size="xs" rounded="full" border="base">
+                    <CustomTag size="xs" rounded="full">
                       {getDiscountPercent(product)}٪ تخفیف
                     </CustomTag>
                   ) : null}
@@ -145,7 +145,6 @@ export function ShowcaseSection({
                 <CustomButton
                   type="button"
                   variant="success"
-                  border="base"
                   rounded="md"
                   size="sm"
                   className="flex-1"

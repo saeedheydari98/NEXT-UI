@@ -426,7 +426,6 @@ export function UserProfilePanel() {
       ) : null}
 
       <CustomButton
-        border="base"
         variant="secondary"
         icon={authUser ? <IoSaveOutline /> : <IoLogInOutline />}
         isLoading={authUser ? isSavingProfile : isRegistering}
@@ -486,7 +485,6 @@ export function UserProfilePanel() {
             </div>
           ) : null}
           <CustomButton
-            border="base"
             variant="secondary"
             icon={<IoKeyOutline />}
             isLoading={isChangingPassword}

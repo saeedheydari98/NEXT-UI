@@ -1631,7 +1631,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   size="sm"
                   rounded="full"
                   variant="primary"
-                  border="base"
                   icon={<IoCreateOutline />}
                   onClick={() => openEditModal(product)}
                 >
@@ -1641,7 +1640,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   size="sm"
                   rounded="full"
                   variant="neutral"
-                  border="base"
                   onClick={() => openProductRelations(product, "category")}
                 >
                   دسته‌بندی
@@ -1650,7 +1648,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   size="sm"
                   rounded="full"
                   variant="neutral"
-                  border="base"
                   onClick={() => openProductRelations(product, "showcase")}
                 >
                   ویترین
@@ -1735,7 +1732,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                       <span className="text-xs text-secondary-text">{categoryProducts.length} محصول</span>
                     </div>
                   </div>
-                  <CustomButton size="sm" variant="neutral" border="base" onClick={() => openEditCategoryModal(category)}>
+                  <CustomButton size="sm" variant="neutral" onClick={() => openEditCategoryModal(category)}>
                     ویرایش
                   </CustomButton>
                 </div>
@@ -1792,7 +1789,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     <span className="text-xs text-secondary-text">{sortedProducts.filter((product) => product.categoryId === category.id).length} محصول</span>
                   </div>
                 </div>
-                <CustomButton size="sm" variant="neutral" border="base" onClick={() => openEditCategoryModal(category)}>
+                <CustomButton size="sm" variant="neutral" onClick={() => openEditCategoryModal(category)}>
                   ویرایش
                 </CustomButton>
               </div>
@@ -1801,7 +1798,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   <CustomButton
                     key={product.id}
                     size="sm"
-                    border="base"
                     rounded="full"
                     variant={product.categoryId === category.id ? "primary" : "neutral"}
                     onClick={() => void toggleCategoryProduct(category, product)}
@@ -1860,16 +1856,16 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             </div>
             );
           })}
-          <CustomButton border="base" icon={<IoSaveOutline />} onClick={() => void saveStorefrontPlacement()}>
+          <CustomButton icon={<IoSaveOutline />} onClick={() => void saveStorefrontPlacement()}>
             ذخیره چیدمان
           </CustomButton>
         </div>
       ) : null}
 
-      {section === "products" ? <FloatButton label="New product" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openCreateModal} /> : null}
-      {section === "showcases" ? <FloatButton label="New showcase" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openShowcaseModal} /> : null}
-      {section === "categories" ? <FloatButton label="دسته‌بندی جدید" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openCategoryModal} /> : null}
-      {section === "banners" ? <FloatButton label="New banner" icon={<IoAdd />} position="bottom-right" border="base" shadow="lg" onClick={openBannerModal} /> : null}
+      {section === "products" ? <FloatButton label="New product" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openCreateModal} /> : null}
+      {section === "showcases" ? <FloatButton label="New showcase" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openShowcaseModal} /> : null}
+      {section === "categories" ? <FloatButton label="دسته‌بندی جدید" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openCategoryModal} /> : null}
+      {section === "banners" ? <FloatButton label="New banner" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openBannerModal} /> : null}
 
       <CustomModal
         open={isCategoryOpen}
@@ -1877,7 +1873,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title="ثبت دسته‌بندی"
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
@@ -1921,7 +1916,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             label={draftCategory.active ? "فعال" : "مخفی"}
             size="sm"
           />
-          <CustomButton border="base" fullWidth icon={<IoSaveOutline />} onClick={submitDraftCategory}>
+          <CustomButton fullWidth icon={<IoSaveOutline />} onClick={submitDraftCategory}>
             ثبت دسته‌بندی
           </CustomButton>
         </div>
@@ -1936,7 +1931,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title={editingCategory?.title || "ویرایش دسته‌بندی"}
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         {editingCategory && (
@@ -1982,10 +1976,10 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               size="sm"
             />
             <div className="flex flex-col gap-2 sm:flex-row">
-              <CustomButton variant="danger" border="base" fullWidth icon={<IoTrashOutline />} onClick={deleteEditingCategory}>
+              <CustomButton variant="danger" fullWidth icon={<IoTrashOutline />} onClick={deleteEditingCategory}>
                 حذف
               </CustomButton>
-              <CustomButton border="base" fullWidth icon={<IoSaveOutline />} onClick={submitEditingCategory}>
+              <CustomButton fullWidth icon={<IoSaveOutline />} onClick={submitEditingCategory}>
                 ذخیره دسته‌بندی
               </CustomButton>
             </div>
@@ -1999,7 +1993,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title="Register banner"
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         <div className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto rounded-lg border border-primary-border bg-primary-card p-3">
@@ -2090,7 +2083,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 placeholder="آدرس تصویر"
                 onChange={(event) => setDraftBannerImageUrl(event.target.value)}
               />
-              <CustomButton border="base" icon={<IoAdd />} onClick={() => addBannerImageUrl("draft")}>
+              <CustomButton icon={<IoAdd />} onClick={() => addBannerImageUrl("draft")}>
                 افزودن
               </CustomButton>
             </div>
@@ -2122,7 +2115,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   <CustomButton
                     variant="danger"
                     size="sm"
-                    border="base"
                     icon={<IoTrashOutline />}
                     onClick={() => removeBannerImage(imageUrl, "draft")}
                   >
@@ -2139,7 +2131,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             size="sm"
           />
           <CustomButton
-            border="base"
             fullWidth
             icon={<IoSaveOutline />}
             onClick={submitDraftBanner}
@@ -2158,7 +2149,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title={editingBanner?.title || "ویرایش بنر"}
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         {editingBanner && (
@@ -2250,7 +2240,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   placeholder="آدرس تصویر"
                   onChange={(event) => setEditingBannerImageUrl(event.target.value)}
                 />
-                <CustomButton border="base" icon={<IoAdd />} onClick={() => addBannerImageUrl("edit")}>
+                <CustomButton icon={<IoAdd />} onClick={() => addBannerImageUrl("edit")}>
                   افزودن
                 </CustomButton>
               </div>
@@ -2279,7 +2269,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     <CustomButton
                       variant="danger"
                       size="sm"
-                      border="base"
                       icon={<IoTrashOutline />}
                       onClick={() => removeBannerImage(imageUrl, "edit")}
                     >
@@ -2298,7 +2287,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <div className="flex flex-col gap-2 sm:flex-row">
               <CustomButton
                 variant="danger"
-                border="base"
                 fullWidth
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingBanner}
@@ -2306,7 +2294,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 حذف
               </CustomButton>
               <CustomButton
-                border="base"
                 fullWidth
                 icon={<IoSaveOutline />}
                 onClick={submitEditingBanner}
@@ -2324,7 +2311,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title="Register showcase"
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
@@ -2390,7 +2376,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     key={product.id}
                     variant={draftShowcase.manualProductIds.map(String).includes(String(product.id)) ? "primary" : "neutral"}
                     size="sm"
-                    border="base"
                     onClick={() => updateDraftShowcase({ manualProductIds: toggleProductId(draftShowcase.manualProductIds, product.id) })}
                   >
                     {product.title}
@@ -2406,7 +2391,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             size="sm"
           />
           <CustomButton
-            border="base"
             fullWidth
             icon={<IoSaveOutline />}
             onClick={submitDraftShowcase}
@@ -2425,7 +2409,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title={editingShowcase?.title || "ویرایش ویترین"}
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         {editingShowcase && (
@@ -2492,7 +2475,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                       key={product.id}
                       variant={editingShowcase.manualProductIds.map(String).includes(String(product.id)) ? "primary" : "neutral"}
                       size="sm"
-                      border="base"
                       onClick={() => updateEditingShowcase({ manualProductIds: toggleProductId(editingShowcase.manualProductIds, product.id) })}
                     >
                       {product.title}
@@ -2510,7 +2492,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <div className="flex flex-col gap-2 sm:flex-row">
               <CustomButton
                 variant="danger"
-                border="base"
                 fullWidth
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingShowcase}
@@ -2518,7 +2499,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 حذف
               </CustomButton>
               <CustomButton
-                border="base"
                 fullWidth
                 icon={<IoSaveOutline />}
                 onClick={submitEditingShowcase}
@@ -2536,7 +2516,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title="ثبت محصول"
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         <div className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto">
@@ -2550,7 +2529,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                     variant={draftProduct.showcaseId === showcase.id ? "primary" : "neutral"}
                     rounded="full"
                     size="sm"
-                    border="base"
                     onClick={() => updateDraftProduct({ showcaseId: showcase.id })}
                   >
                     {showcase.title || "بدون عنوان"}
@@ -2669,7 +2647,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           />
 
           <CustomButton
-            border="base"
             fullWidth
             isLoading={saving}
             loading="dots"
@@ -2691,7 +2668,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title={editingProduct?.title || "ویرایش محصول"}
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         {editingProduct && (
@@ -2706,7 +2682,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                       variant={editingProduct.showcaseId === showcase.id ? "primary" : "neutral"}
                       rounded="full"
                       size="sm"
-                      border="base"
                       onClick={() => updateEditingProduct({ showcaseId: showcase.id })}
                     >
                       {showcase.title || "بدون عنوان"}
@@ -2827,7 +2802,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <div className="flex flex-col gap-2 sm:flex-row">
               <CustomButton
                 variant="danger"
-                border="base"
                 fullWidth
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingProduct}
@@ -2835,7 +2809,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 حذف
               </CustomButton>
               <CustomButton
-                border="base"
                 isLoading={saving}
                 loading="dots"
                 loadingText="در حال ذخیره..."
@@ -2856,7 +2829,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title={relationMode === "category" ? "دسته‌بندی‌های محصول" : "ویترین‌های محصول"}
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         {relationProduct ? (
@@ -2900,7 +2872,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   return (
                     <CustomButton
                       key={showcase.id}
-                      border="base"
                       variant={selected ? "primary" : "neutral"}
                       unstyled={!selected}
                       className={!selected ? "border-primary-border bg-primary-card text-secondary-text" : undefined}
@@ -2914,7 +2885,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             )}
 
             <CustomButton
-              border="base"
               fullWidth
               icon={<IoSaveOutline />}
               onClick={() => void submitRelationSelection()}
@@ -2931,7 +2901,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title={relationMode === "category" ? "دسته‌بندی‌های محصول" : "ویترین‌های محصول"}
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         {relationProduct ? (
@@ -2973,7 +2942,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   return (
                     <CustomButton
                       key={showcase.id}
-                      border="base"
                       variant={selected ? "primary" : "neutral"}
                       onClick={() => void toggleShowcaseProduct(showcase, relationProduct)}
                     >
@@ -2993,7 +2961,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         title="تصویر محصول"
         closeText="بستن"
         rounded="lg"
-        border="base"
         shadow="lg"
       >
         <div className="flex max-h-[75vh] items-center justify-center overflow-hidden rounded-md bg-primary-base">

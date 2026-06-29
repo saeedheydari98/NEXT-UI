@@ -218,7 +218,7 @@ export default function ProductPage() {
             <div className="flex min-w-0 flex-1 flex-col gap-5">
               <Loading loading="skeleton-item" isLoading>
                 <div>
-                  <CustomTag size="xs" rounded="full" border="base">
+                  <CustomTag size="xs" rounded="full" >
                     {LOADING_PRODUCT.badge}
                   </CustomTag>
                 </div>
@@ -261,7 +261,7 @@ export default function ProductPage() {
               </div>
               <div className="flex flex-wrap gap-3">
               <Loading loading="skeleton-item" isLoading>
-                <CustomButton type="button" variant="success" border="base" icon={<IoBagAddOutline />}>
+                <CustomButton type="button" variant="success" icon={<IoBagAddOutline />}>
                   افزودن به سبد
                 </CustomButton>
               </Loading>
@@ -371,7 +371,7 @@ export default function ProductPage() {
               <div className="flex flex-col gap-3">
                 {product.badge ? (
                   <div>
-                    <CustomTag size="xs" rounded="full" border="base">
+                    <CustomTag size="xs" rounded="full" >
                       {product.badge}
                     </CustomTag>
                   </div>
@@ -401,7 +401,7 @@ export default function ProductPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="text-3xl font-bold text-primary">{finalPrice || "بدون قیمت"}</div>
                 {discountPercent > 0 ? (
-                  <CustomTag size="xs" rounded="full" border="base">
+                  <CustomTag size="xs" rounded="full">
                     {discountPercent}٪ تخفیف
                   </CustomTag>
                 ) : null}
@@ -419,7 +419,6 @@ export default function ProductPage() {
               <CustomButton
                 type="button"
                 variant="success"
-                border="base"
                 icon={<IoBagAddOutline />}
                 onClick={() => addToCart(product)}
               >

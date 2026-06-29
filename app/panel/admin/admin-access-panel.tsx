@@ -95,7 +95,6 @@ export function AdminAccessPanel({ onUnlock }: AdminAccessPanelProps) {
       ) : null}
 
       <CustomButton
-        border="base"
         fullWidth
         icon={<IoLockOpenOutline />}
         isLoading={isSubmitting}
