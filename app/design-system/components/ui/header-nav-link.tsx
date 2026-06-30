@@ -8,11 +8,12 @@ import { cx } from "../../variants/shared.variant";
 type HeaderNavLinkProps = {
   href: string;
   children: React.ReactNode;
+  icon?: React.ReactNode;
   className?: string;
   onClick?: () => void;
 };
 
-export function HeaderNavLink({ href, children, className, onClick }: HeaderNavLinkProps) {
+export function HeaderNavLink({ href, children, icon, className, onClick }: HeaderNavLinkProps) {
   const pathname = usePathname();
   const active = href === "/"
     ? pathname === "/" || pathname.startsWith("/brand/")
@@ -24,12 +25,13 @@ export function HeaderNavLink({ href, children, className, onClick }: HeaderNavL
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cx(
-        "flex h-20 items-center justify-center border-b-2 px-4 text-sm font-semibold transition-colors",
+        "flex h-20 items-center justify-center gap-2 border-b-2 px-4 text-sm font-semibold transition-colors",
         active ? "text-primary-text" : "border-transparent text-primary-text hover:text-primary",
         className
       )}
       style={active ? { borderBottomColor: "color-mix(in srgb, var(--primary-border) 58%, var(--primary-text))" } : undefined}
     >
+      {icon ? <span className="text-lg">{icon}</span> : null}
       <span>{children}</span>
     </Link>
   );

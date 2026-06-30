@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { apiFail, apiOk, apiServerError } from "@/lib/api/response";
 import { rateLimit } from "@/lib/api/rate-limit";
 import { getAuthUser } from "@/lib/api/auth";
+import { isValidPastPersianDate, normalizePersianDate } from "@/lib/persian-date";
 import { cartItemDto, getOrCreateActiveCart } from "@/lib/api/catalog-service";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +58,7 @@ function normalizeProfile(value: ProfilePayload) {
     firstName: String(value.firstName ?? "").trim(),
     lastName: String(value.lastName ?? "").trim(),
     nationalId: String(value.nationalId ?? "").trim(),
-    birthDate: String(value.birthDate ?? "").trim(),
+    birthDate: normalizePersianDate(String(value.birthDate ?? "")),
     phone: String(value.phone ?? "").trim(),
     address: String(value.address ?? "").trim(),
     isAdminUnlocked: value.isAdminUnlocked === true,
@@ -65,7 +66,7 @@ function normalizeProfile(value: ProfilePayload) {
 }
 
 function isProfileComplete(profile: ReturnType<typeof normalizeProfile>) {
-  return Boolean(profile.firstName && profile.lastName && profile.nationalId && profile.birthDate && profile.phone && profile.address);
+  return Boolean(profile.firstName && profile.lastName && profile.nationalId && isValidPastPersianDate(profile.birthDate) && profile.phone && profile.address);
 }
 
 function normalizeCartItem(value: CartItemPayload) {

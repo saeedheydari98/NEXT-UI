@@ -1,56 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CategoryOption from "./design-system/components/ui/category-option";
 import { BannerCarousel } from "./products/product-showcase/banner-carousel";
-import {
-  getProducts,
-  slugifyCatalogValue,
-  type BannerRecord,
-  type ProductRecord,
-} from "@/lib/products-client";
-
-type BrandRecord = {
-  id: string;
-  title: string;
-  imageUrl?: string;
-};
+import { useProductsCatalog } from "@/lib/products-catalog-context";
 
 export default function Home() {
   const router = useRouter();
-  const [brands, setBrands] = useState<BrandRecord[]>([]);
-  const [banners, setBanners] = useState<BannerRecord[]>([]);
+  const { brands: catalogBrands, banners: catalogBanners, loading } = useProductsCatalog();
   const [previewImage, setPreviewImage] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const brands = useMemo(
+    () => catalogBrands
+      .filter((brand) => brand.active !== false)
+      .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)),
+    [catalogBrands]
+  );
 
-    void (async () => {
-      const catalog = await getProducts();
-      if (cancelled) return;
+  const banners = useMemo(
+    () => catalogBanners
+      .filter((banner) => banner.active !== false && banner.showOnHome !== false)
+      .sort((a, b) => Number(a.homeSortOrder ?? a.sortOrder ?? 0) - Number(b.homeSortOrder ?? b.sortOrder ?? 0)),
+    [catalogBanners]
+  );
 
-      const brandMap = new Map<string, BrandRecord>();
-      catalog.products
-        .filter((product: ProductRecord) => product.active !== false && product.isActive !== false && String(product.brand ?? "").trim())
-        .forEach((product: ProductRecord) => {
-          const title = String(product.brand ?? "").trim();
-          const id = slugifyCatalogValue(title);
-          if (!brandMap.has(id)) {
-            brandMap.set(id, { id, title, imageUrl: product.imageUrl });
-          }
-        });
+  const displaySections = useMemo(() => {
+    const bannerSections = banners.map((banner) => ({
+      type: "banner" as const,
+      item: banner,
+      sortOrder: Number(banner.homeSortOrder ?? banner.sortOrder ?? 0),
+    }));
+    const brandSections = brands.length > 0
+      ? [{
+          type: "brands" as const,
+          item: brands,
+          sortOrder: Number(brands[0]?.homeSortOrder ?? 1),
+        }]
+      : [];
 
-      setBrands(Array.from(brandMap.values()));
-      setBanners(catalog.banners.filter((banner) => banner.active !== false && banner.showOnHome !== false));
-      setLoading(false);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return [...bannerSections, ...brandSections].sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [banners, brands]);
 
   return (
     <main className="min-h-screen bg-primary-base text-primary-text">
@@ -60,36 +50,37 @@ export default function Home() {
           <span className="text-sm text-secondary-text">اینجا خانه فروشگاه است؛ معرفی فروشگاه، بنرها و برندهای منتخب را از همین صفحه دنبال کنید.</span>
         </div>
 
-        {!loading && banners.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {banners.map((banner) => (
+        {loading ? <div className="text-sm text-secondary-text">در حال بارگذاری برندها...</div> : null}
+
+        {!loading ? (
+          <div className="flex flex-col gap-8">
+            {displaySections.map((section) => section.type === "banner" ? (
               <BannerCarousel
-                key={banner.id}
-                banner={{ ...banner, title: banner.title ?? "", imageUrls: banner.imageUrls ?? [], active: banner.active !== false, sortOrder: Number(banner.sortOrder ?? 0) }}
+                key={`banner-${section.item.id}`}
+                banner={{ ...section.item, title: section.item.title ?? "", imageUrls: section.item.imageUrls ?? [], active: section.item.active !== false, sortOrder: Number(section.item.sortOrder ?? 0) }}
                 onPreview={(imageUrl) => setPreviewImage(imageUrl ?? "")}
               />
+            ) : (
+              <div key="brand-group" className="flex flex-col gap-3">
+                <div className="text-xl font-bold">برندها</div>
+                {brands.length === 0 ? (
+                  <div className="rounded-lg border border-primary-border bg-primary-card p-4 text-sm text-secondary-text">در حال حاضر برند فعالی وجود ندارد.</div>
+                ) : null}
+                <div className="flex flex-wrap gap-4">
+                  {section.item.map((brand) => (
+                    <CategoryOption
+                      key={brand.id}
+                      label={brand.title}
+                      imageUrl={brand.imageUrl}
+                      size="lg"
+                      onClick={() => router.push(`/brand/${brand.slug || brand.id}`)}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : null}
-
-        <div className="flex flex-col gap-3">
-          <div className="text-xl font-bold">برندها</div>
-          {loading ? <div className="text-sm text-secondary-text">در حال بارگذاری برندها...</div> : null}
-          {!loading && brands.length === 0 ? (
-            <div className="rounded-lg border border-primary-border bg-primary-card p-4 text-sm text-secondary-text">در حال حاضر برند فعالی وجود ندارد.</div>
-          ) : null}
-          <div className="flex flex-wrap gap-4">
-            {brands.map((brand) => (
-              <CategoryOption
-                key={brand.id}
-                label={brand.title}
-                imageUrl={brand.imageUrl}
-                size="lg"
-                onClick={() => router.push(`/brand/${brand.id}`)}
-              />
-            ))}
-          </div>
-        </div>
       </div>
 
       {previewImage ? (

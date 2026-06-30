@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { IoArrowForward, IoClose, IoMenu } from "react-icons/io5";
+import { IoArrowForward, IoClose, IoHomeOutline, IoMenu, IoPersonCircleOutline, IoStorefrontOutline } from "react-icons/io5";
 import { usePathname, useRouter } from "next/navigation";
 import Toggle from "../shared/toggle";
 import GlobalSearch from "../ui/global-search";
@@ -10,6 +10,8 @@ import { useTheme } from "../../theme/provider";
 import { useScrollHeaderHide } from "@/hooks/useScrollHeaderHide";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { RiShoppingCartFill } from "react-icons/ri";
+import { BiCategoryAlt } from "react-icons/bi";
+import { MdAdminPanelSettings } from "react-icons/md";
 import { CustomButton } from "../ui/button";
 import { CustomInput } from "../ui/input";
 import { CustomModal } from "../ui/modal";
@@ -40,12 +42,20 @@ type HeaderUser = {
   role?: string | null;
 };
 
-const navItems = [
+const legacyNavItems = [
   { href: "/", label: "خانه" },
   { href: "/categories", label: "دسته بندی" },
   { href: "/products", label: "ویترین" },
   { href: "/panel/admin", label: "پنل مدیریت", adminOnly: true },
   { href: "/panel/user", label: "حساب کاربری" },
+];
+
+const navItems = [
+  { href: "/", label: "خانه", icon: <IoHomeOutline /> },
+  { href: "/categories", label: "دسته بندی", icon: <BiCategoryAlt /> },
+  { href: "/products", label: "ویترین", icon: <IoStorefrontOutline /> },
+  { href: "/panel/admin", label: "پنل مدیریت", icon: <MdAdminPanelSettings />, adminOnly: true },
+  { href: "/panel/user", label: "حساب کاربری", icon: <IoPersonCircleOutline /> },
 ];
 
 function CartLink({ count, onClick }: { count: number; onClick?: () => void }) {
@@ -199,7 +209,7 @@ export function AppHeader() {
         {!isMobile && (
           <nav className="flex flex-1 justify-end items-stretch gap-1 self-stretch">
             {visibleNavItems.map((item) => (
-              <HeaderNavLink key={item.href} href={item.href}>
+              <HeaderNavLink key={item.href} href={item.href} icon={item.icon}>
                 {item.label}
               </HeaderNavLink>
             ))}
@@ -228,7 +238,7 @@ export function AppHeader() {
             </CustomButton>
           ) : null}
           <CartLink count={cartCount} />
-          {isMobile && (
+          {false && isMobile && (
             <button
               onClick={toggleMenu}
               className="text-2xl text-primary-text p-1 rounded-md hover:bg-primary-bg transition-colors"
@@ -241,7 +251,7 @@ export function AppHeader() {
       </div>
 
       {/* Mobile Menu Dropdown - Glassmorphic Background */}
-      {isMobile && (
+      {false && isMobile && (
         <div
           className={`absolute left-0 top-20 z-20 w-1/2 origin-top border border-primary-border/70 bg-primary-card/70 shadow-lg backdrop-blur-xl transition-all duration-300 ease-out ${
             isMenuOpen
@@ -289,6 +299,20 @@ export function AppHeader() {
             )}
           </div>
         </div>
+      )}
+      {isMobile && (
+        <nav className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around gap-1 border-t border-primary-border bg-primary-panel px-2 py-2 shadow-lg backdrop-blur">
+          {visibleNavItems.map((item) => (
+            <HeaderNavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              className="h-14 flex-1 flex-col gap-1 rounded-md border-0 px-1 py-1 text-[11px]"
+            >
+              {item.label}
+            </HeaderNavLink>
+          ))}
+        </nav>
       )}
       <CustomModal
         open={authOpen}

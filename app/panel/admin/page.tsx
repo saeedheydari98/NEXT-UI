@@ -68,7 +68,8 @@ export default function AdminPanelPage() {
     { id: "banners", label: "بنرها" },
     { id: "showcases", label: "ویترین‌ها" },
     { id: "categories", label: "دسته‌بندی‌ها" },
-    { id: "storefront", label: "چیدمان فروشگاه" },
+    { id: "brands", label: "برندها" },
+    { id: "storefront", label: "چیدمان" },
   ];
 
   return (

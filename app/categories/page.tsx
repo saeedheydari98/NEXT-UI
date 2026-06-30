@@ -17,10 +17,25 @@ export default function CategoriesPage() {
     [categories]
   );
 
-  const categoryBanners = useMemo(
-    () => banners.filter((banner) => banner.active !== false && banner.showOnCategories === true),
-    [banners]
-  );
+  const displaySections = useMemo(() => {
+    const bannerSections = banners
+      .filter((banner) => banner.active !== false && banner.showOnCategories === true)
+      .map((banner) => ({
+        type: "banner" as const,
+        item: banner,
+        sortOrder: Number(banner.categorySortOrder ?? banner.sortOrder ?? 0),
+      }));
+
+    const categorySections = visibleCategories.length > 0
+      ? [{
+          type: "categories" as const,
+          item: visibleCategories,
+          sortOrder: Number(visibleCategories[0]?.pageSortOrder ?? 1),
+        }]
+      : [];
+
+    return [...bannerSections, ...categorySections].sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [banners, visibleCategories]);
 
   return (
     <main className="min-h-screen bg-primary-base text-primary-text">
@@ -29,18 +44,6 @@ export default function CategoriesPage() {
           <div className="text-3xl font-bold">دسته بندی</div>
           <span className="text-sm text-secondary-text">یک دسته بندی را انتخاب کنید تا محصولات همان گروه را ببینید.</span>
         </div>
-
-        {categoryBanners.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {categoryBanners.map((banner) => (
-              <BannerCarousel
-                key={banner.id}
-                banner={{ ...banner, title: banner.title ?? "", imageUrls: banner.imageUrls ?? [], active: banner.active !== false, sortOrder: Number(banner.sortOrder ?? 0) }}
-                onPreview={(imageUrl) => setPreviewImage(imageUrl ?? "")}
-              />
-            ))}
-          </div>
-        ) : null}
 
         {loading ? (
           <div className="text-sm text-secondary-text">در حال بارگذاری دسته بندی ها...</div>
@@ -53,16 +56,33 @@ export default function CategoriesPage() {
         ) : null}
 
         <div className="flex flex-wrap gap-4">
-          {visibleCategories.map((category) => {
-            const slug = slugifyCatalogValue(category.slug || category.title || category.id);
+          {displaySections.map((section) => {
+            if (section.type === "banner") {
+              return (
+                <div key={`banner-${section.item.id}`} className="flex w-full min-w-full">
+                  <BannerCarousel
+                    banner={{ ...section.item, title: section.item.title ?? "", imageUrls: section.item.imageUrls ?? [], active: section.item.active !== false, sortOrder: Number(section.item.categorySortOrder ?? section.item.sortOrder ?? 0) }}
+                    onPreview={(imageUrl) => setPreviewImage(imageUrl ?? "")}
+                  />
+                </div>
+              );
+            }
+
             return (
-              <CategoryOption
-                key={category.id}
-                label={category.title}
-                imageUrl={category.imageUrl}
-                size="lg"
-                onClick={() => router.push(`/categories/${slug || category.id}`)}
-              />
+              <div key="category-group" className="flex w-full flex-wrap gap-4">
+                {section.item.map((category) => {
+                  const slug = slugifyCatalogValue(category.slug || category.title || category.id);
+                  return (
+                    <CategoryOption
+                      key={category.id}
+                      label={category.title}
+                      imageUrl={category.imageUrl}
+                      size="lg"
+                      onClick={() => router.push(`/categories/${slug || category.id}`)}
+                    />
+                  );
+                })}
+              </div>
             );
           })}
         </div>

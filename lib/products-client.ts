@@ -4,6 +4,7 @@ import { fetchJsonDeduped, invalidateFetchCache } from "@/lib/fetch-json";
 
 const CATALOG_URL_ACTIVE = "/api/products";
 const CATALOG_URL_ALL = "/api/products?all=1";
+export const PRODUCTS_CATALOG_UPDATED_EVENT = "products-catalog-updated";
 
 export type ProductRecord = {
   id?: number | string;
@@ -83,6 +84,17 @@ export type CategoryRecord = {
   imageUrl?: string | null;
   active?: boolean;
   sortOrder?: number | string;
+  pageSortOrder?: number | string;
+};
+
+export type BrandRecord = {
+  id: string;
+  title: string;
+  slug?: string;
+  imageUrl?: string | null;
+  active?: boolean;
+  sortOrder?: number | string;
+  homeSortOrder?: number | string;
 };
 
 export type BannerRecord = {
@@ -100,6 +112,8 @@ export type BannerRecord = {
   heightPercent?: number | string;
   homeSortOrder?: number | string;
   showcaseSortOrder?: number | string;
+  categorySortOrder?: number | string;
+  productSortOrder?: number | string;
   sortOrder?: number;
   placement?: number | string;
 };
@@ -125,6 +139,7 @@ export type CatalogObject = {
   placement?: number;
   showcases: Array<ShowcaseRecord & { products: ProductRecord[] }>;
   categories: CategoryRecord[];
+  brands: BrandRecord[];
   banners: BannerRecord[];
 };
 
@@ -132,6 +147,8 @@ type CatalogApiTree = {
   type?: "root";
   placement?: number | string;
   categories?: CategoryRecord[];
+  brands?: BrandRecord[];
+  banners?: BannerRecord[];
   children?: Array<
     | (BannerRecord & { type: "banner" })
     | (ShowcaseRecord & { type: "showcase"; products?: ProductRecord[] })
@@ -142,6 +159,7 @@ export type ProductsCache = {
   products: ProductRecord[];
   showcases: ShowcaseRecord[];
   categories: CategoryRecord[];
+  brands: BrandRecord[];
   banners: BannerRecord[];
   tree: CatalogTree;
   catalog: CatalogObject;
@@ -231,9 +249,10 @@ function emptyProductsCache(): ProductsCache {
     products: [],
     showcases: [],
     categories: [],
+    brands: [],
     banners: [],
     tree: { sections: [] },
-    catalog: { placement: 0, showcases: [], categories: [], banners: [] },
+    catalog: { placement: 0, showcases: [], categories: [], brands: [], banners: [] },
   };
 }
 
@@ -274,8 +293,12 @@ function getBannerMeta(banner: BannerRecord) {
   const showcaseId = String(banner.showcaseId ?? images.showcaseId ?? "").trim();
   const hasExplicitTargets = typeof banner.showOnHome === "boolean"
     || typeof banner.showOnShowcase === "boolean"
+    || typeof banner.showOnCategories === "boolean"
+    || typeof banner.showOnProducts === "boolean"
     || typeof images.showOnHome === "boolean"
-    || typeof images.showOnShowcase === "boolean";
+    || typeof images.showOnShowcase === "boolean"
+    || typeof images.showOnCategories === "boolean"
+    || typeof images.showOnProducts === "boolean";
   const showOnHome = hasExplicitTargets
     ? (banner.showOnHome ?? images.showOnHome) !== false
     : !showcaseId;
@@ -298,8 +321,14 @@ function getBannerMeta(banner: BannerRecord) {
   const showcaseSortOrder = Number.isFinite(Number(banner.showcaseSortOrder ?? images.showcaseSortOrder))
     ? Number(banner.showcaseSortOrder ?? images.showcaseSortOrder)
     : getPlacement(banner, 0);
+  const categorySortOrder = Number.isFinite(Number(banner.categorySortOrder ?? images.categorySortOrder))
+    ? Number(banner.categorySortOrder ?? images.categorySortOrder)
+    : homeSortOrder;
+  const productSortOrder = Number.isFinite(Number(banner.productSortOrder ?? images.productSortOrder))
+    ? Number(banner.productSortOrder ?? images.productSortOrder)
+    : showcaseSortOrder;
 
-  return { showcaseId, showOnHome, showOnShowcase, showOnCategories, showOnProducts, homeSortOrder, showcaseSortOrder };
+  return { showcaseId, showOnHome, showOnShowcase, showOnCategories, showOnProducts, homeSortOrder, showcaseSortOrder, categorySortOrder, productSortOrder };
 }
 
 export function normalizeColorStock(value: unknown) {
@@ -387,6 +416,23 @@ function normalizeCategoryRecord(category: CategoryRecord, fallbackOrder: number
     imageUrl: String(category.imageUrl ?? "").trim(),
     active: category.active !== false,
     sortOrder: placement,
+    pageSortOrder: Number.isFinite(Number(category.pageSortOrder)) ? Number(category.pageSortOrder) : 1,
+  };
+}
+
+function normalizeBrandRecord(brand: BrandRecord, fallbackOrder: number): BrandRecord {
+  const placement = getPlacement(brand, fallbackOrder);
+  const title = String(brand.title ?? brand.id ?? "").trim();
+  const slug = slugifyCatalogValue((brand.slug || title || brand.id) ?? "");
+
+  return {
+    id: String(brand.id ?? (slug || `brand-${fallbackOrder}`)),
+    title: title || `Brand ${fallbackOrder}`,
+    slug,
+    imageUrl: String(brand.imageUrl ?? "").trim(),
+    active: brand.active !== false,
+    sortOrder: placement,
+    homeSortOrder: Number.isFinite(Number(brand.homeSortOrder)) ? Number(brand.homeSortOrder) : 1,
   };
 }
 
@@ -411,9 +457,11 @@ function readTreePayload(payload: unknown): CatalogObject | null {
   if (!payload || typeof payload !== "object") return null;
 
   const tree = payload as CatalogApiTree;
-  if (!Array.isArray(tree.children)) return null;
+  const children = Array.isArray(tree.children) ? tree.children : [];
+  const bannerSource = Array.isArray(tree.banners) ? tree.banners : children.filter((item) => item.type === "banner");
+  if (!Array.isArray(tree.children) && !Array.isArray(tree.banners) && !Array.isArray(tree.categories) && !Array.isArray(tree.brands)) return null;
 
-  const showcases = tree.children
+  const showcases = children
     .filter((item) => item.type === "showcase")
     .map((showcase, showcaseIndex) => ({
       ...normalizeShowcaseRecord(showcase as ShowcaseRecord, showcaseIndex + 1),
@@ -430,14 +478,14 @@ function readTreePayload(payload: unknown): CatalogObject | null {
         : [],
     }));
 
-  const banners = tree.children
-    .filter((item) => item.type === "banner")
+  const banners = bannerSource
     .map((banner, bannerIndex) => normalizeBannerRecord(banner as BannerRecord, bannerIndex + 1));
 
   return {
     placement: getPlacement(tree, 0),
     showcases,
     categories: Array.isArray(tree.categories) ? tree.categories.map(normalizeCategoryRecord) : [],
+    brands: Array.isArray(tree.brands) ? tree.brands.map(normalizeBrandRecord) : [],
     banners,
   };
 }
@@ -458,6 +506,7 @@ function parseApiPayload(payload: unknown): ProductsCache {
     products?: ProductRecord[];
     showcases?: ShowcaseRecord[];
     categories?: CategoryRecord[];
+    brands?: BrandRecord[];
     banners?: BannerRecord[];
     children?: Array<
       | (BannerRecord & { type: "banner" })
@@ -514,6 +563,13 @@ function parseApiPayload(payload: unknown): ProductsCache {
       : Array.isArray(record.catalog?.categories)
         ? record.catalog.categories.map(normalizeCategoryRecord)
         : [];
+  const brands = treeCatalog?.brands && treeCatalog.brands.length > 0
+    ? treeCatalog.brands
+    : Array.isArray(record.brands)
+      ? record.brands.map(normalizeBrandRecord)
+      : Array.isArray(record.catalog?.brands)
+        ? record.catalog.brands.map(normalizeBrandRecord)
+        : [];
   const fallbackCategories = categories.length > 0
     ? categories
     : Array.from(new Set(products.flatMap((product) => normalizeStringList(product.categoryIds, [String(product.categoryId ?? "")]))))
@@ -524,6 +580,7 @@ function parseApiPayload(payload: unknown): ProductsCache {
     products: dedupeProducts(products),
     showcases,
     categories: fallbackCategories,
+    brands,
     banners,
     tree:
       record.tree && Array.isArray(record.tree.sections)
@@ -533,6 +590,7 @@ function parseApiPayload(payload: unknown): ProductsCache {
       placement: Number(treeCatalog?.placement ?? record.catalog?.placement ?? 0),
       showcases: catalogShowcases,
       categories: fallbackCategories,
+      brands,
       banners: catalogBanners,
     },
   };
@@ -683,6 +741,9 @@ export function findShowcaseById(
 
 export function clearProductsCache() {
   invalidateFetchCache("/api/products");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(PRODUCTS_CATALOG_UPDATED_EVENT));
+  }
 }
 
 export default { getProducts, findProductById, findShowcaseById, clearProductsCache };

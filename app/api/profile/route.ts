@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isValidPastPersianDate, normalizePersianDate } from "@/lib/persian-date";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -9,7 +10,7 @@ function normalizeProfile(value: any) {
     firstName: String(value?.firstName ?? "").trim(),
     lastName: String(value?.lastName ?? "").trim(),
     nationalId: String(value?.nationalId ?? "").trim(),
-    birthDate: String(value?.birthDate ?? "").trim(),
+    birthDate: normalizePersianDate(String(value?.birthDate ?? "")),
     phone: String(value?.phone ?? "").trim(),
     address: String(value?.address ?? "").trim(),
     themeMode: value?.themeMode === "dark" ? "dark" : "light",
@@ -21,7 +22,7 @@ function readAdminUnlocked(value: any) {
 }
 
 function isComplete(profile: ReturnType<typeof normalizeProfile>) {
-  return Boolean(profile.firstName && profile.lastName && profile.nationalId && profile.birthDate && profile.phone && profile.address);
+  return Boolean(profile.firstName && profile.lastName && profile.nationalId && isValidPastPersianDate(profile.birthDate) && profile.phone && profile.address);
 }
 
 export async function GET(request: Request) {

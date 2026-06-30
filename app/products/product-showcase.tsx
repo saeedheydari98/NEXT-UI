@@ -80,6 +80,10 @@ function normalizeBanner(item: Partial<Banner> & { bannerUrl?: string; images?: 
     showOnShowcase: item.showOnShowcase,
     showOnCategories: item.showOnCategories,
     showOnProducts: item.showOnProducts,
+    homeSortOrder: item.homeSortOrder,
+    showcaseSortOrder: item.showcaseSortOrder,
+    categorySortOrder: item.categorySortOrder,
+    productSortOrder: item.productSortOrder,
     intervalSeconds: Number.isFinite(Number(item.intervalSeconds)) ? Math.max(1, Math.round(Number(item.intervalSeconds))) : 5,
     heightPercent: Number.isFinite(Number(item.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(item.heightPercent)))) : 28,
     sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
@@ -158,7 +162,7 @@ export function ProductShowcase({ mode = "storefront", root = "main" }: ProductS
         .map((banner, index) => ({
           type: "banner" as const,
           item: normalizeBanner(banner, index + 1),
-          sortOrder: Number(banner.sortOrder ?? banner.placement ?? index + 1),
+          sortOrder: Number(banner.productSortOrder ?? banner.sortOrder ?? banner.placement ?? index + 1),
         }))
         .filter((section) => section.item.active !== false && section.item.showOnProducts === true);
 

@@ -159,6 +159,19 @@ model Category {
   imageUrl  String?
   active    Boolean  @default(true)
   sortOrder Int      @default(0)
+  pageSortOrder Int   @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Brand {
+  id        String   @id
+  title     String
+  slug      String   @unique
+  imageUrl  String?
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  homeSortOrder Int  @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -13,7 +13,9 @@ import {
   findProductById,
   findShowcaseById,
   getProducts,
+  PRODUCTS_CATALOG_UPDATED_EVENT,
   type BannerRecord,
+  type BrandRecord,
   type CatalogTree,
   type CategoryRecord,
   type ProductRecord,
@@ -24,6 +26,7 @@ type ProductsCatalogContextValue = {
   products: ProductRecord[];
   showcases: ShowcaseRecord[];
   categories: CategoryRecord[];
+  brands: BrandRecord[];
   banners: BannerRecord[];
   tree: CatalogTree;
   loading: boolean;
@@ -46,6 +49,7 @@ export function ProductsCatalogProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<ProductRecord[]>([]);
   const [showcases, setShowcases] = useState<ShowcaseRecord[]>([]);
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
+  const [brands, setBrands] = useState<BrandRecord[]>([]);
   const [banners, setBanners] = useState<BannerRecord[]>([]);
   const [tree, setTree] = useState<CatalogTree>({ sections: [] });
   const [loading, setLoading] = useState(true);
@@ -58,6 +62,7 @@ export function ProductsCatalogProvider({ children }: { children: ReactNode }) {
       setProducts(data.products);
       setShowcases(data.showcases);
       setCategories(data.categories);
+      setBrands(data.brands);
       setBanners(data.banners);
       setTree(data.tree);
       await waitForMinimumLoading(startedAt);
@@ -76,6 +81,7 @@ export function ProductsCatalogProvider({ children }: { children: ReactNode }) {
       setProducts(data.products);
       setShowcases(data.showcases);
       setCategories(data.categories);
+      setBrands(data.brands);
       setBanners(data.banners);
       setTree(data.tree);
       await waitForMinimumLoading(startedAt);
@@ -87,6 +93,15 @@ export function ProductsCatalogProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const refreshCatalog = () => {
+      void load(true);
+    };
+
+    window.addEventListener(PRODUCTS_CATALOG_UPDATED_EVENT, refreshCatalog);
+    return () => window.removeEventListener(PRODUCTS_CATALOG_UPDATED_EVENT, refreshCatalog);
+  }, [load]);
 
   const getProductById = useCallback(
     (id: string | number) => findProductById(products, id),
@@ -103,6 +118,7 @@ export function ProductsCatalogProvider({ children }: { children: ReactNode }) {
       products,
       showcases,
       categories,
+      brands,
       banners,
       tree,
       loading,
@@ -110,7 +126,7 @@ export function ProductsCatalogProvider({ children }: { children: ReactNode }) {
       getShowcaseById,
       refresh: () => load(true),
     }),
-    [products, showcases, categories, banners, tree, loading, getProductById, getShowcaseById, load]
+    [products, showcases, categories, brands, banners, tree, loading, getProductById, getShowcaseById, load]
   );
 
   return (

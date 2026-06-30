@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPastPersianDate, normalizePersianDate } from "@/lib/persian-date";
 
 const USERNAME_REGEX = /^[a-z0-9._-]+$/;
 const NAME_REGEX = /^[\p{L}][\p{L}\s'-]{1,49}$/u;
@@ -15,10 +16,7 @@ const customerProfileSchema = z.object({
   firstName: z.string().trim().regex(NAME_REGEX),
   lastName: z.string().trim().regex(NAME_REGEX),
   nationalId: z.string().trim().regex(NATIONAL_ID_REGEX),
-  birthDate: z.string().trim().min(1).refine((value) => {
-    const date = new Date(value);
-    return !Number.isNaN(date.getTime()) && date.getTime() <= Date.now();
-  }, "birth date must not be in the future"),
+  birthDate: z.string().trim().min(1).transform(normalizePersianDate).refine(isValidPastPersianDate, "birth date must be a valid past Jalali date"),
   phone: z.string().trim().regex(PHONE_REGEX),
   address: z.string().trim().min(5).max(200),
 });

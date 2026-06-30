@@ -70,6 +70,17 @@ export type CategoryForm = {
   imageUrl: string;
   active: boolean;
   sortOrder: number;
+  pageSortOrder: number;
+};
+
+export type BrandForm = {
+  id: string;
+  title: string;
+  slug: string;
+  imageUrl: string;
+  active: boolean;
+  sortOrder: number;
+  homeSortOrder: number;
 };
 
 export type BannerForm = {
@@ -86,5 +97,7 @@ export type BannerForm = {
   heightPercent: number;
   homeSortOrder: number;
   showcaseSortOrder: number;
+  categorySortOrder: number;
+  productSortOrder: number;
   sortOrder: number;
 };

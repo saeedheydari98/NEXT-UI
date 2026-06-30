@@ -13,6 +13,14 @@ type BannerPayload = {
   imageUrls?: string[];
   images?: unknown;
   active?: boolean;
+  showOnHome?: boolean;
+  showOnShowcase?: boolean;
+  showOnCategories?: boolean;
+  showOnProducts?: boolean;
+  homeSortOrder?: number | string;
+  showcaseSortOrder?: number | string;
+  categorySortOrder?: number | string;
+  productSortOrder?: number | string;
   sortOrder?: number | string;
   intervalSeconds?: number | string;
   heightPercent?: number | string;
@@ -27,17 +35,40 @@ function normalizeImages(value: BannerPayload) {
     return value.images.map((item) => String(item)).filter(Boolean);
   }
 
+  const imageMeta = readImageMeta(value.images);
+  const urls = Array.isArray(imageMeta.urls) ? imageMeta.urls : imageMeta.imageUrls;
+  if (Array.isArray(urls)) {
+    return urls.map((item) => String(item)).filter(Boolean);
+  }
+
   return [];
 }
 
+function readImageMeta(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value as Partial<BannerPayload> & { urls?: unknown; imageUrls?: unknown };
+}
+
 function normalizeBanner(value: BannerPayload, index: number) {
+  const imageMeta = readImageMeta(value.images);
+  const sortOrder = Number.isFinite(Number(value.sortOrder)) ? Number(value.sortOrder) : index + 1;
+  const homeSortOrder = Number.isFinite(Number(value.homeSortOrder ?? imageMeta.homeSortOrder)) ? Number(value.homeSortOrder ?? imageMeta.homeSortOrder) : sortOrder;
+  const showcaseSortOrder = Number.isFinite(Number(value.showcaseSortOrder ?? imageMeta.showcaseSortOrder)) ? Number(value.showcaseSortOrder ?? imageMeta.showcaseSortOrder) : sortOrder;
   return {
     id: String(value.id ?? `banner-${Date.now()}-${index}`).trim(),
     title: String(value.title ?? "").trim(),
     showcaseId: value.showcaseId ? String(value.showcaseId).trim() : null,
     imageUrls: normalizeImages(value),
     active: value.active !== false,
-    sortOrder: Number.isFinite(Number(value.sortOrder)) ? Number(value.sortOrder) : index + 1,
+    showOnHome: (value.showOnHome ?? imageMeta.showOnHome) !== false,
+    showOnShowcase: (value.showOnShowcase ?? imageMeta.showOnShowcase) === true,
+    showOnCategories: (value.showOnCategories ?? imageMeta.showOnCategories) === true,
+    showOnProducts: (value.showOnProducts ?? imageMeta.showOnProducts) === true,
+    homeSortOrder,
+    showcaseSortOrder,
+    categorySortOrder: Number.isFinite(Number(value.categorySortOrder ?? imageMeta.categorySortOrder)) ? Number(value.categorySortOrder ?? imageMeta.categorySortOrder) : homeSortOrder,
+    productSortOrder: Number.isFinite(Number(value.productSortOrder ?? imageMeta.productSortOrder)) ? Number(value.productSortOrder ?? imageMeta.productSortOrder) : showcaseSortOrder,
+    sortOrder,
     intervalSeconds: Number.isFinite(Number(value.intervalSeconds)) ? Math.max(1, Math.round(Number(value.intervalSeconds))) : 5,
     heightPercent: Number.isFinite(Number(value.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(value.heightPercent)))) : 28,
   };
@@ -53,9 +84,13 @@ function toClientBanner(banner: {
   intervalSeconds: number;
   heightPercent: number;
 }) {
+  const meta = readImageMeta(banner.images);
+  const urls = Array.isArray(meta.urls) ? meta.urls : meta.imageUrls;
   const imageUrls = Array.isArray(banner.images)
     ? banner.images.map((item) => String(item)).filter(Boolean)
-    : [];
+    : Array.isArray(urls)
+      ? urls.map((item) => String(item)).filter(Boolean)
+      : [];
 
   return {
     id: banner.id,
@@ -63,6 +98,14 @@ function toClientBanner(banner: {
     showcaseId: banner.showcaseId,
     imageUrls,
     active: banner.active,
+    showOnHome: typeof meta.showOnHome === "boolean" ? meta.showOnHome : true,
+    showOnShowcase: meta.showOnShowcase === true,
+    showOnCategories: meta.showOnCategories === true,
+    showOnProducts: meta.showOnProducts === true,
+    homeSortOrder: Number.isFinite(Number(meta.homeSortOrder)) ? Number(meta.homeSortOrder) : banner.sortOrder,
+    showcaseSortOrder: Number.isFinite(Number(meta.showcaseSortOrder)) ? Number(meta.showcaseSortOrder) : banner.sortOrder,
+    categorySortOrder: Number.isFinite(Number(meta.categorySortOrder)) ? Number(meta.categorySortOrder) : banner.sortOrder,
+    productSortOrder: Number.isFinite(Number(meta.productSortOrder)) ? Number(meta.productSortOrder) : banner.sortOrder,
     sortOrder: banner.sortOrder,
     intervalSeconds: banner.intervalSeconds,
     heightPercent: banner.heightPercent,
@@ -115,7 +158,19 @@ export async function POST(request: Request) {
             id: banner.id || undefined,
             title: banner.title || null,
             showcaseId: banner.showcaseId,
-            images: banner.imageUrls.length > 0 ? banner.imageUrls : Prisma.JsonNull,
+            images: banner.imageUrls.length > 0
+              ? {
+                  urls: banner.imageUrls,
+                  showOnHome: banner.showOnHome,
+                  showOnShowcase: banner.showOnShowcase,
+                  showOnCategories: banner.showOnCategories,
+                  showOnProducts: banner.showOnProducts,
+                  homeSortOrder: banner.homeSortOrder,
+                  showcaseSortOrder: banner.showcaseSortOrder,
+                  categorySortOrder: banner.categorySortOrder,
+                  productSortOrder: banner.productSortOrder,
+                }
+              : Prisma.JsonNull,
             active: banner.active,
             sortOrder: banner.sortOrder,
             intervalSeconds: banner.intervalSeconds,

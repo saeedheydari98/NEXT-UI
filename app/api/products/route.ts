@@ -96,6 +96,8 @@ type BannerPayload = {
   heightPercent?: number | string;
   homeSortOrder?: number | string;
   showcaseSortOrder?: number | string;
+  categorySortOrder?: number | string;
+  productSortOrder?: number | string;
   sortOrder?: number | string;
   placement?: number | string;
 };
@@ -106,6 +108,7 @@ type CatalogTreePayload = {
   children?: Array<ShowcasePayload | BannerPayload>;
   showcases?: ShowcasePayload[];
   categories?: CategoryPayload[];
+  brands?: BrandPayload[];
   banners?: BannerPayload[];
 };
 
@@ -116,6 +119,17 @@ type CategoryPayload = {
   imageUrl?: string | null;
   active?: boolean;
   sortOrder?: number | string;
+  pageSortOrder?: number | string;
+};
+
+type BrandPayload = {
+  id?: string;
+  title?: string;
+  slug?: string;
+  imageUrl?: string | null;
+  active?: boolean;
+  sortOrder?: number | string;
+  homeSortOrder?: number | string;
 };
 
 type BannerRecord = {
@@ -323,6 +337,8 @@ function toClientBanner(banner: BannerRecord) {
   const showOnProducts = typeof meta.showOnProducts === "boolean" ? meta.showOnProducts : showOnShowcase;
   const homeSortOrder = Number.isFinite(Number(meta.homeSortOrder)) ? Number(meta.homeSortOrder) : banner.sortOrder;
   const showcaseSortOrder = Number.isFinite(Number(meta.showcaseSortOrder)) ? Number(meta.showcaseSortOrder) : banner.sortOrder;
+  const categorySortOrder = Number.isFinite(Number(meta.categorySortOrder)) ? Number(meta.categorySortOrder) : homeSortOrder;
+  const productSortOrder = Number.isFinite(Number(meta.productSortOrder)) ? Number(meta.productSortOrder) : showcaseSortOrder;
 
   return {
     type: "banner" as const,
@@ -340,6 +356,8 @@ function toClientBanner(banner: BannerRecord) {
     heightPercent: clampWholeNumber(banner.heightPercent, 10, 100, 28),
     homeSortOrder,
     showcaseSortOrder,
+    categorySortOrder,
+    productSortOrder,
     sortOrder: homeSortOrder,
     placement: homeSortOrder,
   };
@@ -447,6 +465,23 @@ function normalizeCategory(value: Partial<CategoryPayload>, index: number) {
     imageUrl: String(value.imageUrl ?? "").trim(),
     active: value.active !== false,
     sortOrder: Number.isFinite(Number(value.sortOrder)) ? Number(value.sortOrder) : index + 1,
+    pageSortOrder: Number.isFinite(Number(value.pageSortOrder)) ? Number(value.pageSortOrder) : 1,
+  };
+}
+
+function normalizeBrand(value: Partial<BrandPayload>, index: number) {
+  const title = String(value.title ?? "").trim();
+  const slug = slugifyCatalogValue(value.slug || title || value.id || `brand-${index + 1}`);
+  const id = String(value.id ?? slug).trim() || slug;
+
+  return {
+    id,
+    title: title || id,
+    slug,
+    imageUrl: String(value.imageUrl ?? "").trim(),
+    active: value.active !== false,
+    sortOrder: Number.isFinite(Number(value.sortOrder)) ? Number(value.sortOrder) : index + 1,
+    homeSortOrder: Number.isFinite(Number(value.homeSortOrder)) ? Number(value.homeSortOrder) : 1,
   };
 }
 
@@ -457,6 +492,7 @@ function toClientCategory(category: {
   imageUrl?: string | null;
   active: boolean;
   sortOrder: number;
+  pageSortOrder?: number;
 }) {
   return {
     id: category.id,
@@ -465,6 +501,27 @@ function toClientCategory(category: {
     imageUrl: category.imageUrl ?? "",
     active: category.active,
     sortOrder: category.sortOrder,
+    pageSortOrder: category.pageSortOrder ?? 1,
+  };
+}
+
+function toClientBrand(brand: {
+  id: string;
+  title: string;
+  slug: string;
+  imageUrl?: string | null;
+  active: boolean;
+  sortOrder: number;
+  homeSortOrder?: number;
+}) {
+  return {
+    id: brand.id,
+    title: brand.title,
+    slug: brand.slug,
+    imageUrl: brand.imageUrl ?? "",
+    active: brand.active,
+    sortOrder: brand.sortOrder,
+    homeSortOrder: brand.homeSortOrder ?? 1,
   };
 }
 
@@ -490,6 +547,16 @@ function buildCatalogTree(
     imageUrl?: string | null;
     active: boolean;
     sortOrder: number;
+    pageSortOrder?: number;
+  }>,
+  brands: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    imageUrl?: string | null;
+    active: boolean;
+    sortOrder: number;
+    homeSortOrder?: number;
   }>,
   banners: BannerRecord[],
   includeInactive: boolean
@@ -504,8 +571,10 @@ function buildCatalogTree(
     ? banners
     : banners.filter((banner) => banner.active !== false);
 
-  const bannerSections = visibleBanners.map(toClientBanner).filter((banner) => banner.showOnHome !== false);
+  const allBannerSections = visibleBanners.map(toClientBanner);
+  const bannerSections = allBannerSections.filter((banner) => banner.showOnHome !== false);
   const visibleCategories = categories.filter((category) => includeInactive || category.active !== false);
+  const visibleBrands = brands.filter((brand) => includeInactive || brand.active !== false);
   const fallbackCategories = visibleCategories.length > 0
     ? visibleCategories
     : Array.from(
@@ -519,6 +588,17 @@ function buildCatalogTree(
       ).map((categoryId, index) =>
         normalizeCategory({ id: categoryId, title: categoryId, slug: categoryId, active: true }, index)
       );
+  const fallbackBrands = visibleBrands.length > 0
+    ? visibleBrands
+    : Array.from(new Map(
+        visibleProducts
+          .map((product) => String(product.brand ?? "").trim())
+          .filter(Boolean)
+          .map((brandTitle, index) => [
+            slugifyCatalogValue(brandTitle),
+            normalizeBrand({ id: slugifyCatalogValue(brandTitle), title: brandTitle, slug: brandTitle, active: true }, index),
+          ])
+      ).values());
 
   const showcaseSections = visibleShowcases
     .map((showcase) => {
@@ -560,6 +640,10 @@ function buildCatalogTree(
     categories: fallbackCategories
       .map(toClientCategory)
       .sort((a, b) => a.sortOrder - b.sortOrder),
+    brands: fallbackBrands
+      .map(toClientBrand)
+      .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)),
+    banners: allBannerSections,
     children: [...bannerSections, ...showcaseSections].sort(
       (a, b) => Number(a.placement ?? 0) - Number(b.placement ?? 0)
     ),
@@ -607,6 +691,8 @@ function getBannerImageData(value: unknown) {
       showOnProducts?: unknown;
       homeSortOrder?: unknown;
       showcaseSortOrder?: unknown;
+      categorySortOrder?: unknown;
+      productSortOrder?: unknown;
     };
     const urls = Array.isArray(record.urls) ? record.urls : record.imageUrls;
     return {
@@ -618,6 +704,8 @@ function getBannerImageData(value: unknown) {
       showOnProducts: typeof record.showOnProducts === "boolean" ? record.showOnProducts : undefined,
       homeSortOrder: Number.isFinite(Number(record.homeSortOrder)) ? Number(record.homeSortOrder) : undefined,
       showcaseSortOrder: Number.isFinite(Number(record.showcaseSortOrder)) ? Number(record.showcaseSortOrder) : undefined,
+      categorySortOrder: Number.isFinite(Number(record.categorySortOrder)) ? Number(record.categorySortOrder) : undefined,
+      productSortOrder: Number.isFinite(Number(record.productSortOrder)) ? Number(record.productSortOrder) : undefined,
     };
   }
 
@@ -630,6 +718,8 @@ function getBannerImageData(value: unknown) {
     showOnProducts: undefined,
     homeSortOrder: undefined,
     showcaseSortOrder: undefined,
+    categorySortOrder: undefined,
+    productSortOrder: undefined,
   };
 }
 
@@ -780,10 +870,17 @@ export async function GET(request: Request) {
             orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
           })
         : [];
+    const brands =
+      "brand" in prisma && typeof (prisma as any).brand?.findMany === "function"
+        ? await (prisma as any).brand.findMany({
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          })
+        : [];
     const tree = buildCatalogTree(
       limitedProducts,
       showcases,
       categories,
+      brands,
       banners as BannerRecord[],
       includeInactive
     );
@@ -839,6 +936,11 @@ export async function POST(request: Request) {
     ? (body.categories as CategoryPayload[]).map(normalizeCategory)
     : Array.isArray(treePayload?.categories)
       ? treePayload.categories.map(normalizeCategory)
+      : [];
+  const brands = Array.isArray(body.brands)
+    ? (body.brands as BrandPayload[]).map(normalizeBrand)
+    : Array.isArray(treePayload?.brands)
+      ? treePayload.brands.map(normalizeBrand)
       : [];
   const banners = catalogBanners.length > 0
     ? catalogBanners
@@ -920,8 +1022,32 @@ export async function POST(request: Request) {
               imageUrl: category.imageUrl,
               active: category.active,
               sortOrder: category.sortOrder,
+              pageSortOrder: category.pageSortOrder,
             },
             create: category,
+          });
+        }
+      }
+
+      if ("brand" in tx && typeof (tx as any).brand?.deleteMany === "function") {
+        await (tx as any).brand.deleteMany({
+          where: {
+            id: { notIn: brands.map((brand) => brand.id) },
+          },
+        });
+
+        for (const brand of brands) {
+          await (tx as any).brand.upsert({
+            where: { id: brand.id },
+            update: {
+              title: brand.title,
+              slug: brand.slug,
+              imageUrl: brand.imageUrl,
+              active: brand.active,
+              sortOrder: brand.sortOrder,
+              homeSortOrder: brand.homeSortOrder,
+            },
+            create: brand,
           });
         }
       }
@@ -983,6 +1109,8 @@ export async function POST(request: Request) {
           const showcaseId = item.showOnShowcase && item.showcaseId ? String(item.showcaseId) : null;
           const homeSortOrder = Number.isFinite(Number(item.homeSortOrder)) ? Number(item.homeSortOrder) : getPlacement(item, 0);
           const showcaseSortOrder = Number.isFinite(Number(item.showcaseSortOrder)) ? Number(item.showcaseSortOrder) : getPlacement(item, 0);
+          const categorySortOrder = Number.isFinite(Number(item.categorySortOrder)) ? Number(item.categorySortOrder) : homeSortOrder;
+          const productSortOrder = Number.isFinite(Number(item.productSortOrder)) ? Number(item.productSortOrder) : showcaseSortOrder;
           await (tx as any).banner.create({
             data: {
               id: bannerId || undefined,
@@ -998,6 +1126,8 @@ export async function POST(request: Request) {
                     showcaseId: showcaseId ?? "",
                     homeSortOrder,
                     showcaseSortOrder,
+                    categorySortOrder,
+                    productSortOrder,
                   }
                 : Prisma.JsonNull,
               active: item.active ?? true,
@@ -1031,10 +1161,17 @@ export async function POST(request: Request) {
             orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
           })
         : [];
+    const savedBrands =
+      "brand" in prisma && typeof (prisma as any).brand?.findMany === "function"
+        ? await (prisma as any).brand.findMany({
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          })
+        : [];
     const tree = buildCatalogTree(
       data as ProductPayload[],
       savedShowcases,
       savedCategories,
+      savedBrands,
       savedBanners as BannerRecord[],
       true
     );

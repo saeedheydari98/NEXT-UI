@@ -28,6 +28,7 @@ import {
 } from "@/lib/user-profile";
 import { fetchCurrentUser } from "@/lib/auth-client";
 import { useProductsCatalog } from "@/lib/products-catalog-context";
+import { isValidPastPersianDate, normalizePersianDate } from "@/lib/persian-date";
 import ColorStockDots from "../design-system/components/ui/color-stock-dots";
 
 function getFinalPrice(item: CartItemRecord) {
@@ -147,8 +148,7 @@ export default function CartPage() {
     PHONE_PATTERN.test(profileDraft.phone.trim()) &&
     profileDraft.address.trim().length >= 5 &&
     profileDraft.address.trim().length <= 200 &&
-    Boolean(profileDraft.birthDate.trim()) &&
-    new Date(profileDraft.birthDate).getTime() <= Date.now()
+    isValidPastPersianDate(profileDraft.birthDate)
   );
 
   const saveProfileDraft = () => {
@@ -163,7 +163,7 @@ export default function CartPage() {
       firstName: profileDraft.firstName.trim(),
       lastName: profileDraft.lastName.trim(),
       nationalId: profileDraft.nationalId.trim(),
-      birthDate: profileDraft.birthDate.trim(),
+      birthDate: normalizePersianDate(profileDraft.birthDate),
       phone: profileDraft.phone.trim(),
       address: profileDraft.address.trim(),
       themeMode: profileDraft.themeMode,
@@ -440,13 +440,14 @@ export default function CartPage() {
                 <RequiredLabel required className="text-primary-text">تاریخ تولد</RequiredLabel>
                 <CustomInput
                   value={profileDraft.birthDate}
-                  type="date"
-                  max={new Date().toISOString().slice(0, 10)}
+                  placeholder="1370/01/01"
+                  pattern="(13|14)[0-9]{2}/[0-9]{2}/[0-9]{2}"
+                  inputMode="numeric"
                   required
-                  invalid={showProfileRequiredErrors && (!profileDraft.birthDate.trim() || new Date(profileDraft.birthDate).getTime() > Date.now())}
+                  invalid={showProfileRequiredErrors && !isValidPastPersianDate(profileDraft.birthDate)}
                   showLabel={false}
                   aria-label="تاریخ تولد"
-                  onChange={(event) => updateProfileDraft({ birthDate: event.target.value })}
+                  onChange={(event) => updateProfileDraft({ birthDate: normalizePersianDate(event.target.value) })}
                 />
               </div>
               <div className="flex flex-col gap-2">

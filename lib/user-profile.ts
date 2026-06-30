@@ -1,3 +1,5 @@
+import { normalizePersianDate } from "@/lib/persian-date";
+
 export type UserProfile = {
   firstName: string;
   lastName: string;
@@ -49,7 +51,7 @@ export function normalizeUserProfile(value: Partial<UserProfile> | null | undefi
     firstName: String(value?.firstName ?? ""),
     lastName: String(value?.lastName ?? ""),
     nationalId: String(value?.nationalId ?? ""),
-    birthDate: String(value?.birthDate ?? ""),
+    birthDate: normalizePersianDate(String(value?.birthDate ?? "")),
     phone: String(value?.phone ?? ""),
     address: String(value?.address ?? ""),
     themeMode,

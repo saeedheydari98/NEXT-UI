@@ -15,10 +15,11 @@ import { clearProductsCache, getProducts } from "@/lib/products-client";
 import { scrollToFirstInvalidField } from "@/lib/form-validation";
 import { AdminBannerList } from "./products-panel/admin-banner-list";
 import { AdminShowcaseList } from "./products-panel/admin-showcase-list";
-import type { BannerForm, CategoryForm, ProductForm, ShowcaseForm } from "./products-panel/types";
+import type { BannerForm, BrandForm, CategoryForm, ProductForm, ShowcaseForm } from "./products-panel/types";
 
-export type AdminCatalogSection = "products" | "banners" | "showcases" | "categories" | "storefront";
+export type AdminCatalogSection = "products" | "banners" | "showcases" | "categories" | "brands" | "storefront";
 type ProductRelationMode = "category" | "showcase";
+type StorefrontLayoutTab = "home" | "categories" | "products";
 
 // No default showcase id
 
@@ -41,6 +42,17 @@ const createCategory = (): CategoryForm => ({
   imageUrl: "",
   active: true,
   sortOrder: 1,
+  pageSortOrder: 1,
+});
+
+const createBrand = (): BrandForm => ({
+  id: `brand-${Date.now()}`,
+  title: "",
+  slug: "",
+  imageUrl: "",
+  active: true,
+  sortOrder: 1,
+  homeSortOrder: 1,
 });
 
 const createBanner = (): BannerForm => ({
@@ -57,6 +69,8 @@ const createBanner = (): BannerForm => ({
   heightPercent: 28,
   homeSortOrder: 1,
   showcaseSortOrder: 1,
+  categorySortOrder: 1,
+  productSortOrder: 1,
   sortOrder: 1,
 });
 
@@ -255,6 +269,7 @@ function InventoryControls({ product, onChange }: InventoryControlsProps) {
 type ProductAdvancedFieldsProps = {
   product: ProductForm;
   categories: CategoryForm[];
+  brands: BrandForm[];
   onChange: (patch: Partial<ProductForm>) => void;
   hasRequiredError: (key: string) => boolean;
   categoryErrorKey: string;
@@ -268,7 +283,7 @@ function textToImageList(value: string) {
   return value.split(/[\n,]+/).map((item) => item.trim()).filter(Boolean);
 }
 
-function ProductAdvancedFields({ product, categories, onChange, hasRequiredError, categoryErrorKey }: ProductAdvancedFieldsProps) {
+function ProductAdvancedFields({ product, categories, brands, onChange, hasRequiredError, categoryErrorKey }: ProductAdvancedFieldsProps) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
       <div className="text-sm font-bold text-primary-text">جزئیات محصول</div>
@@ -298,8 +313,25 @@ function ProductAdvancedFields({ product, categories, onChange, hasRequiredError
       </div>
       <CustomInput value={imageListToText(product.images)} placeholder="Gallery image URLs" onChange={(event) => onChange({ images: textToImageList(event.target.value) })} />
       <CustomInput value={product.videoUrl} placeholder="Video URL" onChange={(event) => onChange({ videoUrl: event.target.value })} />
+      <div className="flex flex-col gap-2">
+        <RequiredLabel className="text-primary-text">برند</RequiredLabel>
+        <div className="flex flex-wrap gap-3 rounded-md border border-primary-border p-2">
+          {brands.length === 0 ? (
+            <span className="text-xs text-secondary-text">ابتدا از بخش برندها، برند تعریف کنید.</span>
+          ) : null}
+          {brands.map((brand) => (
+            <CategoryOption
+              key={brand.id}
+              label={brand.title}
+              imageUrl={brand.imageUrl}
+              selected={product.brand === brand.id || product.brand === brand.title}
+              size="sm"
+              onClick={() => onChange({ brand: brand.id })}
+            />
+          ))}
+        </div>
+      </div>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <CustomInput value={product.brand} placeholder="Brand" onChange={(event) => onChange({ brand: event.target.value })} />
         <CustomInput value={product.sku} placeholder="SKU" onChange={(event) => onChange({ sku: event.target.value })} />
       </div>
       <div className="flex flex-wrap gap-2">
@@ -484,6 +516,23 @@ function normalizeCategory(item: Partial<CategoryForm>, index: number): Category
     imageUrl: String(item.imageUrl ?? "").trim(),
     active: item.active !== false,
     sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
+    pageSortOrder: Number.isFinite(Number(item.pageSortOrder)) ? Number(item.pageSortOrder) : 1,
+  };
+}
+
+function normalizeBrand(item: Partial<BrandForm>, index: number): BrandForm {
+  const title = String(item.title ?? "").trim();
+  const slug = slugifyValue(item.slug || title || item.id || `brand-${index + 1}`);
+  const id = String(item.id ?? slug).trim() || slug;
+
+  return {
+    id,
+    title,
+    slug,
+    imageUrl: String(item.imageUrl ?? "").trim(),
+    active: item.active !== false,
+    sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
+    homeSortOrder: Number.isFinite(Number(item.homeSortOrder)) ? Number(item.homeSortOrder) : 1,
   };
 }
 
@@ -524,6 +573,12 @@ function normalizeBanner(item: Partial<BannerForm> & { bannerUrl?: string; image
   const showcaseSortOrder = Number.isFinite(Number(item.showcaseSortOrder ?? imageMeta.showcaseSortOrder))
     ? Number(item.showcaseSortOrder ?? imageMeta.showcaseSortOrder)
     : Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1;
+  const categorySortOrder = Number.isFinite(Number(item.categorySortOrder ?? imageMeta.categorySortOrder))
+    ? Number(item.categorySortOrder ?? imageMeta.categorySortOrder)
+    : homeSortOrder;
+  const productSortOrder = Number.isFinite(Number(item.productSortOrder ?? imageMeta.productSortOrder))
+    ? Number(item.productSortOrder ?? imageMeta.productSortOrder)
+    : showcaseSortOrder;
 
   return {
     id: String(item.id ?? `banner-${Date.now()}-${index}`),
@@ -539,6 +594,8 @@ function normalizeBanner(item: Partial<BannerForm> & { bannerUrl?: string; image
     heightPercent: Number.isFinite(Number(item.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(item.heightPercent)))) : 28,
     homeSortOrder,
     showcaseSortOrder,
+    categorySortOrder,
+    productSortOrder,
     sortOrder: homeSortOrder,
   };
 }
@@ -646,6 +703,8 @@ function clampWholeNumber(value: unknown, min: number, max: number, fallback: nu
 function normalizeBannerTiming(banner: BannerForm): BannerForm {
   const homeSortOrder = clampWholeNumber(banner.homeSortOrder || banner.sortOrder, 1, 999, 1);
   const showcaseSortOrder = clampWholeNumber(banner.showcaseSortOrder || banner.sortOrder, 1, 999, 1);
+  const categorySortOrder = clampWholeNumber(banner.categorySortOrder || banner.sortOrder, 1, 999, homeSortOrder);
+  const productSortOrder = clampWholeNumber(banner.productSortOrder || banner.sortOrder, 1, 999, showcaseSortOrder);
   return {
     ...banner,
     showOnShowcase: banner.showOnShowcase && Boolean(banner.showcaseId),
@@ -653,6 +712,8 @@ function normalizeBannerTiming(banner: BannerForm): BannerForm {
     showOnProducts: banner.showOnProducts,
     homeSortOrder,
     showcaseSortOrder,
+    categorySortOrder,
+    productSortOrder,
     sortOrder: homeSortOrder,
     intervalSeconds: clampWholeNumber(banner.intervalSeconds, 1, 60, 5),
     heightPercent: clampWholeNumber(banner.heightPercent, 10, 100, 28),
@@ -669,20 +730,25 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
   const [categories, setCategories] = useState<CategoryForm[]>([
     normalizeCategory({ id: "general", title: "عمومی", slug: "general", imageUrl: "", active: true, sortOrder: 1 }, 0),
   ]);
+  const [brands, setBrands] = useState<BrandForm[]>([]);
   const [banners, setBanners] = useState<BannerForm[]>([]);
   const [draftProduct, setDraftProduct] = useState<ProductForm>(createProduct);
   const [draftShowcase, setDraftShowcase] = useState<ShowcaseForm>(createShowcase);
   const [draftCategory, setDraftCategory] = useState<CategoryForm>(createCategory);
+  const [draftBrand, setDraftBrand] = useState<BrandForm>(createBrand);
   const [draftBanner, setDraftBanner] = useState<BannerForm>(createBanner);
   const [editingShowcase, setEditingShowcase] = useState<ShowcaseForm | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryForm | null>(null);
+  const [editingBrand, setEditingBrand] = useState<BrandForm | null>(null);
   const [editingBanner, setEditingBanner] = useState<BannerForm | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductForm | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false);
   const [isEditShowcaseOpen, setIsEditShowcaseOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isBrandOpen, setIsBrandOpen] = useState(false);
   const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
+  const [isEditBrandOpen, setIsEditBrandOpen] = useState(false);
   const [isBannerOpen, setIsBannerOpen] = useState(false);
   const [isEditBannerOpen, setIsEditBannerOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -697,7 +763,9 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
   const [relationShowcaseIds, setRelationShowcaseIds] = useState<string[]>([]);
   const [draggingProductId, setDraggingProductId] = useState<number | string | null>(null);
   const [draggingCategoryId, setDraggingCategoryId] = useState<string | null>(null);
+  const [draggingBrandId, setDraggingBrandId] = useState<string | null>(null);
   const [draggingStorefrontKey, setDraggingStorefrontKey] = useState<string | null>(null);
+  const [storefrontLayoutTab, setStorefrontLayoutTab] = useState<StorefrontLayoutTab>("home");
   const [draftBannerImageUrl, setDraftBannerImageUrl] = useState("");
   const [editingBannerImageUrl, setEditingBannerImageUrl] = useState("");
 
@@ -744,6 +812,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               showcaseId: String(item.showcaseId ?? ""),
               homeSortOrder: Number(item.homeSortOrder ?? item.sortOrder),
               showcaseSortOrder: Number(item.showcaseSortOrder ?? item.sortOrder),
+              categorySortOrder: Number(item.categorySortOrder ?? item.homeSortOrder ?? item.sortOrder),
+              productSortOrder: Number(item.productSortOrder ?? item.showcaseSortOrder ?? item.sortOrder),
               intervalSeconds: Number(item.intervalSeconds),
               heightPercent: Number(item.heightPercent),
             },
@@ -760,6 +830,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                   imageUrl: item.imageUrl ?? "",
                   active: item.active,
                   sortOrder: Number(item.sortOrder),
+                  pageSortOrder: Number(item.pageSortOrder ?? 1),
                 },
                 index
               )
@@ -772,11 +843,29 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 imageUrl: "",
                 active: true,
                 sortOrder: 1,
+                pageSortOrder: 1,
               }, 0),
             ];
+        const nextBrands = Array.isArray(catalog.brands)
+          ? catalog.brands.map((item, index) =>
+              normalizeBrand(
+                {
+                  id: String(item.id),
+                  title: String(item.title ?? ""),
+                  slug: String(item.slug ?? ""),
+                  imageUrl: String(item.imageUrl ?? ""),
+                  active: item.active !== false,
+                  sortOrder: Number(item.sortOrder),
+                  homeSortOrder: Number(item.homeSortOrder ?? 1),
+                },
+                index
+              )
+            )
+          : [];
         setProducts(apiProducts);
         setShowcases(nextShowcases);
         setCategories(nextCategories);
+        setBrands(nextBrands);
         setBanners(nextBanners);
         await waitForMinimumLoading(startedAt);
       } catch {
@@ -784,6 +873,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         setProducts([]);
         setShowcases([]);
         setCategories([]);
+        setBrands([]);
         setBanners([]);
         setStatus("دریافت اطلاعات فروشگاه ممکن نشد.");
         await waitForMinimumLoading(startedAt);
@@ -816,6 +906,11 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     [categories]
   );
 
+  const sortedBrands = useMemo(
+    () => [...brands].sort((a, b) => a.sortOrder - b.sortOrder),
+    [brands]
+  );
+
   const sortedBanners = useMemo(
     () => [...banners].sort((a, b) => a.sortOrder - b.sortOrder),
     [banners]
@@ -832,26 +927,79 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
   );
 
   const displaySections = useMemo(() => {
-    const bannerSections = sortedBanners.map((banner) => ({
-      type: "banner" as const,
-      item: banner,
-      sortOrder: banner.sortOrder,
-    }));
+    if (storefrontLayoutTab === "categories") {
+      const bannerSections = sortedBanners
+        .filter((banner) => banner.showOnCategories)
+        .map((banner) => ({
+          type: "banner" as const,
+          item: banner,
+          sortOrder: Number(banner.categorySortOrder ?? banner.sortOrder),
+        }));
 
-    const showcaseSections = sortedShowcases.map((showcase) => ({
-      type: "showcase" as const,
-      item: showcase,
-      sortOrder: showcase.sortOrder,
-    }));
+      const categorySections = sortedCategories.length > 0
+        ? [{
+            type: "categoryGroup" as const,
+            item: {
+              id: "category-group",
+              title: "دسته‌بندی‌ها",
+              sortOrder: Number(sortedCategories[0]?.pageSortOrder ?? 1),
+            },
+            sortOrder: Number(sortedCategories[0]?.pageSortOrder ?? 1),
+          }]
+        : [];
 
-    return [...bannerSections, ...showcaseSections].sort((a, b) => a.sortOrder - b.sortOrder);
-  }, [sortedBanners, sortedShowcases]);
+      return [...bannerSections, ...categorySections].sort((a, b) => a.sortOrder - b.sortOrder);
+    }
+
+    if (storefrontLayoutTab === "products") {
+      const bannerSections = sortedBanners
+        .filter((banner) => banner.showOnProducts)
+        .map((banner) => ({
+          type: "banner" as const,
+          item: banner,
+          sortOrder: Number(banner.productSortOrder ?? banner.sortOrder),
+        }));
+
+      const showcaseSections = sortedShowcases.map((showcase) => ({
+        type: "showcase" as const,
+        item: showcase,
+        sortOrder: showcase.sortOrder,
+      }));
+
+      return [...bannerSections, ...showcaseSections].sort((a, b) => a.sortOrder - b.sortOrder);
+    }
+
+    const brandSections = sortedBrands.length > 0
+      ? [{
+          type: "brandGroup" as const,
+          item: {
+            id: "brand-group",
+            title: "برندها",
+            sortOrder: Number(sortedBrands[0]?.homeSortOrder ?? 1),
+          },
+          sortOrder: Number(sortedBrands[0]?.homeSortOrder ?? 1),
+        }]
+      : [];
+
+    return [
+      ...sortedBanners
+      .filter((banner) => banner.showOnHome)
+      .map((banner) => ({
+        type: "banner" as const,
+        item: banner,
+        sortOrder: Number(banner.homeSortOrder ?? banner.sortOrder),
+      })),
+      ...brandSections,
+    ]
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [sortedBanners, sortedBrands, sortedCategories, sortedShowcases, storefrontLayoutTab]);
 
   const persistProducts = async (
     nextProducts: ProductForm[],
     nextShowcases = sortedShowcases,
     nextBanners = sortedBanners,
     nextCategories = sortedCategories,
+    nextBrands = sortedBrands,
     showSavedStatus = true
   ) => {
     const validProducts = dedupeProducts(
@@ -885,6 +1033,16 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             imageUrl: category.imageUrl,
             active: category.active,
             sortOrder: category.sortOrder,
+            pageSortOrder: category.pageSortOrder,
+          })),
+          brands: nextBrands.map((brand) => ({
+            id: brand.id,
+            title: brand.title,
+            slug: brand.slug,
+            imageUrl: brand.imageUrl,
+            active: brand.active,
+            sortOrder: brand.sortOrder,
+            homeSortOrder: brand.homeSortOrder,
           })),
           banners: nextBanners.map((banner) => {
             const normalizedBanner = normalizeBannerTiming(banner);
@@ -902,6 +1060,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               heightPercent: normalizedBanner.heightPercent,
               homeSortOrder: normalizedBanner.homeSortOrder,
               showcaseSortOrder: normalizedBanner.showcaseSortOrder,
+              categorySortOrder: normalizedBanner.categorySortOrder,
+              productSortOrder: normalizedBanner.productSortOrder,
               sortOrder: normalizedBanner.sortOrder,
             };
           }),
@@ -923,9 +1083,13 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
       const savedCategories = Array.isArray(data?.data?.categories)
         ? data.data.categories.map(normalizeCategory)
         : nextCategories;
+      const savedBrands = Array.isArray(data?.data?.brands)
+        ? data.data.brands.map(normalizeBrand)
+        : nextBrands;
       setProducts(savedProducts);
       setShowcases(savedShowcases);
       setCategories(savedCategories);
+      setBrands(savedBrands);
       setBanners(savedBanners);
       clearProductsCache();
       if (showSavedStatus) setStatus("Catalog saved to database.");
@@ -951,7 +1115,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     ordered.splice(targetIndex, 0, moved);
     const reordered = ordered.map((product, index) => ({ ...product, sortOrder: index + 1 }));
     setProducts(reordered);
-    await persistProducts(reordered, sortedShowcases, sortedBanners, sortedCategories, false);
+    await persistProducts(reordered, sortedShowcases, sortedBanners, sortedCategories, sortedBrands, false);
     setStatus("ترتیب محصولات ذخیره شد.");
   };
 
@@ -967,8 +1131,24 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     ordered.splice(targetIndex, 0, moved);
     const reordered = ordered.map((category, index) => ({ ...category, sortOrder: index + 1 }));
     setCategories(reordered);
-    await persistProducts(products, sortedShowcases, sortedBanners, reordered, false);
+    await persistProducts(products, sortedShowcases, sortedBanners, reordered, sortedBrands, false);
     setStatus("ترتیب دسته‌بندی‌ها ذخیره شد.");
+  };
+
+  const reorderBrands = async (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+
+    const ordered = [...sortedBrands];
+    const sourceIndex = ordered.findIndex((brand) => brand.id === sourceId);
+    const targetIndex = ordered.findIndex((brand) => brand.id === targetId);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const [moved] = ordered.splice(sourceIndex, 1);
+    ordered.splice(targetIndex, 0, moved);
+    const reordered = ordered.map((brand, index) => ({ ...brand, sortOrder: index + 1 }));
+    setBrands(reordered);
+    await persistProducts(products, sortedShowcases, sortedBanners, sortedCategories, reordered, false);
+    setStatus("ترتیب برندها ذخیره شد.");
   };
 
   const reorderShowcaseProducts = async (
@@ -995,7 +1175,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         : item
     );
     setShowcases(nextShowcases);
-    await persistProducts(products, nextShowcases, sortedBanners, sortedCategories, false);
+    await persistProducts(products, nextShowcases, sortedBanners, sortedCategories, sortedBrands, false);
     setStatus("ترتیب محصولات ویترین ذخیره شد.");
   };
 
@@ -1046,6 +1226,12 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     setIsCategoryOpen(true);
   };
 
+  const openBrandModal = () => {
+    setRequiredErrors([]);
+    setDraftBrand({ ...createBrand(), sortOrder: (Math.max(0, ...sortedBrands.map((brand) => brand.sortOrder)) || 0) + 1 });
+    setIsBrandOpen(true);
+  };
+
   const openBannerModal = () => {
     setRequiredErrors([]);
     setDraftBanner({ ...createBanner(), homeSortOrder: nextDisplayOrder, showcaseSortOrder: nextDisplayOrder, sortOrder: nextDisplayOrder });
@@ -1063,6 +1249,12 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     setRequiredErrors([]);
     setEditingCategory(category);
     setIsEditCategoryOpen(true);
+  };
+
+  const openEditBrandModal = (brand: BrandForm) => {
+    setRequiredErrors([]);
+    setEditingBrand(brand);
+    setIsEditBrandOpen(true);
   };
 
   const openEditBannerModal = (banner: BannerForm) => {
@@ -1106,6 +1298,37 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
       }
       if (patch.slug !== undefined) {
         return { ...next, slug: slugifyValue(patch.slug) };
+      }
+      return next;
+    });
+  };
+
+  const updateDraftBrand = (patch: Partial<BrandForm>) => {
+    setDraftBrand((current) => {
+      const next = { ...current, ...patch };
+      if ("title" in patch && !current.slug.trim()) {
+        next.slug = slugifyValue(String(patch.title ?? ""));
+        next.id = next.slug || next.id;
+      }
+      if ("slug" in patch) {
+        next.slug = slugifyValue(String(patch.slug ?? ""));
+        next.id = next.slug || next.id;
+      }
+      return next;
+    });
+  };
+
+  const updateEditingBrand = (patch: Partial<BrandForm>) => {
+    setEditingBrand((current) => {
+      if (!current) return current;
+      const next = { ...current, ...patch };
+      if ("title" in patch && !current.slug.trim()) {
+        next.slug = slugifyValue(String(patch.title ?? ""));
+        next.id = next.slug || next.id;
+      }
+      if ("slug" in patch) {
+        next.slug = slugifyValue(String(patch.slug ?? ""));
+        next.id = next.slug || next.id;
       }
       return next;
     });
@@ -1190,6 +1413,21 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         return;
       }
       updateEditingCategory({ imageUrl });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleBrandImageUpload = (file: File | null, mode: "draft" | "edit") => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageUrl = String(reader.result ?? "");
+      if (mode === "draft") {
+        updateDraftBrand({ imageUrl });
+        return;
+      }
+      updateEditingBrand({ imageUrl });
     };
     reader.readAsDataURL(file);
   };
@@ -1302,6 +1540,20 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     await persistProducts(products, sortedShowcases, sortedBanners, nextCategories);
   };
 
+  const submitDraftBrand = async () => {
+    if (!draftBrand.title.trim()) {
+      showRequiredErrors(["draftBrand.title"], "عنوان برند الزامی است.");
+      return;
+    }
+
+    const normalized = normalizeBrand(draftBrand, sortedBrands.length);
+    setRequiredErrors([]);
+    const nextBrands = [...sortedBrands, normalized];
+    setBrands(nextBrands);
+    setIsBrandOpen(false);
+    await persistProducts(products, sortedShowcases, sortedBanners, sortedCategories, nextBrands);
+  };
+
   const submitDraftBanner = async () => {
     if (draftBanner.imageUrls.length === 0) {
       showRequiredErrors(["draftBanner.images"], "Banner needs at least one image.");
@@ -1350,6 +1602,29 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     setIsEditCategoryOpen(false);
     setEditingCategory(null);
     await persistProducts(products, sortedShowcases, sortedBanners, nextCategories);
+  };
+
+  const submitEditingBrand = async () => {
+    if (!editingBrand) return;
+
+    if (!editingBrand.title.trim()) {
+      showRequiredErrors(["editingBrand.title"], "عنوان برند الزامی است.");
+      return;
+    }
+
+    const nextBrand = normalizeBrand(editingBrand, editingBrand.sortOrder);
+    const nextBrands = sortedBrands.map((brand) =>
+      brand.id === editingBrand.id ? nextBrand : brand
+    );
+    const nextProducts = products.map((product) =>
+      product.brand === editingBrand.id ? { ...product, brand: nextBrand.id } : product
+    );
+    setRequiredErrors([]);
+    setProducts(nextProducts);
+    setBrands(nextBrands);
+    setIsEditBrandOpen(false);
+    setEditingBrand(null);
+    await persistProducts(nextProducts, sortedShowcases, sortedBanners, sortedCategories, nextBrands);
   };
 
   const submitEditingBanner = async () => {
@@ -1402,6 +1677,19 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     setIsEditCategoryOpen(false);
     setEditingCategory(null);
     await persistProducts(nextProducts, sortedShowcases, sortedBanners, nextCategories);
+  };
+
+  const deleteEditingBrand = async () => {
+    if (!editingBrand) return;
+    const nextBrands = sortedBrands.filter((brand) => brand.id !== editingBrand.id);
+    const nextProducts = products.map((product) =>
+      product.brand === editingBrand.id ? { ...product, brand: "" } : product
+    );
+    setProducts(nextProducts);
+    setBrands(nextBrands);
+    setIsEditBrandOpen(false);
+    setEditingBrand(null);
+    await persistProducts(nextProducts, sortedShowcases, sortedBanners, sortedCategories, nextBrands);
   };
 
   const deleteShowcase = async (showcaseToDelete: ShowcaseForm) => {
@@ -1471,7 +1759,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     const nextProduct = nextProducts.find((item) => item.id === product.id) ?? null;
     setProducts(nextProducts);
     setRelationProduct((current) => current?.id === product.id ? nextProduct : current);
-    await persistProducts(nextProducts, sortedShowcases, sortedBanners, sortedCategories, false);
+    await persistProducts(nextProducts, sortedShowcases, sortedBanners, sortedCategories, sortedBrands, false);
   };
 
   const toggleCategoryProduct = async (category: CategoryForm, product: ProductForm) => {
@@ -1532,7 +1820,12 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
   const updateBannerPlacement = (banner: BannerForm, sortOrder: number) => {
     setBanners((current) =>
-      current.map((item) => (item.id === banner.id ? { ...item, homeSortOrder: sortOrder, sortOrder } : item))
+      current.map((item) => {
+        if (item.id !== banner.id) return item;
+        if (storefrontLayoutTab === "categories") return { ...item, categorySortOrder: sortOrder };
+        if (storefrontLayoutTab === "products") return { ...item, productSortOrder: sortOrder };
+        return { ...item, homeSortOrder: sortOrder, sortOrder };
+      })
     );
   };
 
@@ -1542,9 +1835,23 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     );
   };
 
-  const saveStorefrontPlacement = () => persistProducts(products, sortedShowcases, sortedBanners, sortedCategories);
+  const updateCategoryPlacement = (category: CategoryForm, sortOrder: number) => {
+    setCategories((current) =>
+      current.map((item) => (item.id === category.id ? { ...item, sortOrder } : item))
+    );
+  };
 
-  const storefrontKey = (entry: { type: "banner" | "showcase"; item: { id: string } }) => `${entry.type}:${entry.item.id}`;
+  const updateCategoryGroupPlacement = (sortOrder: number) => {
+    setCategories((current) => current.map((item) => ({ ...item, pageSortOrder: sortOrder })));
+  };
+
+  const updateBrandGroupPlacement = (sortOrder: number) => {
+    setBrands((current) => current.map((item) => ({ ...item, homeSortOrder: sortOrder })));
+  };
+
+  const saveStorefrontPlacement = () => persistProducts(products, sortedShowcases, sortedBanners, sortedCategories, sortedBrands);
+
+  const storefrontKey = (entry: { type: "banner" | "showcase" | "category" | "categoryGroup" | "brandGroup"; item: { id: string } }) => `${entry.type}:${entry.item.id}`;
 
   const reorderStorefrontSections = async (sourceKey: string, targetKey: string) => {
     if (!sourceKey || sourceKey === targetKey) return;
@@ -1562,17 +1869,30 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     const nextOrder = new Map(ordered.map((entry, index) => [entry.key, index + 1]));
     const nextBanners = banners.map((banner) => ({
       ...banner,
-      homeSortOrder: nextOrder.get(`banner:${banner.id}`) ?? banner.homeSortOrder,
-      sortOrder: nextOrder.get(`banner:${banner.id}`) ?? banner.sortOrder,
+      homeSortOrder: storefrontLayoutTab === "home" ? nextOrder.get(`banner:${banner.id}`) ?? banner.homeSortOrder : banner.homeSortOrder,
+      categorySortOrder: storefrontLayoutTab === "categories" ? nextOrder.get(`banner:${banner.id}`) ?? banner.categorySortOrder : banner.categorySortOrder,
+      productSortOrder: storefrontLayoutTab === "products" ? nextOrder.get(`banner:${banner.id}`) ?? banner.productSortOrder : banner.productSortOrder,
+      sortOrder: storefrontLayoutTab === "home" ? nextOrder.get(`banner:${banner.id}`) ?? banner.sortOrder : banner.sortOrder,
     }));
     const nextShowcases = showcases.map((showcase) => ({
       ...showcase,
-      sortOrder: nextOrder.get(`showcase:${showcase.id}`) ?? showcase.sortOrder,
+      sortOrder: storefrontLayoutTab === "products" ? nextOrder.get(`showcase:${showcase.id}`) ?? showcase.sortOrder : showcase.sortOrder,
+    }));
+    const nextCategories = categories.map((category) => ({
+      ...category,
+      sortOrder: storefrontLayoutTab === "categories" ? nextOrder.get(`category:${category.id}`) ?? category.sortOrder : category.sortOrder,
+      pageSortOrder: storefrontLayoutTab === "categories" ? nextOrder.get("categoryGroup:category-group") ?? category.pageSortOrder : category.pageSortOrder,
+    }));
+    const nextBrands = brands.map((brand) => ({
+      ...brand,
+      homeSortOrder: storefrontLayoutTab === "home" ? nextOrder.get("brandGroup:brand-group") ?? brand.homeSortOrder : brand.homeSortOrder,
     }));
 
     setBanners(nextBanners);
     setShowcases(nextShowcases);
-    await persistProducts(products, nextShowcases, nextBanners, sortedCategories, false);
+    setCategories(nextCategories);
+    setBrands(nextBrands);
+    await persistProducts(products, nextShowcases, nextBanners, nextCategories, nextBrands, false);
     setStatus("چیدمان فروشگاه ذخیره شد.");
   };
 
@@ -1584,6 +1904,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           {section === "banners" && "بنرها"}
           {section === "showcases" && "ویترین‌ها"}
           {section === "categories" && "دسته‌بندی‌ها"}
+          {section === "brands" && "برندها"}
           {section === "storefront" && "مدیریت چیدمان فروشگاه"}
         </div>
         <div className="hidden text-base font-bold text-primary-text">
@@ -1591,6 +1912,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           {section === "banners" && "بنرها"}
           {section === "showcases" && "ویترین‌ها"}
           {section === "categories" && "دسته‌بندی‌ها"}
+          {section === "brands" && "برندها"}
           {section === "storefront" && "مدیریت چیدمان فروشگاه"}
         </div>
         <span className="text-xs font-semibold text-primary-text">
@@ -1598,6 +1920,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
           {section === "banners" && `${sortedBanners.length} بنر`}
           {section === "showcases" && `${sortedShowcases.length} ویترین`}
           {section === "categories" && `${sortedCategories.length} دسته‌بندی`}
+          {section === "brands" && `${sortedBrands.length} برند`}
           {section === "storefront" && `${displaySections.length} بخش`}
         </span>
       </div>
@@ -1827,10 +2150,88 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
         </div>
       ) : null}
 
+      {section === "brands" ? (
+        <div className="flex flex-col gap-4">
+          {sortedBrands.length === 0 ? (
+            <div className="rounded-md border border-dashed border-primary-border bg-primary-card p-4 text-sm text-secondary-text">
+              هنوز برندی تعریف نشده است.
+            </div>
+          ) : null}
+          {sortedBrands.map((brand) => {
+            const brandProducts = sortedProducts.filter((product) => product.brand === brand.id || product.brand === brand.title);
+            return (
+              <div
+                key={brand.id}
+                draggable
+                onDragStart={(event) => {
+                  setDraggingBrandId(brand.id);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", brand.id);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const sourceId = event.dataTransfer.getData("text/plain") || draggingBrandId;
+                  if (sourceId) void reorderBrands(sourceId, brand.id);
+                  setDraggingBrandId(null);
+                }}
+                onDragEnd={() => setDraggingBrandId(null)}
+                className={`flex cursor-grab flex-col gap-3 rounded-lg border bg-primary-card p-3 active:cursor-grabbing ${
+                  draggingBrandId === brand.id ? "border-primary opacity-70" : "border-primary-border"
+                }`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <CategoryOption label={brand.title} imageUrl={brand.imageUrl} size="sm" />
+                    <div className="flex flex-col gap-1">
+                      <div className="text-sm font-bold text-primary-text">{brand.title || "برند بدون عنوان"}</div>
+                      <span className="text-xs text-secondary-text">{brandProducts.length} محصول</span>
+                    </div>
+                  </div>
+                  <CustomButton size="sm" variant="neutral" onClick={() => openEditBrandModal(brand)}>
+                    ویرایش
+                  </CustomButton>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
       {section === "storefront" ? (
         <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "home" as const, label: "خانه" },
+              { id: "categories" as const, label: "دسته بندی" },
+              { id: "products" as const, label: "ویترین" },
+            ].map((tab) => (
+              <CustomButton
+                key={tab.id}
+                size="sm"
+                variant={storefrontLayoutTab === tab.id ? "primary" : "neutral"}
+                onClick={() => setStorefrontLayoutTab(tab.id)}
+              >
+                {tab.label}
+              </CustomButton>
+            ))}
+          </div>
           {displaySections.map((entry) => {
             const key = storefrontKey(entry);
+            const entrySortOrder = entry.type === "banner"
+              ? storefrontLayoutTab === "categories"
+                ? entry.item.categorySortOrder
+                : storefrontLayoutTab === "products"
+                  ? entry.item.productSortOrder
+                  : entry.item.homeSortOrder
+              : entry.type === "categoryGroup"
+                ? entry.item.sortOrder
+                : entry.type === "brandGroup"
+                  ? entry.item.sortOrder
+              : entry.item.sortOrder;
             return (
             <div
               key={key}
@@ -1861,11 +2262,13 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               </div>
               <CustomInput
                 type="number"
-                value={entry.item.sortOrder}
+                value={entrySortOrder}
                 placeholder="ترتیب"
                 onChange={(event) => {
                   const sortOrder = Number(event.target.value);
                   if (entry.type === "banner") updateBannerPlacement(entry.item, sortOrder);
+                  else if (entry.type === "brandGroup") updateBrandGroupPlacement(sortOrder);
+                  else if (entry.type === "categoryGroup") updateCategoryGroupPlacement(sortOrder);
                   else updateShowcasePlacement(entry.item, sortOrder);
                 }}
               />
@@ -1881,6 +2284,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
       {section === "products" ? <FloatButton label="New product" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openCreateModal} /> : null}
       {section === "showcases" ? <FloatButton label="New showcase" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openShowcaseModal} /> : null}
       {section === "categories" ? <FloatButton label="دسته‌بندی جدید" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openCategoryModal} /> : null}
+      {section === "brands" ? <FloatButton label="برند جدید" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openBrandModal} /> : null}
       {section === "banners" ? <FloatButton label="New banner" icon={<IoAdd />} position="bottom-right" shadow="lg" onClick={openBannerModal} /> : null}
 
       <CustomModal
@@ -1995,6 +2399,122 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               </CustomButton>
               <CustomButton variant="danger" fullWidth icon={<IoTrashOutline />} onClick={deleteEditingCategory}>
                 حذف
+              </CustomButton>
+            </div>
+          </div>
+        )}
+      </CustomModal>
+
+      <CustomModal
+        open={isBrandOpen}
+        onClose={() => setIsBrandOpen(false)}
+        title="ثبت برند"
+        rounded="lg"
+        shadow="lg"
+      >
+        <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
+          <RequiredLabel required className="text-primary-text">عنوان برند</RequiredLabel>
+          <CustomInput
+            value={draftBrand.title}
+            placeholder="عنوان برند"
+            invalid={hasRequiredError("draftBrand.title") && !draftBrand.title.trim()}
+            onChange={(event) => updateDraftBrand({ title: event.target.value })}
+          />
+          <CustomInput
+            value={draftBrand.slug}
+            placeholder="Slug"
+            onChange={(event) => updateDraftBrand({ slug: event.target.value })}
+          />
+          <CustomInput
+            value={draftBrand.imageUrl}
+            placeholder="آدرس تصویر برند"
+            onChange={(event) => updateDraftBrand({ imageUrl: event.target.value })}
+          />
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-3 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
+            <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
+            <span className="text-sm font-semibold">بارگذاری تصویر برند</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => handleBrandImageUpload(event.target.files?.[0] ?? null, "draft")}
+            />
+          </label>
+          <CategoryOption label={draftBrand.title || "برند"} imageUrl={draftBrand.imageUrl} />
+          <CustomInput
+            type="number"
+            value={draftBrand.sortOrder}
+            placeholder="ترتیب داخل برندها"
+            onChange={(event) => updateDraftBrand({ sortOrder: Number(event.target.value) })}
+          />
+          <CustomSwitch
+            checked={draftBrand.active}
+            onChange={(active) => updateDraftBrand({ active })}
+            label={draftBrand.active ? "فعال" : "مخفی"}
+          />
+          <CustomButton fullWidth icon={<IoSaveOutline />} onClick={submitDraftBrand}>
+            ذخیره برند
+          </CustomButton>
+        </div>
+      </CustomModal>
+
+      <CustomModal
+        open={isEditBrandOpen}
+        onClose={() => {
+          setIsEditBrandOpen(false);
+          setEditingBrand(null);
+        }}
+        title={editingBrand?.title || "ویرایش برند"}
+        rounded="lg"
+        shadow="lg"
+      >
+        {editingBrand && (
+          <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-card p-3">
+            <RequiredLabel required className="text-primary-text">عنوان برند</RequiredLabel>
+            <CustomInput
+              value={editingBrand.title}
+              placeholder="عنوان برند"
+              invalid={hasRequiredError("editingBrand.title") && !editingBrand.title.trim()}
+              onChange={(event) => updateEditingBrand({ title: event.target.value })}
+            />
+            <CustomInput
+              value={editingBrand.slug}
+              placeholder="Slug"
+              onChange={(event) => updateEditingBrand({ slug: event.target.value })}
+            />
+            <CustomInput
+              value={editingBrand.imageUrl}
+              placeholder="آدرس تصویر برند"
+              onChange={(event) => updateEditingBrand({ imageUrl: event.target.value })}
+            />
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-primary-border bg-primary-card py-3 text-sm font-semibold text-secondary-text transition hover:bg-primary-bg">
+              <IoCloudUploadOutline className="text-xl" aria-hidden="true" />
+              <span className="text-sm font-semibold">بارگذاری تصویر برند</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => handleBrandImageUpload(event.target.files?.[0] ?? null, "edit")}
+              />
+            </label>
+            <CategoryOption label={editingBrand.title || "برند"} imageUrl={editingBrand.imageUrl} />
+            <CustomInput
+              type="number"
+              value={editingBrand.sortOrder}
+              placeholder="ترتیب داخل برندها"
+              onChange={(event) => updateEditingBrand({ sortOrder: Number(event.target.value) })}
+            />
+            <CustomSwitch
+              checked={editingBrand.active}
+              onChange={(active) => updateEditingBrand({ active })}
+              label={editingBrand.active ? "فعال" : "مخفی"}
+            />
+            <div className="flex flex-col gap-2">
+              <CustomButton fullWidth icon={<IoSaveOutline />} onClick={submitEditingBrand}>
+                ذخیره تغییرات
+              </CustomButton>
+              <CustomButton variant="danger" fullWidth icon={<IoTrashOutline />} onClick={deleteEditingBrand}>
+                حذف برند
               </CustomButton>
             </div>
           </div>
@@ -2627,6 +3147,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             <ProductAdvancedFields
               product={draftProduct}
               categories={sortedCategories}
+              brands={sortedBrands}
               onChange={updateDraftProduct}
               hasRequiredError={hasRequiredError}
               categoryErrorKey="draftProduct.categoryId"
@@ -2774,6 +3295,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               <ProductAdvancedFields
                 product={editingProduct}
                 categories={sortedCategories}
+                brands={sortedBrands}
                 onChange={updateEditingProduct}
                 hasRequiredError={hasRequiredError}
                 categoryErrorKey="editingProduct.categoryId"

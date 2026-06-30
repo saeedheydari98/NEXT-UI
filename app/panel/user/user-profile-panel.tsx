@@ -17,6 +17,7 @@ import {
   type UserProfile,
 } from "@/lib/user-profile";
 import { fetchCurrentUser, setCachedAuthUser } from "@/lib/auth-client";
+import { isValidPastPersianDate, normalizePersianDate } from "@/lib/persian-date";
 
 type PanelUser = {
   username?: string | null;
@@ -91,7 +92,7 @@ export function UserProfilePanel() {
     firstName: profileDraft.firstName.trim(),
     lastName: profileDraft.lastName.trim(),
     nationalId: profileDraft.nationalId.trim(),
-    birthDate: profileDraft.birthDate.trim(),
+    birthDate: normalizePersianDate(profileDraft.birthDate),
     phone: profileDraft.phone.trim(),
     address: profileDraft.address.trim(),
     themeMode: profileDraft.themeMode,
@@ -107,8 +108,7 @@ export function UserProfilePanel() {
       PHONE_PATTERN.test(profileDraft.phone.trim()) &&
       profileDraft.address.trim().length >= 5 &&
       profileDraft.address.trim().length <= 200 &&
-      Boolean(profileDraft.birthDate.trim()) &&
-      new Date(profileDraft.birthDate).getTime() <= Date.now()
+      isValidPastPersianDate(profileDraft.birthDate)
     ) return true;
     setShowRequiredErrors(true);
     setStatus("لطفا اطلاعات پروفایل را به‌درستی وارد کنید.");
@@ -377,13 +377,14 @@ export function UserProfilePanel() {
           <CustomInput
             value={profileDraft.birthDate}
             variant="primary"
-            type="date"
-            max={new Date().toISOString().slice(0, 10)}
+            placeholder="1370/01/01"
+            pattern="(13|14)[0-9]{2}/[0-9]{2}/[0-9]{2}"
+            inputMode="numeric"
             required
-            invalid={showRequiredErrors && (!profileDraft.birthDate.trim() || new Date(profileDraft.birthDate).getTime() > Date.now())}
+            invalid={showRequiredErrors && !isValidPastPersianDate(profileDraft.birthDate)}
             showLabel={false}
             aria-label="تاریخ تولد"
-            onChange={(event) => updateProfileDraft({ birthDate: event.target.value })}
+            onChange={(event) => updateProfileDraft({ birthDate: normalizePersianDate(event.target.value) })}
           />
         </div>
         <div className="flex flex-col gap-2">

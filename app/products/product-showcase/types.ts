@@ -63,5 +63,7 @@ export type Banner = {
   heightPercent?: number | string;
   homeSortOrder?: number | string;
   showcaseSortOrder?: number | string;
+  categorySortOrder?: number | string;
+  productSortOrder?: number | string;
   sortOrder: number;
 };
