@@ -15,7 +15,7 @@ type HeaderNavLinkProps = {
 export function HeaderNavLink({ href, children, className, onClick }: HeaderNavLinkProps) {
   const pathname = usePathname();
   const active = href === "/"
-    ? pathname === "/" || pathname.startsWith("/showcase/")
+    ? pathname === "/" || pathname.startsWith("/brand/")
     : pathname === href || pathname.startsWith(`${href}/`);
 
   return (

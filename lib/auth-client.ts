@@ -40,15 +40,17 @@ export async function fetchCurrentUser(options?: { force?: boolean }) {
   if (!options?.force && pendingUser) return pendingUser;
 
   pendingUser = fetch("/api/user/profile", { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() : null))
+    .then((res) => {
+      if (!res.ok) throw new Error("profile load failed");
+      return res.json();
+    })
     .then((data) => {
       const user = data?.data?.user?.role ? data.data.user as AuthClientUser : null;
       setCachedAuthUser(user, { emit: false });
       return user;
     })
     .catch(() => {
-      setCachedAuthUser(null, { emit: false });
-      return null;
+      return cachedUser;
     })
     .finally(() => {
       pendingUser = null;

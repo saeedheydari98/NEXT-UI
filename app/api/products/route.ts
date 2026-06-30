@@ -90,6 +90,8 @@ type BannerPayload = {
   active?: boolean;
   showOnHome?: boolean;
   showOnShowcase?: boolean;
+  showOnCategories?: boolean;
+  showOnProducts?: boolean;
   intervalSeconds?: number | string;
   heightPercent?: number | string;
   homeSortOrder?: number | string;
@@ -311,9 +313,14 @@ function toClientBanner(banner: BannerRecord) {
   const meta = getBannerImageData(banner.images);
   const imageUrls = meta.imageUrls;
   const showcaseId = String(banner.showcaseId ?? meta.showcaseId ?? "").trim();
-  const hasExplicitTargets = typeof meta.showOnHome === "boolean" || typeof meta.showOnShowcase === "boolean";
+  const hasExplicitTargets = typeof meta.showOnHome === "boolean"
+    || typeof meta.showOnShowcase === "boolean"
+    || typeof meta.showOnCategories === "boolean"
+    || typeof meta.showOnProducts === "boolean";
   const showOnHome = hasExplicitTargets ? meta.showOnHome !== false : !showcaseId;
   const showOnShowcase = hasExplicitTargets ? meta.showOnShowcase === true : Boolean(showcaseId);
+  const showOnCategories = meta.showOnCategories === true;
+  const showOnProducts = typeof meta.showOnProducts === "boolean" ? meta.showOnProducts : showOnShowcase;
   const homeSortOrder = Number.isFinite(Number(meta.homeSortOrder)) ? Number(meta.homeSortOrder) : banner.sortOrder;
   const showcaseSortOrder = Number.isFinite(Number(meta.showcaseSortOrder)) ? Number(meta.showcaseSortOrder) : banner.sortOrder;
 
@@ -327,6 +334,8 @@ function toClientBanner(banner: BannerRecord) {
     active: banner.active,
     showOnHome,
     showOnShowcase,
+    showOnCategories,
+    showOnProducts,
     intervalSeconds: clampWholeNumber(banner.intervalSeconds, 1, 60, 5),
     heightPercent: clampWholeNumber(banner.heightPercent, 10, 100, 28),
     homeSortOrder,
@@ -594,6 +603,8 @@ function getBannerImageData(value: unknown) {
       showcaseId?: unknown;
       showOnHome?: unknown;
       showOnShowcase?: unknown;
+      showOnCategories?: unknown;
+      showOnProducts?: unknown;
       homeSortOrder?: unknown;
       showcaseSortOrder?: unknown;
     };
@@ -603,6 +614,8 @@ function getBannerImageData(value: unknown) {
       showcaseId: typeof record.showcaseId === "string" ? record.showcaseId : "",
       showOnHome: typeof record.showOnHome === "boolean" ? record.showOnHome : undefined,
       showOnShowcase: typeof record.showOnShowcase === "boolean" ? record.showOnShowcase : undefined,
+      showOnCategories: typeof record.showOnCategories === "boolean" ? record.showOnCategories : undefined,
+      showOnProducts: typeof record.showOnProducts === "boolean" ? record.showOnProducts : undefined,
       homeSortOrder: Number.isFinite(Number(record.homeSortOrder)) ? Number(record.homeSortOrder) : undefined,
       showcaseSortOrder: Number.isFinite(Number(record.showcaseSortOrder)) ? Number(record.showcaseSortOrder) : undefined,
     };
@@ -613,6 +626,8 @@ function getBannerImageData(value: unknown) {
     showcaseId: "",
     showOnHome: undefined,
     showOnShowcase: undefined,
+    showOnCategories: undefined,
+    showOnProducts: undefined,
     homeSortOrder: undefined,
     showcaseSortOrder: undefined,
   };
@@ -978,6 +993,8 @@ export async function POST(request: Request) {
                     urls: imageUrls,
                     showOnHome: item.showOnHome !== false,
                     showOnShowcase: Boolean(showcaseId),
+                    showOnCategories: item.showOnCategories === true,
+                    showOnProducts: item.showOnProducts === true || item.showOnShowcase === true,
                     showcaseId: showcaseId ?? "",
                     homeSortOrder,
                     showcaseSortOrder,

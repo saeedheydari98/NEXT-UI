@@ -225,38 +225,38 @@ export function UserProfilePanel() {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-secondary-border bg-secondary-card p-4 text-primary-text">
+    <section className="flex flex-col gap-4 rounded-xl border border-primary-border bg-primary-card p-4 text-primary-text">
       <div className="flex flex-col gap-1">
-        <div className="text-base font-bold text-secondary-text">
+        <div className="text-base font-bold text-primary-text">
           {authUser ? "اطلاعات پروفایل" : "ساخت حساب کاربری"}
         </div>
-        <div className="text-sm text-secondary-text">
+        <div className="text-sm text-primary-text">
           {authUser ? "اطلاعات موردنیاز برای ارسال و پرداخت سفارش را ویرایش کنید." : "برای ساخت حساب، اطلاعات ضروری مشتری را کامل کنید."}
         </div>
       </div>
 
       {authUser ? (
-        <div className="flex flex-col gap-2 rounded-md border border-secondary-border bg-primary-base p-3">
-          <RequiredLabel className="text-secondary-text">نام کاربری</RequiredLabel>
+        <div className="flex flex-col gap-2 rounded-md border border-primary-border bg-primary-base p-3">
+          <RequiredLabel className="text-primary-text">نام کاربری</RequiredLabel>
           <CustomInput
             value={authUser.username || ""}
-            variant="secondary"
+            variant="primary"
             disabled
             showLabel={false}
             autoComplete="username"
             aria-label="نام کاربری"
           />
           {!isLocalEmail(authUser.email) && authUser.email ? (
-            <span className="text-xs font-semibold text-secondary-text">{authUser.email}</span>
+            <span className="text-xs font-semibold text-primary-text">{authUser.email}</span>
           ) : null}
         </div>
       ) : (
-        <div className="flex flex-col gap-3 rounded-md border border-secondary-border bg-primary-base p-3">
+        <div className="flex flex-col gap-3 rounded-md border border-primary-border bg-primary-base p-3">
           <div className="flex flex-col gap-2">
-            <RequiredLabel required className="text-secondary-text">نام کاربری</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">نام کاربری</RequiredLabel>
             <CustomInput
               value={registerDraft.username}
-              variant="secondary"
+              variant="primary"
               placeholder="نام کاربری"
               pattern="[a-z0-9._-]{3,32}"
               title="۳ تا ۳۲ کاراکتر شامل حروف کوچک انگلیسی، عدد، نقطه، خط تیره یا زیرخط"
@@ -272,10 +272,10 @@ export function UserProfilePanel() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <RequiredLabel className="text-secondary-text">ایمیل</RequiredLabel>
+            <RequiredLabel className="text-primary-text">ایمیل</RequiredLabel>
             <CustomInput
               value={registerDraft.email}
-              variant="secondary"
+              variant="primary"
               type="email"
               placeholder="ایمیل"
               autoComplete="email"
@@ -286,10 +286,10 @@ export function UserProfilePanel() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <RequiredLabel required className="text-secondary-text">رمز عبور</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">رمز عبور</RequiredLabel>
             <CustomInput
               value={registerDraft.password}
-              variant="secondary"
+              variant="primary"
               type="password"
               placeholder="رمز عبور"
               autoComplete="new-password"
@@ -306,10 +306,10 @@ export function UserProfilePanel() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <RequiredLabel required className="text-secondary-text">تکرار رمز عبور</RequiredLabel>
+            <RequiredLabel required className="text-primary-text">تکرار رمز عبور</RequiredLabel>
             <CustomInput
               value={registerDraft.passwordConfirm}
-              variant="secondary"
+              variant="primary"
               type="password"
               placeholder="تکرار رمز عبور"
               autoComplete="new-password"
@@ -329,10 +329,10 @@ export function UserProfilePanel() {
 
       <div ref={formRef} className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
-          <RequiredLabel required className="text-secondary-text">نام</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">نام</RequiredLabel>
           <CustomInput
             value={profileDraft.firstName}
-            variant="secondary"
+            variant="primary"
             placeholder="نام"
             pattern="[\p{L}][\p{L}\s'-]{1,49}"
             required
@@ -343,10 +343,10 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <RequiredLabel required className="text-secondary-text">نام خانوادگی</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">نام خانوادگی</RequiredLabel>
           <CustomInput
             value={profileDraft.lastName}
-            variant="secondary"
+            variant="primary"
             placeholder="نام خانوادگی"
             pattern="[\p{L}][\p{L}\s'-]{1,49}"
             required
@@ -357,10 +357,10 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <RequiredLabel required className="text-secondary-text">کد ملی</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">کد ملی</RequiredLabel>
           <CustomInput
             value={profileDraft.nationalId}
-            variant="secondary"
+            variant="primary"
             placeholder="کد ملی"
             pattern="\d{10}"
             maxLength={10}
@@ -373,10 +373,10 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <RequiredLabel required className="text-secondary-text">تاریخ تولد</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">تاریخ تولد</RequiredLabel>
           <CustomInput
             value={profileDraft.birthDate}
-            variant="secondary"
+            variant="primary"
             type="date"
             max={new Date().toISOString().slice(0, 10)}
             required
@@ -387,10 +387,10 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <RequiredLabel required className="text-secondary-text">شماره تماس</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">شماره تماس</RequiredLabel>
           <CustomInput
             value={profileDraft.phone}
-            variant="secondary"
+            variant="primary"
             placeholder="شماره تماس"
             pattern="09\d{9}"
             maxLength={11}
@@ -403,10 +403,10 @@ export function UserProfilePanel() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <RequiredLabel required className="text-secondary-text">آدرس</RequiredLabel>
+          <RequiredLabel required className="text-primary-text">آدرس</RequiredLabel>
           <CustomInput
             value={profileDraft.address}
-            variant="secondary"
+            variant="primary"
             placeholder="آدرس کامل"
             minLength={5}
             maxLength={200}
@@ -420,13 +420,13 @@ export function UserProfilePanel() {
       </div>
 
       {status ? (
-        <div className="rounded-md border border-secondary-border bg-secondary-card px-3 py-2 text-sm font-semibold text-secondary-text">
+        <div className="rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
           {status}
         </div>
       ) : null}
 
       <CustomButton
-        variant="secondary"
+        variant="primary"
         icon={authUser ? <IoSaveOutline /> : <IoLogInOutline />}
         isLoading={authUser ? isSavingProfile : isRegistering}
         onClick={authUser ? saveProfile : registerAndLogin}
@@ -435,13 +435,13 @@ export function UserProfilePanel() {
       </CustomButton>
 
       {authUser ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-secondary-border bg-primary-base p-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-primary-border bg-primary-base p-3">
           {showPasswordForm ? (
             <>
-              <div className="text-sm font-bold text-secondary-text">تغییر رمز عبور</div>
+              <div className="text-sm font-bold text-primary-text">تغییر رمز عبور</div>
               <CustomInput
                 value={passwordDraft.currentPassword}
-                variant="secondary"
+                variant="primary"
                 type="password"
                 placeholder="رمز عبور فعلی"
                 autoComplete="current-password"
@@ -453,7 +453,7 @@ export function UserProfilePanel() {
               />
               <CustomInput
                 value={passwordDraft.password}
-                variant="secondary"
+                variant="primary"
                 type="password"
                 placeholder="رمز عبور جدید"
                 autoComplete="new-password"
@@ -466,7 +466,7 @@ export function UserProfilePanel() {
               />
               <CustomInput
                 value={passwordDraft.passwordConfirm}
-                variant="secondary"
+                variant="primary"
                 type="password"
                 placeholder="تکرار رمز عبور جدید"
                 autoComplete="new-password"
@@ -480,12 +480,12 @@ export function UserProfilePanel() {
             </>
           ) : null}
           {passwordStatus ? (
-            <div className="rounded-md border border-secondary-border bg-secondary-card px-3 py-2 text-sm font-semibold text-secondary-text">
+            <div className="rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
               {passwordStatus}
             </div>
           ) : null}
           <CustomButton
-            variant="secondary"
+            variant="primary"
             icon={<IoKeyOutline />}
             isLoading={isChangingPassword}
             onClick={showPasswordForm ? changePassword : () => setShowPasswordForm(true)}

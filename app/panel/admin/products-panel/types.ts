@@ -80,6 +80,8 @@ export type BannerForm = {
   active: boolean;
   showOnHome: boolean;
   showOnShowcase: boolean;
+  showOnCategories: boolean;
+  showOnProducts: boolean;
   intervalSeconds: number;
   heightPercent: number;
   homeSortOrder: number;

@@ -76,6 +76,10 @@ function normalizeBanner(item: Partial<Banner> & { bannerUrl?: string; images?: 
     title: String(item.title ?? `بنر ${index + 1}`),
     imageUrls,
     active: item.active !== false,
+    showOnHome: item.showOnHome,
+    showOnShowcase: item.showOnShowcase,
+    showOnCategories: item.showOnCategories,
+    showOnProducts: item.showOnProducts,
     intervalSeconds: Number.isFinite(Number(item.intervalSeconds)) ? Math.max(1, Math.round(Number(item.intervalSeconds))) : 5,
     heightPercent: Number.isFinite(Number(item.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(item.heightPercent)))) : 28,
     sortOrder: Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1,
@@ -104,13 +108,13 @@ function ensureShowcases(products: Product[], savedShowcases: Showcase[]) {
 }
 
 type ProductShowcaseProps = {
-  mode?: "storefront" | "products";
+  mode?: "storefront" | "showcase" | "products";
   root?: "main" | "div";
 };
 
 export function ProductShowcase({ mode = "storefront", root = "main" }: ProductShowcaseProps) {
   // header search is handled on the separate `/search` route
-  const { products: catalogProducts, showcases: catalogShowcases, tree, loading } = useProductsCatalog();
+  const { products: catalogProducts, showcases: catalogShowcases, banners: catalogBanners, tree, loading } = useProductsCatalog();
   const [cartMessage, setCartMessage] = useState("");
   const [previewImage, setPreviewImage] = useState("");
   const dragRef = useRef({
@@ -147,6 +151,37 @@ export function ProductShowcase({ mode = "storefront", root = "main" }: ProductS
             sortOrder: 1,
           }]
         : [];
+    }
+
+    if (mode === "showcase") {
+      const productBanners = catalogBanners
+        .map((banner, index) => ({
+          type: "banner" as const,
+          item: normalizeBanner(banner, index + 1),
+          sortOrder: Number(banner.sortOrder ?? banner.placement ?? index + 1),
+        }))
+        .filter((section) => section.item.active !== false && section.item.showOnProducts === true);
+
+      const showcaseSections = sortedShowcases
+        .map((showcase) => {
+          const allProducts = sortedProducts.filter((product) => {
+            const showcaseIds = normalizeStringList(
+              (product as { showcaseIds?: unknown }).showcaseIds,
+              product.showcaseId ? [String(product.showcaseId)] : []
+            );
+            return showcaseIds.includes(showcase.id);
+          });
+
+          return {
+            type: "showcase" as const,
+            item: showcase,
+            products: allProducts,
+            sortOrder: showcase.sortOrder,
+          };
+        })
+        .filter((section) => section.products.length > 0);
+
+      return [...productBanners, ...showcaseSections].sort((a, b) => a.sortOrder - b.sortOrder);
     }
 
     if (tree.sections.length > 0) {
@@ -192,7 +227,7 @@ export function ProductShowcase({ mode = "storefront", root = "main" }: ProductS
       .filter((section) => section.products.length > 0);
 
     return showcaseSections.sort((a, b) => a.sortOrder - b.sortOrder);
-  }, [mode, sortedProducts, sortedShowcases, tree]);
+  }, [catalogBanners, mode, sortedProducts, sortedShowcases, tree]);
 
   
 

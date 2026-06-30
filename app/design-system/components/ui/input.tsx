@@ -76,7 +76,7 @@ export function CustomInput({
     <button
       type="button"
       aria-label={showPassword ? "پنهان کردن رمز عبور" : "نمایش رمز عبور"}
-      className="flex items-center justify-center text-lg text-secondary-text transition-colors hover:text-primary-text"
+      className="flex items-center justify-center text-lg font-bold text-primary-text transition-colors hover:text-primary"
       onClick={() => setShowPassword((current) => !current)}
       disabled={isDisabled}
     >
@@ -86,7 +86,7 @@ export function CustomInput({
   const control = (
     <div className={cx("relative inline-flex items-center", fullWidth && "w-full")}>
       {!isLoading && icon && (
-        <span className="absolute left-3 text-secondary-text">{icon}</span>
+        <span className="absolute right-3 text-secondary-text">{icon}</span>
       )}
       <input
         {...rest}
@@ -108,8 +108,8 @@ export function CustomInput({
           !isDisabled && interactionStates.hover.none,
           isDisabled && interactionStates.disabled.base,
           fullWidth && "w-full",
-          icon !== undefined && "pl-10",
-          resolvedIconAfter !== null && "pr-10",
+          icon !== undefined && "pr-10",
+          resolvedIconAfter !== null && "pl-10",
           className
         )}
         style={{
@@ -119,13 +119,13 @@ export function CustomInput({
         }}
       />
       {isLoading && (
-        <span className="absolute right-3 flex items-center gap-2 text-secondary-text">
+        <span className="absolute left-3 flex items-center gap-2 text-secondary-text">
           <Loading loading={loading} size={size} />
           {loadingText && <span className="text-sm">{loadingText}</span>}
         </span>
       )}
       {!isLoading && resolvedIconAfter && (
-        <span className="absolute right-3 text-secondary-text">{resolvedIconAfter}</span>
+        <span className="absolute left-3 text-primary-text">{resolvedIconAfter}</span>
       )}
     </div>
   );

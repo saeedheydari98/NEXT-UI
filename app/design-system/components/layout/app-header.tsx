@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { IoArrowBack, IoClose, IoMenu } from "react-icons/io5";
+import { IoArrowForward, IoClose, IoMenu } from "react-icons/io5";
 import { usePathname, useRouter } from "next/navigation";
 import Toggle from "../shared/toggle";
 import GlobalSearch from "../ui/global-search";
@@ -42,7 +42,8 @@ type HeaderUser = {
 
 const navItems = [
   { href: "/", label: "خانه" },
-  { href: "/products", label: "محصولات" },
+  { href: "/categories", label: "دسته بندی" },
+  { href: "/products", label: "ویترین" },
   { href: "/panel/admin", label: "پنل مدیریت", adminOnly: true },
   { href: "/panel/user", label: "حساب کاربری" },
 ];
@@ -180,7 +181,7 @@ export function AppHeader() {
               aria-label="بازگشت"
               className="flex shrink-0 items-center justify-center p-1 text-xl text-primary-text transition-colors hover:text-primary"
             >
-              <IoArrowBack />
+              <IoArrowForward />
             </button>
           ) : null}
           <div className="shrink-0 text-primary-base-nomode"><GiSpermWhale size={40}/></div>
@@ -214,7 +215,7 @@ export function AppHeader() {
                 خروج
               </CustomButton>
             </div>
-          ) : !authUser ? (
+          ) : !authUser && !isMobile ? (
             <CustomButton
               size="sm"
               onClick={() => {
@@ -272,7 +273,20 @@ export function AppHeader() {
               >
                 خروج
               </CustomButton>
-            ) : null}
+            ) : (
+              <CustomButton
+                size="sm"
+                fullWidth
+                onClick={() => {
+                  closeMenu();
+                  setAuthMode("choice");
+                  setAuthStatus("");
+                  setAuthOpen(true);
+                }}
+              >
+                حساب کاربری
+              </CustomButton>
+            )}
           </div>
         </div>
       )}
@@ -332,12 +346,12 @@ export function AppHeader() {
                 <div className="rounded-md border border-primary-border bg-primary-bg px-3 py-2 text-sm font-semibold text-primary-text">{authStatus}</div>
               ) : null}
               <div className="flex gap-2">
-                <CustomButton variant="neutral" fullWidth onClick={() => setAuthMode("choice")}>
-                  بازگشت
-                </CustomButton>
                 <CustomButton fullWidth isLoading={authLoading} onClick={submitAuth}>
                   ورود
                 </CustomButton>
+                <CustomButton variant="neutral" fullWidth onClick={() => setAuthMode("choice")}>
+                  بازگشت
+                </CustomButton> 
               </div>
             </>
           )}

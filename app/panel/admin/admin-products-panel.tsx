@@ -51,6 +51,8 @@ const createBanner = (): BannerForm => ({
   active: true,
   showOnHome: true,
   showOnShowcase: false,
+  showOnCategories: false,
+  showOnProducts: false,
   intervalSeconds: 5,
   heightPercent: 28,
   homeSortOrder: 1,
@@ -504,10 +506,18 @@ function normalizeBanner(item: Partial<BannerForm> & { bannerUrl?: string; image
   const showcaseId = String(item.showcaseId ?? imageMeta.showcaseId ?? "").trim();
   const hasExplicitTargets = typeof item.showOnHome === "boolean"
     || typeof item.showOnShowcase === "boolean"
+    || typeof item.showOnCategories === "boolean"
+    || typeof item.showOnProducts === "boolean"
     || typeof imageMeta.showOnHome === "boolean"
-    || typeof imageMeta.showOnShowcase === "boolean";
+    || typeof imageMeta.showOnShowcase === "boolean"
+    || typeof imageMeta.showOnCategories === "boolean"
+    || typeof imageMeta.showOnProducts === "boolean";
   const showOnHome = hasExplicitTargets ? (item.showOnHome ?? imageMeta.showOnHome) !== false : !showcaseId;
   const showOnShowcase = hasExplicitTargets ? (item.showOnShowcase ?? imageMeta.showOnShowcase) === true : Boolean(showcaseId);
+  const showOnCategories = (item.showOnCategories ?? imageMeta.showOnCategories) === true;
+  const showOnProducts = typeof (item.showOnProducts ?? imageMeta.showOnProducts) === "boolean"
+    ? (item.showOnProducts ?? imageMeta.showOnProducts) === true
+    : showOnShowcase;
   const homeSortOrder = Number.isFinite(Number(item.homeSortOrder ?? imageMeta.homeSortOrder))
     ? Number(item.homeSortOrder ?? imageMeta.homeSortOrder)
     : Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : index + 1;
@@ -523,6 +533,8 @@ function normalizeBanner(item: Partial<BannerForm> & { bannerUrl?: string; image
     active: item.active !== false,
     showOnHome,
     showOnShowcase,
+    showOnCategories,
+    showOnProducts,
     intervalSeconds: Number.isFinite(Number(item.intervalSeconds)) ? Math.max(1, Math.round(Number(item.intervalSeconds))) : 5,
     heightPercent: Number.isFinite(Number(item.heightPercent)) ? Math.max(10, Math.min(100, Math.round(Number(item.heightPercent)))) : 28,
     homeSortOrder,
@@ -637,6 +649,8 @@ function normalizeBannerTiming(banner: BannerForm): BannerForm {
   return {
     ...banner,
     showOnShowcase: banner.showOnShowcase && Boolean(banner.showcaseId),
+    showOnCategories: banner.showOnCategories,
+    showOnProducts: banner.showOnProducts,
     homeSortOrder,
     showcaseSortOrder,
     sortOrder: homeSortOrder,
@@ -882,6 +896,8 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               active: normalizedBanner.active,
               showOnHome: normalizedBanner.showOnHome,
               showOnShowcase: normalizedBanner.showOnShowcase,
+              showOnCategories: normalizedBanner.showOnCategories,
+              showOnProducts: normalizedBanner.showOnProducts,
               intervalSeconds: normalizedBanner.intervalSeconds,
               heightPercent: normalizedBanner.heightPercent,
               homeSortOrder: normalizedBanner.homeSortOrder,
@@ -1974,11 +1990,11 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               size="sm"
             />
             <div className="flex flex-col gap-2 sm:flex-row">
-              <CustomButton variant="danger" fullWidth icon={<IoTrashOutline />} onClick={deleteEditingCategory}>
-                حذف
-              </CustomButton>
               <CustomButton fullWidth icon={<IoSaveOutline />} onClick={submitEditingCategory}>
                 ذخیره دسته‌بندی
+              </CustomButton>
+              <CustomButton variant="danger" fullWidth icon={<IoTrashOutline />} onClick={deleteEditingCategory}>
+                حذف
               </CustomButton>
             </div>
           </div>
@@ -2017,6 +2033,24 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 <span>خانه</span>
               </label>
               <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                <input
+                  type="checkbox"
+                  checked={draftBanner.showOnCategories}
+                  onChange={(event) => updateDraftBanner({ showOnCategories: event.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                <span>دسته بندی</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                <input
+                  type="checkbox"
+                  checked={draftBanner.showOnProducts}
+                  onChange={(event) => updateDraftBanner({ showOnProducts: event.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                <span>ویترین</span>
+              </label>
+              <label className="hidden cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
                 <input
                   type="checkbox"
                   checked={draftBanner.showOnShowcase}
@@ -2184,6 +2218,24 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
                   <input
                     type="checkbox"
+                    checked={editingBanner.showOnCategories}
+                    onChange={(event) => updateEditingBanner({ showOnCategories: event.target.checked })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span>دسته بندی</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                  <input
+                    type="checkbox"
+                    checked={editingBanner.showOnProducts}
+                    onChange={(event) => updateEditingBanner({ showOnProducts: event.target.checked })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span>ویترین</span>
+                </label>
+                <label className="hidden cursor-pointer items-center gap-2 rounded-md border border-primary-border bg-primary-card px-3 py-2 text-sm font-semibold text-primary-text">
+                  <input
+                    type="checkbox"
                     checked={editingBanner.showOnShowcase}
                     onChange={(event) => {
                       const showOnShowcase = event.target.checked;
@@ -2300,19 +2352,19 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
             />
             <div className="flex flex-col gap-2 sm:flex-row">
               <CustomButton
+                fullWidth
+                icon={<IoSaveOutline />}
+                onClick={submitEditingBanner}
+              >
+                ذخیره بنر
+              </CustomButton>
+              <CustomButton
                 variant="danger"
                 fullWidth
                 icon={<IoTrashOutline />}
                 onClick={deleteEditingBanner}
               >
                 حذف
-              </CustomButton>
-              <CustomButton
-                fullWidth
-                icon={<IoSaveOutline />}
-                onClick={submitEditingBanner}
-              >
-                ذخیره بنر
               </CustomButton>
             </div>
           </div>
@@ -2801,14 +2853,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
             <div className="flex flex-col gap-2 sm:flex-row">
               <CustomButton
-                variant="danger"
-                fullWidth
-                icon={<IoTrashOutline />}
-                onClick={deleteEditingProduct}
-              >
-                حذف
-              </CustomButton>
-              <CustomButton
                 isLoading={saving}
                 loading="dots"
                 loadingText="در حال ذخیره..."
@@ -2817,6 +2861,14 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
                 onClick={submitEditingProduct}
               >
                 ذخیره تغییرات
+              </CustomButton>
+              <CustomButton
+                variant="danger"
+                fullWidth
+                icon={<IoTrashOutline />}
+                onClick={deleteEditingProduct}
+              >
+                حذف
               </CustomButton>
             </div>
           </div>

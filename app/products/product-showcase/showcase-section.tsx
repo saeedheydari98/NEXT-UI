@@ -77,14 +77,14 @@ export function ShowcaseSection({
           return (
           <article
             key={product.id ?? `${product.title}-${index}`}
-            className={`flex min-h-48 min-w-90 max-w-90 shrink-0 flex-col overflow-hidden rounded-lg border bg-primary-card shadow-sm ${
+            className={`flex min-h-40 min-w-72 max-w-72 shrink-0 flex-col overflow-hidden rounded-lg border bg-primary-card shadow-sm ${
               isLoading ? "border-border-default" : "border-primary-border"
             }`}
           >
-            <div className="flex min-h-36 flex-1 gap-3 p-3">
+            <div className="flex min-h-28 flex-1 gap-3 p-3">
               <button
                 type="button"
-                className="relative flex min-h-28 w-1/3 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media"
+                className="relative flex min-h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media"
                 onClick={() => onPreview(product.imageUrl)}
                 disabled={isLoading || !product.imageUrl}
                 aria-label="باز کردن تصویر محصول"
@@ -114,9 +114,6 @@ export function ShowcaseSection({
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <Loading loading="skeleton-item" isLoading={isLoading}>
                   <div className="line-clamp-1 text-sm font-bold">{product.title}</div>
-                </Loading>
-                <Loading loading="skeleton-item" isLoading={isLoading}>
-                  <span className="line-clamp-2 text-xs leading-5 text-secondary-text">{product.description}</span>
                 </Loading>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex flex-col gap-1">

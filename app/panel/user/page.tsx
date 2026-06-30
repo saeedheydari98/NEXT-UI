@@ -30,34 +30,34 @@ function UserOrdersPanel() {
   }, []);
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-secondary-border bg-secondary-card p-4 text-primary-text">
+    <section className="flex flex-col gap-4 rounded-xl border border-primary-border bg-primary-card p-4 text-primary-text">
       <div className="flex flex-col gap-1">
-        <div className="text-base font-bold text-secondary-text">خریدها</div>
-        <span className="text-sm text-secondary-text">
+        <div className="text-base font-bold text-primary-text">خریدها</div>
+        <span className="text-sm text-primary-text">
           برای ثبت دیدگاه و امتیاز، وارد صفحه محصول شوید.
         </span>
       </div>
       {orders.length === 0 ? (
-        <span className="text-sm text-secondary-text">هنوز خریدی ثبت نشده است.</span>
+        <span className="text-sm text-primary-text">هنوز خریدی ثبت نشده است.</span>
       ) : (
         <div className="flex flex-wrap gap-3">
           {orders.flatMap((order) =>
             order.items.map((item) => (
               <div
                 key={item.id}
-                className="flex w-full max-w-sm flex-col gap-3 rounded-md border border-secondary-border bg-primary-base p-3"
+                className="flex w-full max-w-sm flex-col gap-3 rounded-md border border-primary-border bg-primary-base p-3"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary-media">
                     {item.imageUrl ? (
                       <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     ) : (
-                      <span className="text-xs text-secondary-text">بدون تصویر</span>
+                      <span className="text-xs text-primary-text">بدون تصویر</span>
                     )}
                   </div>
                   <div className="flex min-w-0 flex-col gap-1">
                     <span className="text-sm font-bold text-primary-text">{item.title}</span>
-                    <span className="text-xs text-secondary-text">
+                    <span className="text-xs text-primary-text">
                       تعداد: {item.quantity}
                       {item.selectedColor ? ` | رنگ: ${item.selectedColor}` : ""}
                     </span>
@@ -66,7 +66,7 @@ function UserOrdersPanel() {
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-secondary-border pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-primary-border pt-2">
                   <span className="flex items-center gap-1 rounded-full border border-success-border bg-success-bg px-3 py-1 text-xs font-bold text-success-text">
                     <IoCheckmarkCircleOutline aria-hidden="true" />
                     <span>خریداری‌شده</span>
@@ -92,8 +92,8 @@ export default function UserPanelPage() {
   return (
     <main className="min-h-screen bg-primary-base p-6 text-primary-text">
       <div className="flex flex-col gap-4">
-        <div className="text-2xl text-secondary-text font-bold">حساب کاربری</div>
-        <div className="flex flex-wrap gap-2 rounded-lg border border-secondary-border bg-secondary-card p-2">
+        <div className="text-2xl text-primary-text font-bold">حساب کاربری</div>
+        <div className="flex flex-wrap gap-2 rounded-lg border border-primary-border bg-primary-card p-2">
           {[
             { id: "profile", label: "پروفایل" },
             { id: "orders", label: "خریدها" },
@@ -103,8 +103,8 @@ export default function UserPanelPage() {
               type="button"
               className={`rounded-md border px-4 py-2 text-sm font-semibold transition ${
                 activeTab === tab.id
-                  ? "border-secondary-border bg-secondary text-secondary-contrast"
-                  : "border-secondary-border bg-primary-base text-secondary-text hover:bg-secondary-card"
+                  ? "border-primary-border bg-primary text-primary-contrast"
+                  : "border-primary-border bg-primary-base text-primary-text hover:bg-primary-card"
               }`}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
             >

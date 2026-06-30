@@ -35,7 +35,7 @@ export default function ShowcaseLink({
   className,
 }: Props) {
   const slug = slugifyCatalogValue(showcaseTitle || showcaseId);
-  const href = `/showcase/${slug || showcaseId}`;
+  const href = `/products/showcase/${slug || showcaseId}`;
 
   return (
     <CustomButton

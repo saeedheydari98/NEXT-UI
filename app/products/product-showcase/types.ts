@@ -57,6 +57,8 @@ export type Banner = {
   active: boolean;
   showOnHome?: boolean;
   showOnShowcase?: boolean;
+  showOnCategories?: boolean;
+  showOnProducts?: boolean;
   intervalSeconds?: number | string;
   heightPercent?: number | string;
   homeSortOrder?: number | string;

@@ -126,45 +126,50 @@ function bearerToken(request: Request) {
 }
 
 export async function getAuthUser(request: Request): Promise<AuthUser | null> {
-  const store = await cookies();
-  const token = bearerToken(request) || store.get(ACCESS_COOKIE)?.value;
-  const payload = verifyToken(token);
-  const id = Number(payload?.sub);
+  try {
+    const store = await cookies();
+    const token = bearerToken(request) || store.get(ACCESS_COOKIE)?.value;
+    const payload = verifyToken(token);
+    const id = Number(payload?.sub);
 
-  if (Number.isInteger(id) && id > 0) {
-    return findPublicUser(id);
-  }
+    if (Number.isInteger(id) && id > 0) {
+      return findPublicUser(id);
+    }
 
-  const refreshToken = store.get(REFRESH_COOKIE)?.value;
-  const refreshPayload = verifyToken(refreshToken);
-  const refreshUserId = Number(refreshPayload?.sub);
-  if (!refreshToken || refreshPayload?.type !== "refresh" || !Number.isInteger(refreshUserId) || refreshUserId <= 0) {
+    const refreshToken = store.get(REFRESH_COOKIE)?.value;
+    const refreshPayload = verifyToken(refreshToken);
+    const refreshUserId = Number(refreshPayload?.sub);
+    if (!refreshToken || refreshPayload?.type !== "refresh" || !Number.isInteger(refreshUserId) || refreshUserId <= 0) {
+      return null;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: refreshUserId },
+      select: { id: true, email: true, username: true, name: true, role: true, refreshTokenHash: true, avatarUrl: true },
+    });
+    if (!user || user.refreshTokenHash !== hashToken(refreshToken)) return null;
+
+    const normalizedUser = await normalizeRole(user);
+    const accessToken = createAccessToken(normalizedUser);
+    const nextRefreshToken = createRefreshToken(normalizedUser);
+    await prisma.user.update({
+      where: { id: normalizedUser.id },
+      data: { refreshTokenHash: hashToken(nextRefreshToken) },
+    });
+    await setAuthCookies(accessToken, nextRefreshToken);
+
+    return {
+      id: normalizedUser.id,
+      email: normalizedUser.email,
+      username: normalizedUser.username,
+      name: normalizedUser.name,
+      role: normalizedUser.role,
+      avatarUrl: normalizedUser.avatarUrl,
+    };
+  } catch (error) {
+    console.error("Auth user load error:", error);
     return null;
   }
-
-  const user = await prisma.user.findUnique({
-    where: { id: refreshUserId },
-    select: { id: true, email: true, username: true, name: true, role: true, refreshTokenHash: true, avatarUrl: true },
-  });
-  if (!user || user.refreshTokenHash !== hashToken(refreshToken)) return null;
-
-  const normalizedUser = await normalizeRole(user);
-  const accessToken = createAccessToken(normalizedUser);
-  const nextRefreshToken = createRefreshToken(normalizedUser);
-  await prisma.user.update({
-    where: { id: normalizedUser.id },
-    data: { refreshTokenHash: hashToken(nextRefreshToken) },
-  });
-  await setAuthCookies(accessToken, nextRefreshToken);
-
-  return {
-    id: normalizedUser.id,
-    email: normalizedUser.email,
-    username: normalizedUser.username,
-    name: normalizedUser.name,
-    role: normalizedUser.role,
-    avatarUrl: normalizedUser.avatarUrl,
-  };
 }
 
 export async function requireUser(request: Request) {

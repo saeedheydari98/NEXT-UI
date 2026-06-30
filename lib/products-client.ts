@@ -94,6 +94,8 @@ export type BannerRecord = {
   active?: boolean;
   showOnHome?: boolean;
   showOnShowcase?: boolean;
+  showOnCategories?: boolean;
+  showOnProducts?: boolean;
   intervalSeconds?: number | string;
   heightPercent?: number | string;
   homeSortOrder?: number | string;
@@ -280,6 +282,16 @@ function getBannerMeta(banner: BannerRecord) {
   const showOnShowcase = hasExplicitTargets
     ? (banner.showOnShowcase ?? images.showOnShowcase) === true
     : Boolean(showcaseId);
+  const showOnCategories = typeof banner.showOnCategories === "boolean"
+    ? banner.showOnCategories
+    : typeof images.showOnCategories === "boolean"
+      ? images.showOnCategories
+      : false;
+  const showOnProducts = typeof banner.showOnProducts === "boolean"
+    ? banner.showOnProducts
+    : typeof images.showOnProducts === "boolean"
+      ? images.showOnProducts
+      : showOnShowcase;
   const homeSortOrder = Number.isFinite(Number(banner.homeSortOrder ?? images.homeSortOrder))
     ? Number(banner.homeSortOrder ?? images.homeSortOrder)
     : getPlacement(banner, 0);
@@ -287,7 +299,7 @@ function getBannerMeta(banner: BannerRecord) {
     ? Number(banner.showcaseSortOrder ?? images.showcaseSortOrder)
     : getPlacement(banner, 0);
 
-  return { showcaseId, showOnHome, showOnShowcase, homeSortOrder, showcaseSortOrder };
+  return { showcaseId, showOnHome, showOnShowcase, showOnCategories, showOnProducts, homeSortOrder, showcaseSortOrder };
 }
 
 export function normalizeColorStock(value: unknown) {

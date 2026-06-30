@@ -8,6 +8,7 @@ import { resolveVariantColors, UICommonVariant } from "../../variants/ui.variant
 import { useTheme } from "../../theme/provider";
 import { LoadingVariant } from "../loading/loading";
 import { borderVariants, radiusVariants, shadowVariants, sizeVariants } from "../../variants/shared.variant";
+import { HiMiniXMark } from "react-icons/hi2";
 
 type CustomModalProps = {
   open: boolean;
@@ -19,6 +20,7 @@ type CustomModalProps = {
   rounded?: keyof typeof radiusVariants;
   border?: keyof typeof borderVariants;
   shadow?: keyof typeof shadowVariants;
+  closeIcon?: React.ReactNode;
   closeText?: string;
   loading?: LoadingVariant;
   isLoading?: boolean;
@@ -43,7 +45,8 @@ export function CustomModal({
   rounded = "lg",
   border = "dashed",
   shadow = "lg",
-  closeText = "X",
+  closeIcon = <HiMiniXMark size={24}/>,
+  closeText = "",
   loading = "spinner",
   isLoading = false,
   loadingText,
@@ -83,7 +86,7 @@ export function CustomModal({
           <div className="flex items-center justify-between gap-3">
             <div className="text-xl font-bold">{title}</div>
             <CustomButton variant="danger" size="sm" onClick={onClose} disabled={isLoading}>
-              {closeText}
+              {closeText || closeIcon}
             </CustomButton>
           </div>
           <div>{children}</div>

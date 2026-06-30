@@ -65,15 +65,8 @@ export default function ShowcasePage() {
   }, [products, searchQuery, sort]);
 
   const showcaseBanners = useMemo(
-    () =>
-      banners
-        .filter((banner) =>
-          banner.active !== false
-          && banner.showOnShowcase === true
-          && String(banner.showcaseId ?? "") === String(showcase?.id ?? showcaseId)
-        )
-        .sort((a, b) => Number(a.showcaseSortOrder ?? a.sortOrder ?? 0) - Number(b.showcaseSortOrder ?? b.sortOrder ?? 0)),
-    [banners, showcase?.id, showcaseId]
+    () => banners.filter(() => false),
+    [banners]
   );
 
   const addToCart = async (product: ProductRecord) => {

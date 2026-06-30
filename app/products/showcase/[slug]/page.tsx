@@ -1,10 +1,1 @@
-import { redirect } from "next/navigation";
-
-type PageProps = {
-  params: Promise<{ slug?: string }>;
-};
-
-export default async function LegacyShowcasePage({ params }: PageProps) {
-  const { slug = "" } = await params;
-  redirect(`/showcase/${slug}`);
-}
+export { default } from "@/app/showcase/[slug]/page";

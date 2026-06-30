@@ -23,8 +23,8 @@ export default function AdminPanelPage() {
 
   useEffect(() => {
     const syncAccessFromApi = async () => {
-      const user = await fetchCurrentUser();
-      const access = await fetchAdminAccess();
+      const user = await fetchCurrentUser({ force: true });
+      const access = await fetchAdminAccess({ force: true });
       setAuthUser(user);
       setHasAdminAccess(access);
     };
@@ -42,7 +42,10 @@ export default function AdminPanelPage() {
       });
     });
     const unsubscribeAuthUser = subscribeAuthUser(() => {
-      void fetchCurrentUser().then(setAuthUser);
+      void fetchCurrentUser({ force: true }).then((user) => {
+        setAuthUser(user);
+        setHasAdminAccess(user?.role === "admin" || user?.role === "superadmin");
+      });
     });
 
     return () => {
