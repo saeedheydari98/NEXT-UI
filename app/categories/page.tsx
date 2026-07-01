@@ -28,10 +28,10 @@ export default function CategoriesPage() {
 
     const categorySections = visibleCategories.length > 0
       ? [{
-          type: "categories" as const,
-          item: visibleCategories,
-          sortOrder: Number(visibleCategories[0]?.pageSortOrder ?? 1),
-        }]
+        type: "categories" as const,
+        item: visibleCategories,
+        sortOrder: Number(visibleCategories[0]?.pageSortOrder ?? 1),
+      }]
       : [];
 
     return [...bannerSections, ...categorySections].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -55,33 +55,40 @@ export default function CategoriesPage() {
           </div>
         ) : null}
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col gap-4">
           {displaySections.map((section) => {
             if (section.type === "banner") {
               return (
-                <div key={`banner-${section.item.id}`} className="flex w-full min-w-full">
-                  <BannerCarousel
-                    banner={{ ...section.item, title: section.item.title ?? "", imageUrls: section.item.imageUrls ?? [], active: section.item.active !== false, sortOrder: Number(section.item.categorySortOrder ?? section.item.sortOrder ?? 0) }}
-                    onPreview={(imageUrl) => setPreviewImage(imageUrl ?? "")}
-                  />
-                </div>
+                <BannerCarousel
+                  key={`banner-${section.item.id}`}
+                  banner={{
+                    ...section.item,
+                    title: section.item.title ?? "",
+                    imageUrls: section.item.imageUrls ?? [],
+                    active: section.item.active !== false,
+                    sortOrder: Number(section.item.categorySortOrder ?? section.item.sortOrder ?? 0)
+                  }}
+                  onPreview={(imageUrl) => setPreviewImage(imageUrl ?? "")}
+                />
               );
             }
-
             return (
-              <div key="category-group" className="flex w-full flex-wrap gap-4">
-                {section.item.map((category) => {
-                  const slug = slugifyCatalogValue(category.slug || category.title || category.id);
-                  return (
-                    <CategoryOption
-                      key={category.id}
-                      label={category.title}
-                      imageUrl={category.imageUrl}
-                      size="lg"
-                      onClick={() => router.push(`/categories/${slug || category.id}`)}
-                    />
-                  );
-                })}
+              <div key="category-group" className="flex flex-col gap-3">
+                <div className="text-xl font-bold">دسته بندی ها</div>
+                <div className="flex w-full flex-wrap gap-4">
+                  {section.item.map((category) => {
+                    const slug = slugifyCatalogValue(category.slug || category.title || category.id);
+                    return (
+                      <CategoryOption
+                        key={category.id}
+                        label={category.title}
+                        imageUrl={category.imageUrl}
+                        size="lg"
+                        onClick={() => router.push(`/categories/${slug || category.id}`)}
+                      />
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

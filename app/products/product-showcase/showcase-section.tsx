@@ -162,7 +162,7 @@ export function ShowcaseSection({
               </Loading>
               <Loading loading="skeleton-item" isLoading={isLoading} className="flex-1">
                 <div className="flex flex-1 gap-2 w-full">
-                  <ProductLink iconAfter={<FiExternalLink />} className="w-full flex justify-center items-center gap-1" productId={product.id ?? String(product.id)} productTitle={product.title}>
+                  <ProductLink iconAfter={<FiExternalLink size={18}/>} className="w-full flex  justify-center items-center gap-1" productId={product.id ?? String(product.id)} productTitle={product.title}>
                     مشاهده محصول
                   </ProductLink>
                 </div>

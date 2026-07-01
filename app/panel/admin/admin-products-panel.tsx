@@ -351,6 +351,9 @@ function toggleProductId(list: Array<number | string>, productId: number | strin
 
 
 function getProductKey(product: Partial<ProductForm>) {
+  const id = String(product.id ?? "").trim();
+  if (id && /^\d+$/.test(id)) return `id:${id}`;
+
   return [
     product.title,
     product.description,
@@ -1880,7 +1883,6 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
     }));
     const nextCategories = categories.map((category) => ({
       ...category,
-      sortOrder: storefrontLayoutTab === "categories" ? nextOrder.get(`category:${category.id}`) ?? category.sortOrder : category.sortOrder,
       pageSortOrder: storefrontLayoutTab === "categories" ? nextOrder.get("categoryGroup:category-group") ?? category.pageSortOrder : category.pageSortOrder,
     }));
     const nextBrands = brands.map((brand) => ({
@@ -2033,6 +2035,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
       {section === "categories" ? (
         <div className="flex flex-col gap-4">
+          <div className="text-sm font-bold text-primary-text">دیو دسته بندی ها</div>
           {sortedCategories.map((category) => {
             const categoryProducts = sortedProducts.filter((product) => {
               const ids = product.categoryIds.length > 0 ? product.categoryIds : [product.categoryId];
@@ -2152,6 +2155,7 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
 
       {section === "brands" ? (
         <div className="flex flex-col gap-4">
+          <div className="text-sm font-bold text-primary-text">دیو برندها</div>
           {sortedBrands.length === 0 ? (
             <div className="rounded-md border border-dashed border-primary-border bg-primary-card p-4 text-sm text-secondary-text">
               هنوز برندی تعریف نشده است.
@@ -2257,8 +2261,12 @@ export function AdminProductsPanel({ section = "storefront" }: AdminProductsPane
               }`}
             >
               <div className="flex flex-col gap-1">
-                <div className="text-sm font-bold text-primary-text">{entry.item.title || `${entry.type === "banner" ? "بنر" : "ویترین"} بدون عنوان`}</div>
-                <span className="text-xs text-secondary-text">{entry.type === "banner" ? "بنر" : "ویترین"}</span>
+                <div className="text-sm font-bold text-primary-text">
+                  {entry.item.title || `${entry.type === "banner" ? "بنر" : entry.type === "categoryGroup" || entry.type === "brandGroup" ? "دیو لینک ها" : "ویترین"} بدون عنوان`}
+                </div>
+                <span className="text-xs text-secondary-text">
+                  {entry.type === "banner" ? "بنر" : entry.type === "categoryGroup" || entry.type === "brandGroup" ? "دیو لینک ها" : "ویترین"}
+                </span>
               </div>
               <CustomInput
                 type="number"

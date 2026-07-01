@@ -299,6 +299,9 @@ function clampWholeNumber(value: unknown, min: number, max: number, fallback: nu
 }
 
 function getProductKey(product: Partial<ProductPayload>) {
+  const id = String(product.id ?? "").trim();
+  if (id && /^\d+$/.test(id)) return `id:${id}`;
+
   return [
     String(product.showcaseId ?? "").trim().toLowerCase(),
     product.title,
@@ -321,6 +324,11 @@ function dedupeProducts(products: ProductPayload[]) {
     seen.add(key);
     return true;
   });
+}
+
+function getExistingProductId(product: Partial<ProductPayload>) {
+  const id = Number(product.id);
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
 function toClientBanner(banner: BannerRecord) {
@@ -996,7 +1004,15 @@ export async function POST(request: Request) {
         await tx.banner.deleteMany();
       }
 
-      await tx.product.deleteMany();
+      const existingProductIds = normalized
+        .map(getExistingProductId)
+        .filter((id): id is number => id !== null);
+
+      await tx.product.deleteMany({
+        where: existingProductIds.length > 0
+          ? { id: { notIn: existingProductIds } }
+          : {},
+      });
 
       if (hasShowcaseModel) {
         await tx.showcase.deleteMany({
@@ -1086,20 +1102,30 @@ export async function POST(request: Request) {
       }
 
       for (const item of sortProducts(normalized)) {
-        await tx.product.create({
-          data: {
-            ...normalizeProductData({
-              ...item,
-              colorStock: Object.keys(normalizeColorStock(item.colorStock)).length > 0
-                ? normalizeColorStock(item.colorStock)
-                : Prisma.JsonNull,
-              stockStatus: item.stockStatus || (Number(item.stockQuantity) > 0 ? "in_stock" : "out_of_stock"),
-            }),
-              showcaseId: String(item.showcaseId ?? "").trim(),
-              showcaseIds: item.showcaseIds,
-              categoryIds: item.categoryIds,
-          },
-        });
+        const productData = {
+          ...normalizeProductData({
+            ...item,
+            colorStock: Object.keys(normalizeColorStock(item.colorStock)).length > 0
+              ? normalizeColorStock(item.colorStock)
+              : Prisma.JsonNull,
+            stockStatus: item.stockStatus || (Number(item.stockQuantity) > 0 ? "in_stock" : "out_of_stock"),
+          }),
+          showcaseId: String(item.showcaseId ?? "").trim(),
+          showcaseIds: item.showcaseIds,
+          categoryIds: item.categoryIds,
+        };
+        const existingProductId = getExistingProductId(item);
+
+        if (existingProductId) {
+          await tx.product.update({
+            where: { id: existingProductId },
+            data: productData,
+          });
+        } else {
+          await tx.product.create({
+            data: productData,
+          });
+        }
       }
 
       if ("banner" in tx && typeof tx.banner?.create === "function") {

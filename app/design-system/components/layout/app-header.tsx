@@ -300,7 +300,7 @@ export function AppHeader() {
           </div>
         </div>
       )}
-      {isMobile && (
+      {false && isMobile && (
         <nav className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around gap-1 border-t border-primary-border bg-primary-panel px-2 py-2 shadow-lg backdrop-blur">
           {visibleNavItems.map((item) => (
             <HeaderNavLink

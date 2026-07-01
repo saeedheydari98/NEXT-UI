@@ -222,6 +222,9 @@ export type GetProductsOptions = {
 };
 
 function getProductKey(product: Partial<ProductRecord>) {
+  const id = String(product.id ?? "").trim();
+  if (id && /^\d+$/.test(id)) return `id:${id}`;
+
   return [
     product.title,
     product.description,
